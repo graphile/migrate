@@ -2,7 +2,10 @@ import * as pg from "pg";
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
+import * as chokidar from "chokidar";
 import { promisify } from "util";
+
+const migrationsFolder = `${process.cwd()}/migrations`;
 
 const calculateHash = (str: string) =>
   crypto
@@ -16,6 +19,7 @@ const HASH = "--! Hash: ";
 
 const fsp = {
   readFile: promisify(fs.readFile),
+  writeFile: promisify(fs.writeFile),
   stat: promisify(fs.stat),
   readdir: promisify(fs.readdir),
   mkdir: promisify(fs.mkdir),
@@ -63,22 +67,23 @@ async function getLastMigration(
 }
 
 async function getAllMigrations(): Promise<Array<FileMigration>> {
-  const migrationsFolder = `${process.cwd()}/migrations/committed`;
-  const stat = await fsp.stat(migrationsFolder);
-  if (stat) {
-    if (!stat.isDirectory()) {
-      throw new Error(`${migrationsFolder} is not a directory`);
-    }
-  } else {
-    await fsp.mkdir(path.dirname(migrationsFolder));
+  const committedMigrationsFolder = `${migrationsFolder}/committed`;
+  try {
     await fsp.mkdir(migrationsFolder);
+  } catch (e) {
+    // noop
   }
-  const files = await fsp.readdir(migrationsFolder);
+  try {
+    await fsp.mkdir(committedMigrationsFolder);
+  } catch (e) {
+    // noop
+  }
+  const files = await fsp.readdir(committedMigrationsFolder);
   const isMigration = (filename: string) => filename.match(/^[0-9]{6}_.*\.sql/);
   const migrations: Array<FileMigration> = await Promise.all(
     files.filter(isMigration).map(
       async (filename): Promise<FileMigration> => {
-        const fullPath = `${migrationsFolder}/${filename}`;
+        const fullPath = `${committedMigrationsFolder}/${filename}`;
         const contents = await fsp.readFile(fullPath, "utf8");
         const i = contents.indexOf("\n");
         const firstLine = contents.substring(0, i);
@@ -154,11 +159,14 @@ async function runStringMigration(
     await pgClient.query("begin");
   }
   try {
-    await pgClient.query(body);
+    await pgClient.query({
+      text: body,
+    });
   } catch (e) {
     // tslint:disable-next-line no-console
     console.error(`Error occurred whilst processing migration: ${e.message}`);
-    process.exit(1);
+    // tslint:disable-next-line no-console
+    // console.error(e);
   }
   if (committedMigration) {
     const { hash, previousHash, filename } = committedMigration;
@@ -188,23 +196,99 @@ async function runCommittedMigration(
   }
   // tslint:disable-next-line no-console
   console.log(`graphile-migrate: Running migration '${filename}'`);
-  await runStringMigration(pgClient, body, committedMigration);
+  try {
+    await runStringMigration(pgClient, body, committedMigration);
+  } catch (e) {
+    // tslint:disable-next-line no-console
+    console.error("Migration failed: ", e);
+    process.exit(1);
+  }
 }
 
-export async function migrate(connectionString: string) {
+export async function migrate(settings: Settings) {
+  validateSettings(settings);
+  const { connectionString } = settings;
   await withClient(connectionString, async pgClient => {
     const lastMigration = await getLastMigration(pgClient);
     const remainingMigrations = await getMigrationsAfter(lastMigration);
-    if (remainingMigrations.length === 0) {
-      // tslint:disable-next-line no-console
-      console.log("graphile-migrate: Up to date");
-    } else {
-      // Run migrations in series
-      for (const migration of remainingMigrations) {
-        await runCommittedMigration(pgClient, migration);
-      }
+    // Run migrations in series
+    for (const migration of remainingMigrations) {
+      await runCommittedMigration(pgClient, migration);
     }
+    // tslint:disable-next-line no-console
+    console.log("graphile-migrate: Up to date");
   });
+}
+
+interface Settings {
+  connectionString: string;
+  shadowConnectionString: string;
+}
+
+function validateSettings(settings: unknown): settings is Settings {
+  if (!settings) {
+    throw new Error("Expected settings object");
+  }
+  if (typeof settings !== "object") {
+    throw new Error("Expected settings object, received " + typeof settings);
+  }
+  // tslint:disable no-string-literal
+  if (typeof settings!["connectionString"] !== "string") {
+    throw new Error("Expected settings.connectionString to be a string");
+  }
+  if (typeof settings!["shadowConnectionString"] !== "string") {
+    throw new Error("Expected settings.shadowConnectionString to be a string");
+  }
+  // tslint:enable no-string-literal
+  return true;
+}
+
+export async function watch(settings: Settings) {
+  validateSettings(settings);
+  await migrate(settings);
+  // Watch the file
+  const currentMigrationPath = `${migrationsFolder}/current.sql`;
+  try {
+    await fsp.stat(currentMigrationPath);
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      await fsp.writeFile(currentMigrationPath, "-- Enter migration here");
+    } else {
+      throw e;
+    }
+  }
+  const watcher = chokidar.watch(currentMigrationPath);
+  let running = false;
+  let runAgain = false;
+  async function run() {
+    try {
+      // tslint:disable-next-line no-console
+      console.log(`[${new Date().toISOString()}]: running current.sql`);
+      const body = await fsp.readFile(currentMigrationPath, "utf8");
+      await withClient(settings.connectionString, pgClient =>
+        runStringMigration(pgClient, body)
+      );
+    } catch (e) {
+      // tslint:disable-next-line no-console
+      console.error(e);
+    }
+  }
+  function queue() {
+    if (running) {
+      runAgain = true;
+      return;
+    }
+    running = true;
+
+    run().finally(() => {
+      running = false;
+      if (runAgain) {
+        run();
+      }
+    });
+  }
+  watcher.on("change", queue);
+  queue();
 }
 
 async function withClient(

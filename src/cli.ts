@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as fs from "fs";
-import { migrate } from "./index";
+import { migrate, watch } from "./index";
 
 function getSettings() {
   let data;
@@ -22,8 +22,11 @@ async function main() {
   const argv = process.argv.slice(2);
   const [cmd] = argv;
   if (cmd === "migrate") {
-    await migrate(getSettings().connectionString);
+    await migrate(getSettings());
+  } else if (cmd === "watch") {
+    await watch(getSettings());
   } else {
+    // tslint:disable-next-line no-console
     console.error(`Command '${cmd || ""}' not understood`);
     process.exit(1);
   }

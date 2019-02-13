@@ -32,7 +32,9 @@
   },
   "homepage": "https://github.com/graphile/migrate#readme",
   "dependencies": {
+    "@types/chokidar": "^1.7.5",
     "@types/pg": "^7.4.11",
+    "chokidar": "^2.1.1",
     "pg": ">=6.5 <8"
   },
   "devDependencies": {
