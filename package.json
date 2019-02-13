@@ -2,9 +2,17 @@
   "name": "graphile-migrate",
   "version": "0.0.0",
   "description": "Opinionated SQL-powered migration tool for PostgreSQL",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "jest"
+    "prepack": "tsc && chmod +x dist/cli.js",
+    "watch": "tsc --watch"
+  },
+  "bin": {
+    "graphile-migrate": "./dist/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/graphile/migrate.git"
   },
   "keywords": [
     "postgresql",
@@ -18,5 +26,19 @@
     "functions"
   ],
   "author": "Benjie Gillam <code@benjiegillam.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/graphile/migrate/issues"
+  },
+  "homepage": "https://github.com/graphile/migrate#readme",
+  "dependencies": {
+    "@types/pg": "^7.4.11",
+    "pg": ">=6.5 <8"
+  },
+  "devDependencies": {
+    "typescript": "^3.3.1"
+  },
+  "files": [
+    "dist"
+  ]
 }

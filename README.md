@@ -22,6 +22,7 @@ Opinionated SQL-powered migration tool for PostgreSQL.
 - Migrations should automatically be wrapped in transactions
 - Migrations should not pollute PostgreSQL global settings (e.g. use `SET LOCAL` rather than `SET`)
 - Migrations that require execution outside of a transaction (e.g. to enable augmenting non-DDL-safe things, such as `ENUM`s in PostgreSQL) should be explicitly marked
+- Loading all your migrations at once into memory should not exhaust Node's memory 😉
 
 ## Setup
 
@@ -41,12 +42,14 @@ files for running graphile-migrate.
 commands in order to import the existing database as if it were the first
 migration.
 
-`graphile-migrate watch` will watch the new migration file,
-re-running it's SQL on any change. This file should be idempotent (this is
-your responsibility); i.e. it should be able to be ran multiple times and
-have the same result. Further, they should use `CASCADE` so that if other
-migrations are worked on in parallel no additional `rollback` step is
-required. Examples of idempotent operations:
+`graphile-migrate migrate` will run any un-executed committed migrations.
+
+`graphile-migrate watch` will run any un-executed committed migration and
+then watch the new migration file, re-running it's SQL on any change. This
+file should be idempotent (this is your responsibility); i.e. it should be
+able to be ran multiple times and have the same result. Further, they should
+use `CASCADE` so that if other migrations are worked on in parallel no
+additional `rollback` step is required. Examples of idempotent operations:
 
 ```
 -- Create a schema
