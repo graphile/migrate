@@ -1,0 +1,22 @@
+{
+  "name": "graphile-migrate",
+  "version": "0.0.0",
+  "description": "Opinionated SQL-powered migration tool for PostgreSQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "postgresql",
+    "postgres",
+    "pg",
+    "migrate",
+    "sql",
+    "easy",
+    "fast",
+    "watch",
+    "functions"
+  ],
+  "author": "Benjie Gillam <code@benjiegillam.com>",
+  "license": "MIT"
+}
