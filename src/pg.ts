@@ -1,11 +1,21 @@
 import * as pg from "pg";
+import { ParsedSettings } from "./settings";
+import { parse } from "pg-connection-string";
+
+export interface Context {
+  database: string;
+}
 
 export type Client = pg.PoolClient;
 export async function withClient<T = void>(
   connectionString: string,
-  settings: Settings,
-  callback: (pgClient: pg.PoolClient) => Promise<T>
+  parsedSettings: ParsedSettings,
+  callback: (pgClient: pg.PoolClient, context: Context) => Promise<T>
 ): Promise<T> {
+  const { database } = parse(connectionString);
+  if (!database) {
+    throw new Error("Connection string does not specify a database");
+  }
   const pgPool = new pg.Pool({ connectionString });
   pgPool.on("error", (err: Error) => {
     // tslint:disable-next-line no-console
@@ -15,10 +25,10 @@ export async function withClient<T = void>(
   try {
     const pgClient = await pgPool.connect();
     try {
-      if (settings.pgSettings) {
+      if (parsedSettings.pgSettings) {
         const sqlFragments = [];
         const sqlValues = [];
-        for (const [key, value] of Object.entries(settings.pgSettings)) {
+        for (const [key, value] of Object.entries(parsedSettings.pgSettings)) {
           sqlValues.push(key, value);
           sqlFragments.push(
             `pg_catalog.set_config($${sqlValues.length - 1}::text, $${
@@ -33,7 +43,10 @@ export async function withClient<T = void>(
           });
         }
       }
-      return await callback(pgClient);
+      const context: Context = {
+        database,
+      };
+      return await callback(pgClient, context);
     } finally {
       await pgClient.release();
     }

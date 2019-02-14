@@ -1,34 +1,67 @@
 import * as chokidar from "chokidar";
 import { withClient } from "./pg";
-import { Settings, parseSettings } from "./settings";
+import { Settings, ParsedSettings, parseSettings } from "./settings";
 import * as fsp from "./fsp";
 import {
   getLastMigration,
   getMigrationsAfter,
   runCommittedMigration,
   runStringMigration,
+  generatePlaceholderReplacement,
 } from "./migration";
 
-export async function migrate(settings: Settings) {
-  const parsedSettings = parseSettings(settings);
-  const { connectionString } = parsedSettings;
-  await withClient(connectionString, parsedSettings, async pgClient => {
-    const lastMigration = await getLastMigration(pgClient, parsedSettings);
-    const remainingMigrations = await getMigrationsAfter(
-      parsedSettings,
-      lastMigration
-    );
-    // Run migrations in series
-    for (const migration of remainingMigrations) {
-      await runCommittedMigration(pgClient, parsedSettings, migration);
-    }
-    // tslint:disable-next-line no-console
-    console.log("graphile-migrate: Up to date");
-  });
+export async function migrate(settings: Settings, shadow = false) {
+  const parsedSettings = await parseSettings(settings, shadow);
+  return _migrate(parsedSettings, shadow);
 }
 
 export async function watch(settings: Settings) {
-  const parsedSettings = parseSettings(settings);
+  const parsedSettings = await parseSettings(settings);
+  return _watch(parsedSettings);
+}
+
+export async function reset(
+  settings: Settings,
+  shadow = false,
+  rootConnectionString = "template1"
+) {
+  const parsedSettings = await parseSettings(settings, shadow);
+  return _reset(parsedSettings, shadow, rootConnectionString);
+}
+/**********/
+
+async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
+  const connectionString = shadow
+    ? parsedSettings.shadowConnectionString
+    : parsedSettings.connectionString;
+  if (!connectionString) {
+    throw new Error("Could not determine connection string");
+  }
+  await withClient(
+    connectionString,
+    parsedSettings,
+    async (pgClient, context) => {
+      const lastMigration = await getLastMigration(pgClient, parsedSettings);
+      const remainingMigrations = await getMigrationsAfter(
+        parsedSettings,
+        lastMigration
+      );
+      // Run migrations in series
+      for (const migration of remainingMigrations) {
+        await runCommittedMigration(
+          pgClient,
+          parsedSettings,
+          context,
+          migration
+        );
+      }
+      // tslint:disable-next-line no-console
+      console.log("graphile-migrate: Up to date");
+    }
+  );
+}
+
+async function _watch(parsedSettings: ParsedSettings) {
   await migrate(parsedSettings);
   // Watch the file
   const currentMigrationPath = `${parsedSettings.migrationsFolder}/current.sql`;
@@ -53,7 +86,8 @@ export async function watch(settings: Settings) {
       await withClient(
         parsedSettings.connectionString,
         parsedSettings,
-        pgClient => runStringMigration(pgClient, parsedSettings, body)
+        (pgClient, context) =>
+          runStringMigration(pgClient, parsedSettings, context, body)
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
@@ -82,4 +116,49 @@ export async function watch(settings: Settings) {
   }
   watcher.on("change", queue);
   queue();
+}
+
+export async function _reset(
+  parsedSettings: ParsedSettings,
+  shadow: boolean,
+  rootConnectionString = "template1"
+) {
+  const connectionString = shadow
+    ? parsedSettings.shadowConnectionString
+    : parsedSettings.connectionString;
+  if (!connectionString) {
+    throw new Error("Could not determine connection string for reset");
+  }
+  await withClient(rootConnectionString, parsedSettings, async pgClient => {
+    const databaseName = shadow
+      ? parsedSettings.shadowDatabaseName
+      : parsedSettings.databaseName;
+    const databaseOwner = parsedSettings.databaseOwner;
+    await pgClient.query(`DROP DATABASE IF EXISTS ${databaseName};`);
+    await pgClient.query(
+      `CREATE DATABASE ${databaseName} OWNER ${databaseOwner};`
+    );
+    await pgClient.query(`REVOKE ALL ON DATABASE ${databaseName} FROM PUBLIC;`);
+  });
+  if (parsedSettings.afterReset) {
+    await withClient(
+      connectionString,
+      parsedSettings,
+      async (pgClient, context) => {
+        const body = await fsp.readFile(
+          `${parsedSettings.migrationsFolder}/${parsedSettings.afterReset}`,
+          "utf8"
+        );
+        const query = generatePlaceholderReplacement(parsedSettings, context)(
+          body
+        );
+        // tslint:disable-next-line no-console
+        console.log(query);
+        await pgClient.query({
+          text: query,
+        });
+      }
+    );
+  }
+  await _migrate(parsedSettings, shadow);
 }

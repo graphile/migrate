@@ -35,7 +35,8 @@
     "@types/chokidar": "^1.7.5",
     "@types/pg": "^7.4.11",
     "chokidar": "^2.1.1",
-    "pg": ">=6.5 <8"
+    "pg": ">=6.5 <8",
+    "pg-connection-string": "^2.0.0"
   },
   "devDependencies": {
     "typescript": "^3.3.1"

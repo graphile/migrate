@@ -1,12 +1,17 @@
 import { calculateHash } from "./hash";
-import { Client } from "./pg";
-import { ParsedSettings } from "./parsedSettings";
+import { Client, Context } from "./pg";
 import * as fsp from "./fsp";
 import { ParsedSettings } from "./settings";
+import memoize from "./memoize";
 
 // NEVER CHANGE THESE!
 const PREVIOUS = "--! Previous: ";
 const HASH = "--! Hash: ";
+
+// From https://stackoverflow.com/a/3561711/141284
+function escapeRegexp(str: string): string {
+  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
 
 interface Migration {
   filename: string;
@@ -23,6 +28,27 @@ interface FileMigration extends Migration {
   fullPath: string;
   previous: FileMigration | null;
 }
+
+export const generatePlaceholderReplacement = memoize(
+  (
+    parsedSettings: ParsedSettings,
+    { database }: Context
+  ): ((str: string) => string) => {
+    const placeholders = {
+      ...parsedSettings.placeholders,
+      ":DATABASE_NAME": database,
+      ":DATABASE_OWNER": parsedSettings.databaseOwner,
+    };
+
+    const regexp = new RegExp(
+      Object.keys(placeholders)
+        .map(escapeRegexp)
+        .join("|"),
+      "g"
+    );
+    return str => str.replace(regexp, keyword => placeholders[keyword] || "");
+  }
+);
 
 async function migrateMigrationSchema(
   pgClient: Client,
@@ -140,10 +166,16 @@ export async function getMigrationsAfter(
 
 export async function runStringMigration(
   pgClient: Client,
-  _parsedSettings: ParsedSettings,
-  body: string,
+  parsedSettings: ParsedSettings,
+  context: Context,
+  rawBody: string,
   committedMigration?: FileMigration
 ) {
+  const placeholderReplacement = generatePlaceholderReplacement(
+    parsedSettings,
+    context
+  );
+  const body = placeholderReplacement(rawBody);
   const i = body.indexOf("\n");
   const firstLine = body.substring(0, i);
   const transaction = !firstLine.match(/^--!\s*no-transaction\b/);
@@ -177,6 +209,7 @@ export async function runStringMigration(
 export async function runCommittedMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings,
+  context: Context,
   committedMigration: FileMigration
 ) {
   const { hash, filename, body } = committedMigration;
@@ -193,6 +226,7 @@ export async function runCommittedMigration(
     await runStringMigration(
       pgClient,
       parsedSettings,
+      context,
       body,
       committedMigration
     );

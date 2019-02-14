@@ -22,7 +22,7 @@ Opinionated SQL-powered migration tool for PostgreSQL.
 - Migrations should automatically be wrapped in transactions
 - Migrations should not pollute PostgreSQL global settings (e.g. use `SET LOCAL` rather than `SET`)
 - Migrations that require execution outside of a transaction (e.g. to enable augmenting non-DDL-safe things, such as `ENUM`s in PostgreSQL) should be explicitly marked
-- Loading all your migrations at once into memory should not exhaust Node's memory 😉
+- Roles should be managed outside of migrations (since they can be shared between databases)
 
 ## Setup
 
@@ -35,12 +35,12 @@ everyone.
 
 ## Usage
 
-`graphile-migrate init` will ask you some questions and set up the relevant
+[TODO] `graphile-migrate init` will ask you some questions and set up the relevant
 files for running graphile-migrate.
 
-`graphile-migrate import` can be used after init but before running any other
+[TODO] `graphile-migrate import` can be used after init but before running any other
 commands in order to import the existing database as if it were the first
-migration.
+migration. (UNIMPLEMENTED: for now just pg_dump, and put the schema in migrations/schema.sql.)
 
 `graphile-migrate migrate` will run any un-executed committed migrations.
 
@@ -78,7 +78,7 @@ DROP FUNCTION IF EXISTS ... CASCADE;
 CREATE OR REPLACE FUNCTION ...
 ```
 
-`graphile-migrate check` will:
+[TODO] `graphile-migrate check` will:
 
 - reset the shadow database to the latest dump
 - apply the current migration to the shadow database, and output a SQL schema diff you can use to ensure no accidental changes have been made
@@ -88,6 +88,18 @@ When you're happy, `graphile-migrate commit` will:
 - reset the shadow database to the latest dump
 - apply the current migration to the shadow database, and replace the dump
 - move the current migration to committed migrations (adding a hash to prevent tampering)
+
+`graphile-migrate reset` will drop and re-create the database, and re-run all the committed migrations from the start.
+
+## Configuration
+
+Configuration goes in `.gmrc`, which is a JSON file with the following keys:
+
+- `connectionString` - optional, alternatively set `DATABASE_URL` envvar
+- `shadowConnectionString` - optional, alternatively set `SHADOW_DATABASE_URL` envvar
+- `pgSettings` - optional string-string key-value object defining settings to set in PostgreSQL when migrating. Useful for setting `search_path` for example.
+- `placeholders` - optional string-string key-value object defining placeholder values to be replaced when encountered in any migration files. Placeholders must begin with a colon and a capital letter, and then can continue with a string of capital letters, numbers and underscores `/^:[A-Z][A-Z0-9_]+$/`. `:DATABASE_NAME` and `:DATABASE_OWNER` are automatically added to this object. The value must be a valid in the place you use it (i.e. ensure you escape the values). The special value `!ENV` will tell graphile-migrate to load the setting from the relevant environment variable.
+- `afterReset` - optional name of a file in the migrations folder to execute once the database has been reset; useful for setting default permissions, installing extensions, and the like.
 
 ## Collaboration
 
