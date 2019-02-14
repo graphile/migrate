@@ -62,7 +62,7 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
 }
 
 async function _watch(parsedSettings: ParsedSettings) {
-  await migrate(parsedSettings);
+  await _migrate(parsedSettings);
   // Watch the file
   const currentMigrationPath = `${parsedSettings.migrationsFolder}/current.sql`;
   try {
