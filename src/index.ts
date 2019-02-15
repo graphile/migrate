@@ -15,9 +15,9 @@ export async function migrate(settings: Settings, shadow = false) {
   return _migrate(parsedSettings, shadow);
 }
 
-export async function watch(settings: Settings) {
-  const parsedSettings = await parseSettings(settings);
-  return _watch(parsedSettings);
+export async function watch(settings: Settings, once = false, shadow = false) {
+  const parsedSettings = await parseSettings(settings, shadow);
+  return _watch(parsedSettings, once, shadow);
 }
 
 export async function reset(
@@ -61,8 +61,12 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
   );
 }
 
-async function _watch(parsedSettings: ParsedSettings) {
-  await _migrate(parsedSettings);
+async function _watch(
+  parsedSettings: ParsedSettings,
+  once = false,
+  shadow = false
+) {
+  await _migrate(parsedSettings, shadow);
   // Watch the file
   const currentMigrationPath = `${parsedSettings.migrationsFolder}/current.sql`;
   try {
@@ -74,7 +78,6 @@ async function _watch(parsedSettings: ParsedSettings) {
       throw e;
     }
   }
-  const watcher = chokidar.watch(currentMigrationPath);
   let running = false;
   let runAgain = false;
   async function run() {
@@ -114,7 +117,10 @@ async function _watch(parsedSettings: ParsedSettings) {
       }
     });
   }
-  watcher.on("change", queue);
+  if (!once) {
+    const watcher = chokidar.watch(currentMigrationPath);
+    watcher.on("change", queue);
+  }
   queue();
 }
 

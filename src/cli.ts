@@ -22,11 +22,15 @@ async function main() {
   const argv = process.argv.slice(2);
   const [cmd] = argv;
   if (argv.length === 0 || cmd === "migrate") {
-    await migrate(getSettings());
+    const shadow = argv.indexOf("--shadow") >= 0;
+    await migrate(getSettings(), shadow);
   } else if (cmd === "watch") {
-    await watch(getSettings());
+    const once = argv.indexOf("--once") >= 0;
+    const shadow = argv.indexOf("--shadow") >= 0;
+    await watch(getSettings(), once, shadow);
   } else if (cmd === "reset") {
-    await reset(getSettings());
+    const shadow = argv.indexOf("--shadow") >= 0;
+    await reset(getSettings(), shadow);
   } else {
     // tslint:disable-next-line no-console
     console.error(`Command '${cmd || ""}' not understood`);
