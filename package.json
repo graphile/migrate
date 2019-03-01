@@ -39,7 +39,10 @@
     "pg-connection-string": "^2.0.0"
   },
   "devDependencies": {
-    "typescript": "^3.3.1"
+    "prettier": "^1.16.4",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3333"
   },
   "files": [
     "dist"
