@@ -1,6 +1,6 @@
 # graphile-migrate
 
-Opinionated SQL-powered migration tool for PostgreSQL.
+Opinionated SQL-powered hyper-speed productive roll-forward migration tool for PostgreSQL.
 
 ## Status
 
@@ -8,30 +8,32 @@ Opinionated SQL-powered migration tool for PostgreSQL.
 
 ## Opinions
 
-- Migrations should be written in familiar SQL
-- Iteration should be easy
+- Migrations should be written in SQL
+- Local iteration should be easy and fast
 - Migrating should be _fast_
-- Once deployed, databases should be identical (including column order)
+- Once deployed, databases should be identical (including subtleties such as column order)
 - Roll-forward only (production issues should be fixed via additional migrations, development can iterate current migration)
 - Once a migration is signed off (deployable) it should never be edited
-- Use PostgreSQL
+- Use PostgreSQL ;)
 - Development databases are cheap; can run multiple
 - Resetting development database is acceptable if necessary (but data preservation should be attempted)
 - Production databases are critical - NEVER RESET
 - Migrating data (as well as DDL) is acceptable, but should be kept to fast operations (or trigger a background job)
-- Migrations should automatically be wrapped in transactions
-- Migrations should not pollute PostgreSQL global settings (e.g. use `SET LOCAL` rather than `SET`)
+- Migrations should automatically be wrapped in transactions by default
 - Migrations that require execution outside of a transaction (e.g. to enable augmenting non-DDL-safe things, such as `ENUM`s in PostgreSQL) should be explicitly marked
+- Migrations should not pollute PostgreSQL global settings (e.g. use `SET LOCAL` rather than `SET`)
 - Roles should be managed outside of migrations (since they can be shared between databases)
+- Certain schemas are managed by other tools and should not be interfered with; e.g. `graphile_jobs`
 
 ## Setup
 
 `graphile-migrations` requires two databases: the first is your main database
 against which you perform development, the second is a "shadow" database
 which is used by the system to apply migrations. You should never interact
-with the "shadow" database manually. Further all members of your team should
+with the "shadow" database directly. Further all members of your team should
 run the same PostgreSQL version to ensure that the shadow dump matches for
-everyone.
+everyone (one way of achieving this is through Docker, but that isn't
+required).
 
 ## Usage
 
