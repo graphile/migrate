@@ -1,6 +1,11 @@
 import * as chokidar from "chokidar";
 import { withClient } from "./pg";
-import { Settings, ParsedSettings, parseSettings } from "./settings";
+import {
+  Settings,
+  ParsedSettings,
+  parseSettings,
+  isCommandSpec,
+} from "./settings";
 import * as fsp from "./fsp";
 import {
   getLastMigration,
@@ -9,6 +14,10 @@ import {
   runStringMigration,
   generatePlaceholderReplacement,
 } from "./migration";
+import { exec as rawExec } from "child_process";
+import { promisify } from "util";
+
+const exec = promisify(rawExec);
 
 export async function migrate(settings: Settings, shadow = false) {
   const parsedSettings = await parseSettings(settings, shadow);
@@ -147,24 +156,51 @@ export async function _reset(
     await pgClient.query(`REVOKE ALL ON DATABASE ${databaseName} FROM PUBLIC;`);
   });
   if (parsedSettings.afterReset) {
-    await withClient(
-      connectionString,
-      parsedSettings,
-      async (pgClient, context) => {
-        const body = await fsp.readFile(
-          `${parsedSettings.migrationsFolder}/${parsedSettings.afterReset}`,
-          "utf8"
+    const afterReset = Array.isArray(parsedSettings.afterReset)
+      ? parsedSettings.afterReset
+      : [parsedSettings.afterReset];
+    for (const afterResetItem of afterReset) {
+      if (typeof afterResetItem === "string") {
+        // SQL
+        await withClient(
+          connectionString,
+          parsedSettings,
+          async (pgClient, context) => {
+            const body = await fsp.readFile(
+              `${parsedSettings.migrationsFolder}/${afterResetItem}`,
+              "utf8"
+            );
+            const query = generatePlaceholderReplacement(
+              parsedSettings,
+              context
+            )(body);
+            // tslint:disable-next-line no-console
+            console.log(query);
+            await pgClient.query({
+              text: query,
+            });
+          }
         );
-        const query = generatePlaceholderReplacement(parsedSettings, context)(
-          body
-        );
-        // tslint:disable-next-line no-console
-        console.log(query);
-        await pgClient.query({
-          text: query,
+      } else if (isCommandSpec(afterResetItem)) {
+        // Run the command
+        const { stdout, stderr } = await exec(afterResetItem.command, {
+          env: {
+            PATH: process.env.PATH,
+            DATABASE_URL: connectionString,
+          },
+          encoding: "utf8",
+          maxBuffer: 10 * 1024 * 1024,
         });
+        if (stdout) {
+          // tslint:disable-next-line no-console
+          console.log(stdout);
+        }
+        if (stderr) {
+          // tslint:disable-next-line no-console
+          console.error(stderr);
+        }
       }
-    );
+    }
   }
   await _migrate(parsedSettings, shadow);
 }

@@ -1,6 +1,16 @@
 import { parse } from "pg-connection-string";
 import * as fsp from "./fsp";
 
+export interface CommandSpec {
+  command: string;
+}
+
+export function isCommandSpec(o: unknown): o is CommandSpec {
+  return (
+    (typeof o === "object" && o && typeof o["command"] === "string") || false
+  );
+}
+
 export interface Settings {
   connectionString?: string;
   shadowConnectionString?: string;
@@ -11,7 +21,7 @@ export interface Settings {
   placeholders?: {
     [key: string]: string;
   };
-  afterReset?: string;
+  afterReset?: string | Array<string | CommandSpec>;
 }
 
 export interface ParsedSettings extends Settings {
@@ -158,11 +168,25 @@ export async function parseSettings(
     }
   );
 
-  await check("afterReset", async afterReset => {
-    if (afterReset && typeof afterReset !== "string") {
-      throw new Error("Expected string");
+  await check("afterReset", async (rawAfterReset: unknown) => {
+    const afterResetArray = Array.isArray(rawAfterReset)
+      ? rawAfterReset
+      : [rawAfterReset];
+    for (const afterReset of afterResetArray) {
+      if (afterReset && typeof afterReset === "string") {
+        await fsp.stat(`${migrationsFolder}/${afterReset}`);
+      } else if (
+        afterReset &&
+        typeof afterReset === "object" &&
+        typeof afterReset["command"] === "string"
+      ) {
+        // OK.
+      } else {
+        throw new Error(
+          `Expected afterReset to contain an array of strings or command specs; received '${typeof afterReset}'`
+        );
+      }
     }
-    await fsp.stat(`${migrationsFolder}/${afterReset}`);
   });
 
   /******/
