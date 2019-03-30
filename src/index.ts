@@ -18,6 +18,7 @@ import {
 import { exec as rawExec } from "child_process";
 import { promisify } from "util";
 import { calculateHash } from "./hash";
+import * as pgMinify from "pg-minify";
 
 const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
 
@@ -46,7 +47,7 @@ export async function commit(
   settings: Settings,
   rootConnectionString = "template1"
 ) {
-  const parsedSettings = await parseSettings(settings, false);
+  const parsedSettings = await parseSettings(settings, true);
   return _commit(parsedSettings, rootConnectionString);
 }
 /**********/
@@ -238,17 +239,27 @@ export async function _commit(
     String(newMigrationNumber).padStart(6, "0") + ".sql";
   const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
   const body = await fsp.readFile(currentMigrationPath, "utf8");
-  const hash = calculateHash(newMigrationNumber + "\n" + body);
+  const minifiedBody = pgMinify(body);
+  if (minifiedBody.trim() === "") {
+    throw new Error("Current migration is blank.");
+  }
+
+  const hash = calculateHash(body, lastMigration && lastMigration.hash);
   const finalBody = `--! Previous: ${
     lastMigration ? lastMigration.filename : "-"
-  }\n--! Hash: ${hash}\n\n${body}`;
-
-  await fsp.writeFile(
-    `${committedMigrationsFolder}/${newMigrationFilename}`,
-    finalBody
-  );
-  await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
+  }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
   await _reset(parsedSettings, true, rootConnectionString);
-  await _migrate(parsedSettings, true);
-  await _migrate(parsedSettings);
+  const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
+  await fsp.writeFile(newMigrationFilepath, finalBody);
+  try {
+    await _migrate(parsedSettings, true);
+    await _migrate(parsedSettings);
+    await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
+  } catch (e) {
+    console.error(e);
+    console.error("ABORTING...");
+    await fsp.writeFile(currentMigrationPath, body);
+    await fsp.unlink(newMigrationFilepath);
+    console.error("ABORTED AND ROLLED BACK");
+  }
 }

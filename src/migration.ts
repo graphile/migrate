@@ -108,14 +108,19 @@ export async function getAllMigrations(
             "Invalid committed migration - no 'previous' comment"
           );
         }
-        const previousHash = firstLine.substring(PREVIOUS.length) || null;
+        const previousHashRaw = firstLine.substring(PREVIOUS.length) || null;
+        const previousHash =
+          previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
         const j = contents.indexOf("\n", i + 1);
         const secondLine = contents.substring(i + 1, j);
         if (!secondLine.startsWith(HASH)) {
           throw new Error("Invalid committed migration - no 'hash' comment");
         }
         const hash = secondLine.substring(HASH.length);
-        const body = contents.substring(j + 1).trim();
+        if (contents[j + 1] !== "\n") {
+          throw new Error("Invalid migration header in '${fullPath}'");
+        }
+        const body = contents.substring(j + 2);
         return {
           filename,
           fullPath,
@@ -212,9 +217,9 @@ export async function runCommittedMigration(
   context: Context,
   committedMigration: FileMigration
 ) {
-  const { hash, filename, body } = committedMigration;
+  const { hash, filename, body, previousHash } = committedMigration;
   // Check the hash
-  const newHash = calculateHash(body);
+  const newHash = calculateHash(body, previousHash);
   if (newHash !== hash) {
     throw new Error(
       `Hash for ${filename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`

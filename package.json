@@ -36,7 +36,8 @@
     "@types/pg": "^7.4.11",
     "chokidar": "^2.1.1",
     "pg": ">=6.5 <8",
-    "pg-connection-string": "^2.0.0"
+    "pg-connection-string": "^2.0.0",
+    "pg-minify": "^0.5.5"
   },
   "devDependencies": {
     "prettier": "^1.16.4",
