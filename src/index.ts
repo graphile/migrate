@@ -243,7 +243,6 @@ export async function _commit(
     lastMigration ? lastMigration.filename : "-"
   }\n--! Hash: ${hash}\n\n${body}`;
 
-  await fsp.mkdir(committedMigrationsFolder);
   await fsp.writeFile(
     `${committedMigrationsFolder}/${newMigrationFilename}`,
     finalBody
