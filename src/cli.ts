@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as fs from "fs";
-import { migrate, watch, reset } from "./index";
+import { migrate, watch, reset, commit } from "./index";
 
 function getSettings() {
   let data;
@@ -31,6 +31,8 @@ async function main() {
   } else if (cmd === "reset") {
     const shadow = argv.indexOf("--shadow") >= 0;
     await reset(getSettings(), shadow);
+  } else if (cmd === "commit") {
+    await commit(getSettings());
   } else {
     // tslint:disable-next-line no-console
     console.error(`Command '${cmd || ""}' not understood`);

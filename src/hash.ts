@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
-export const calculateHash = (str: string) =>
-  crypto
-    .createHash("sha1")
+export const calculateHash = (str: string, algorithm: string = 'sha1') =>
+  algorithm + ':' + crypto
+    .createHash(algorithm)
     .update(str)
     .digest("hex");

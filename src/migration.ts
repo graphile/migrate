@@ -95,7 +95,7 @@ export async function getAllMigrations(
     // noop
   }
   const files = await fsp.readdir(committedMigrationsFolder);
-  const isMigration = (filename: string) => filename.match(/^[0-9]{6}_.*\.sql/);
+  const isMigration = (filename: string) => filename.match(/^[0-9]{6,}\.sql/);
   const migrations: Array<FileMigration> = await Promise.all(
     files.filter(isMigration).map(
       async (filename): Promise<FileMigration> => {

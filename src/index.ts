@@ -8,6 +8,7 @@ import {
 } from "./settings";
 import * as fsp from "./fsp";
 import {
+  getAllMigrations,
   getLastMigration,
   getMigrationsAfter,
   runCommittedMigration,
@@ -16,6 +17,9 @@ import {
 } from "./migration";
 import { exec as rawExec } from "child_process";
 import { promisify } from "util";
+import { calculateHash } from "./hash";
+
+const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
 
 const exec = promisify(rawExec);
 
@@ -36,6 +40,14 @@ export async function reset(
 ) {
   const parsedSettings = await parseSettings(settings, shadow);
   return _reset(parsedSettings, shadow, rootConnectionString);
+}
+
+export async function commit(
+  settings: Settings,
+  rootConnectionString = "template1"
+) {
+  const parsedSettings = await parseSettings(settings, false);
+  return _commit(parsedSettings, rootConnectionString);
 }
 /**********/
 
@@ -70,6 +82,10 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
   );
 }
 
+function getCurrentMigrationPath(parsedSettings: ParsedSettings) {
+  return `${parsedSettings.migrationsFolder}/current.sql`;
+}
+
 async function _watch(
   parsedSettings: ParsedSettings,
   once = false,
@@ -77,12 +93,12 @@ async function _watch(
 ) {
   await _migrate(parsedSettings, shadow);
   // Watch the file
-  const currentMigrationPath = `${parsedSettings.migrationsFolder}/current.sql`;
+  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
   try {
     await fsp.stat(currentMigrationPath);
   } catch (e) {
     if (e.code === "ENOENT") {
-      await fsp.writeFile(currentMigrationPath, "-- Enter migration here");
+      await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
     } else {
       throw e;
     }
@@ -203,4 +219,37 @@ export async function _reset(
     }
   }
   await _migrate(parsedSettings, shadow);
+}
+export async function _commit(
+  parsedSettings: ParsedSettings,
+  rootConnectionString = "template1"
+) {
+  const { migrationsFolder } = parsedSettings;
+  const committedMigrationsFolder = `${migrationsFolder}/committed`;
+  const allMigrations = await getAllMigrations(parsedSettings);
+  const lastMigration = allMigrations[allMigrations.length - 1];
+  const newMigrationNumber = lastMigration
+    ? parseInt(lastMigration.filename, 10) + 1
+    : 1;
+  if (Number.isNaN(newMigrationNumber)) {
+    throw new Error("Could not determine next migration number");
+  }
+  const newMigrationFilename =
+    String(newMigrationNumber).padStart(6, "0") + ".sql";
+  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
+  const body = await fsp.readFile(currentMigrationPath, "utf8");
+  const hash = calculateHash(newMigrationNumber + "\n" + body);
+  const finalBody = `--! Previous: ${
+    lastMigration ? lastMigration.filename : "-"
+  }\n--! Hash: ${hash}\n\n${body}`;
+
+  await fsp.mkdir(committedMigrationsFolder);
+  await fsp.writeFile(
+    `${committedMigrationsFolder}/${newMigrationFilename}`,
+    finalBody
+  );
+  await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
+  await _reset(parsedSettings, true, rootConnectionString);
+  await _migrate(parsedSettings, true);
+  await _migrate(parsedSettings);
 }
