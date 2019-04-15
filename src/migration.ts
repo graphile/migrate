@@ -10,7 +10,7 @@ const HASH = "--! Hash: ";
 
 // From https://stackoverflow.com/a/3561711/141284
 function escapeRegexp(str: string): string {
-  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 }
 
 interface Migration {
