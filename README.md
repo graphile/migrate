@@ -1,5 +1,11 @@
 # graphile-migrate
 
+[![Patreon sponsor button](https://img.shields.io/badge/sponsor-via%20Patreon-orange.svg)](https://patreon.com/benjie)
+[![Discord chat room](https://img.shields.io/discord/489127045289476126.svg)](http://discord.gg/graphile)
+[![Package on npm](https://img.shields.io/npm/v/graphile-migrate.svg?style=flat)](https://www.npmjs.com/package/graphile-migrate)
+![MIT license](https://img.shields.io/npm/l/graphile-migrate.svg)
+[![Follow](https://img.shields.io/badge/twitter-@GraphileHQ-blue.svg)](https://twitter.com/GraphileHQ)
+
 Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
 
 ## Why?
@@ -26,17 +32,29 @@ software so I can justify allocating additional time to it.
 
 ## Status
 
-**EXPERIMENTAL**
+**HIGHLY EXPERIMENTAL**
 
 There are no automated tests yet, and APIs may still change. (Pull requests to
 add tests welcome!)
 
+Using this for prototyping should be fine, but when it comes to shipping you
+may want to
+
+- help us write tests and finalise interfaces
+- send us money to do the same
+- use an alternative migration framework, such as:
+  - [db-migrate](https://db-migrate.readthedocs.io/en/latest/Getting%20Started/commands/)
+  - [sqitch](https://sqitch.org/)
+  - [Flyway](https://flywaydb.org/)
+  - [migra](https://github.com/djrobstep/migra)
+
 ## Opinions
 
-- Migrations should be written in SQL
 - Local iteration should be easy and _fast_
 - Migrating should be fast
 - Once deployed, databases should be identical (including subtleties such as column order)
+- Migration software should not be tied to a particular application stack
+- Migrations should be written in SQL
 - Roll-forward only (production issues should be fixed via additional migrations, development can iterate current migration)
 - Once a migration is signed off (deployable) it should never be edited
 - Use PostgreSQL ;)
