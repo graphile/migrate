@@ -18,8 +18,8 @@ Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
 ## Crowd-funded open-source software
 
 To advance and improve this software more rapidly, I need your support. Please
-sponsor ongoing maintenance and development via Patreon:
-https://www.patreon.com/benjie
+[sponsor ongoing maintenance and development via
+Patreon](https://www.patreon.com/benjie).
 
 If you're already a Patreon sponsor, please let me know you're using this
 software so I can justify allocating additional time to it.
@@ -41,7 +41,7 @@ add tests welcome!)
 - Once a migration is signed off (deployable) it should never be edited
 - Use PostgreSQL ;)
 - Development databases are cheap; can run multiple
-- Resetting development database is acceptable if necessary
+- Resetting development database is acceptable if absolutely necessary
 - Production databases are critical - NEVER RESET
 - Migrating data (as well as DDL) is acceptable, but should be kept to fast operations (or trigger a background job)
 - Migrations should automatically be wrapped in transactions by default
@@ -99,31 +99,36 @@ It's possible to consume this module as a JavaScript library rather than via
 the CLI. There's no documentation on this, but the CLI code in `cli.ts` is very
 approachable.
 
+ALPHA WARNING: internals are likely to change a lot, so expect breakage if you
+use library mode right now. CLI is more stable.
+
 ## Configuration
 
 Configuration goes in `.gmrc`, which is a JSON file with the following keys:
 
-- `connectionString` - optional, alternatively set `DATABASE_URL` environment
+- `connectionString` — optional, alternatively set `DATABASE_URL` environment
   variable
-- `shadowConnectionString` - optional, alternatively set `SHADOW_DATABASE_URL`
+- `shadowConnectionString` — optional, alternatively set `SHADOW_DATABASE_URL`
   environment variable
-- `pgSettings` - optional string-string key-value object defining settings to
+- `pgSettings` — optional string-string key-value object defining settings to
   set in PostgreSQL when migrating. Useful for setting `search_path` for
-  example.
-- `placeholders` - optional string-string key-value object defining placeholder
+  example. Beware of changing this, a full reset will use the new values which
+  may lead to unexpected consequences.
+- `placeholders` — optional string-string key-value object defining placeholder
   values to be replaced when encountered in any migration files. Placeholders
   must begin with a colon and a capital letter, and then can continue with a
   string of capital letters, numbers and underscores `/^:[A-Z][A-Z0-9_]+$/`.
   `:DATABASE_NAME` and `:DATABASE_OWNER` are automatically added to this
   object. The value must be a valid in the place you use it (i.e. ensure you
-  escape the values). The special value `!ENV` will tell graphile-migrate to
+  escape the values) — graphile-migrate does not perform any escaping for you.
+  The special value `!ENV` will tell graphile-migrate to
   load the setting from the environment variable with the same name.
-- `afterReset` - optional list of actions to execute after the database has
-  been created but before the migrations run. String values are interpretted as
+- `afterReset` — optional list of actions to execute after the database has
+  been created but before the migrations run. String values are interpreted as
   the name of a file in the migrations folder to execute once the database has
   been reset; useful for setting default permissions, installing extensions,
   and the like. Objects with a `command` key specify shell actions (e.g.
-  installing a worker schema into the database).
+  installing a separately managed worker schema into the database).
 
 ```json
 {
@@ -140,10 +145,10 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
 
 ## Collaboration
 
-Developers can work on different migrations in parallel, and can switch
-between `git` branches - idempotent migrations using `CASCADE`
-when dropping should make it possible to do this with little issue (other
-than the implicit data loss of dropping tables/columns/etc).
+The intention is that developers can work on different migrations in parallel,
+and can switch between `git` branches - idempotent migrations using `CASCADE`
+when dropping should make it possible to do this with little issue (other than
+the implicit data loss of dropping tables/columns/etc).
 
 `graphile-migrate commit`, on the other hand, should be linear - one way to
 approach this is to only commit a migration immediately before it is merged to
@@ -221,6 +226,12 @@ CREATE OR REPLACE FUNCTION ...
 ```
 
 ## TODO:
+
+- [ ] Use a proper CLI parsing library
+
+- [ ] Store pgSettings with committed transactions to protect against user edits
+
+- [ ] Ability to disable transaction in a single migration
 
 - [ ] Add automated tests
 
