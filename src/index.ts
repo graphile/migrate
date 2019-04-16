@@ -19,10 +19,27 @@ import { exec as rawExec } from "child_process";
 import { promisify } from "util";
 import { calculateHash } from "./hash";
 import * as pgMinify from "pg-minify";
+import chalk from "chalk";
+
+function indent(text: string, spaces: number) {
+  const indentString = " ".repeat(spaces);
+  return indentString + text.replace(/\n(?!$)/g, "\n" + indentString);
+}
 
 const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
 
 const exec = promisify(rawExec);
+//
+const logDbError = (e: Error) => {
+  // tslint:disable no-console
+  console.error();
+  console.error(
+    chalk.red.bold(`🛑 Error occurred whilst processing migration`)
+  );
+  console.error(indent(e.stack ? e.stack : e.message, 4));
+  console.error();
+  // tslint:enable no-console
+};
 
 export async function migrate(settings: Settings, shadow = false) {
   const parsedSettings = await parseSettings(settings, shadow);
@@ -59,6 +76,7 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
   if (!connectionString) {
     throw new Error("Could not determine connection string");
   }
+  const logSuffix = shadow ? "[shadow]" : "";
   await withClient(
     connectionString,
     parsedSettings,
@@ -74,11 +92,22 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
           pgClient,
           parsedSettings,
           context,
-          migration
+          migration,
+          logSuffix
         );
       }
       // tslint:disable-next-line no-console
-      console.log("graphile-migrate: Up to date");
+      console.log(
+        `graphile-migrate${logSuffix}: ${
+          lastMigration
+            ? "Up to date"
+            : remainingMigrations.length
+            ? `Up to date — ${
+                remainingMigrations.length
+              } committed migrations executed`
+            : `Up to date — no committed migrations to run`
+        }`
+      );
     }
   );
 }
@@ -125,8 +154,7 @@ async function _watch(
         `[${new Date().toISOString()}]: Finished (${duration.toFixed(0)}ms)`
       );
     } catch (e) {
-      // tslint:disable-next-line no-console
-      console.error(e);
+      logDbError(e);
     }
   }
   function queue() {
@@ -251,15 +279,19 @@ export async function _commit(
   await _reset(parsedSettings, true, rootConnectionString);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
+  console.log(
+    `graphile-migrate: New migration '${newMigrationFilename}' created`
+  );
   try {
     await _migrate(parsedSettings, true);
     await _migrate(parsedSettings);
     await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
   } catch (e) {
-    console.error(e);
+    logDbError(e);
     console.error("ABORTING...");
     await fsp.writeFile(currentMigrationPath, body);
     await fsp.unlink(newMigrationFilepath);
     console.error("ABORTED AND ROLLED BACK");
+    process.exitCode = 1;
   }
 }

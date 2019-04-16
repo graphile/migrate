@@ -191,23 +191,23 @@ export async function runStringMigration(
     await pgClient.query({
       text: body,
     });
+    if (committedMigration) {
+      const { hash, previousHash, filename } = committedMigration;
+      await pgClient.query({
+        name: "migration-insert",
+        text:
+          "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
+        values: [hash, previousHash, filename],
+      });
+    }
+    if (transaction) {
+      await pgClient.query("commit");
+    }
   } catch (e) {
-    // tslint:disable-next-line no-console
-    console.error(`Error occurred whilst processing migration: ${e.message}`);
-    // tslint:disable-next-line no-console
-    // console.error(e);
-  }
-  if (committedMigration) {
-    const { hash, previousHash, filename } = committedMigration;
-    await pgClient.query({
-      name: "migration-insert",
-      text:
-        "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
-      values: [hash, previousHash, filename],
-    });
-  }
-  if (transaction) {
-    await pgClient.query("commit");
+    if (transaction) {
+      await pgClient.query("rollback");
+    }
+    throw e;
   }
 }
 
@@ -215,7 +215,8 @@ export async function runCommittedMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings,
   context: Context,
-  committedMigration: FileMigration
+  committedMigration: FileMigration,
+  logSuffix: string
 ) {
   const { hash, filename, body, previousHash } = committedMigration;
   // Check the hash
@@ -226,18 +227,12 @@ export async function runCommittedMigration(
     );
   }
   // tslint:disable-next-line no-console
-  console.log(`graphile-migrate: Running migration '${filename}'`);
-  try {
-    await runStringMigration(
-      pgClient,
-      parsedSettings,
-      context,
-      body,
-      committedMigration
-    );
-  } catch (e) {
-    // tslint:disable-next-line no-console
-    console.error("Migration failed: ", e);
-    process.exit(1);
-  }
+  console.log(`graphile-migrate${logSuffix}: Running migration '${filename}'`);
+  await runStringMigration(
+    pgClient,
+    parsedSettings,
+    context,
+    body,
+    committedMigration
+  );
 }
