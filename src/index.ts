@@ -274,7 +274,7 @@ export async function _commit(
 
   const hash = calculateHash(body, lastMigration && lastMigration.hash);
   const finalBody = `--! Previous: ${
-    lastMigration ? lastMigration.filename : "-"
+    lastMigration ? lastMigration.hash : "-"
   }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
   await _reset(parsedSettings, true, rootConnectionString);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;

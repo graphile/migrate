@@ -149,7 +149,7 @@ export async function getAllMigrations(
         throw new Error(
           `Previous migration with hash '${previous.hash}' doesn't match '${
             migration.filename
-          }''s expected previous hash ${migration.previousHash}`
+          }''s expected previous hash '${migration.previousHash}'`
         );
       }
     }
