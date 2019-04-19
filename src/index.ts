@@ -268,7 +268,7 @@ export async function _commit(
   const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
   const body = await fsp.readFile(currentMigrationPath, "utf8");
   const minifiedBody = pgMinify(body);
-  if (minifiedBody.trim() === "") {
+  if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
 
