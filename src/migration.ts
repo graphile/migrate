@@ -3,6 +3,7 @@ import { Client, Context } from "./pg";
 import * as fsp from "./fsp";
 import { ParsedSettings } from "./settings";
 import memoize from "./memoize";
+import { runQueryWithErrorInstrumentation } from "./instrumentation";
 
 // NEVER CHANGE THESE!
 const PREVIOUS = "--! Previous: ";
@@ -174,6 +175,7 @@ export async function runStringMigration(
   parsedSettings: ParsedSettings,
   context: Context,
   rawBody: string,
+  filename: string,
   committedMigration?: FileMigration
 ) {
   const placeholderReplacement = generatePlaceholderReplacement(
@@ -188,9 +190,7 @@ export async function runStringMigration(
     await pgClient.query("begin");
   }
   try {
-    await pgClient.query({
-      text: body,
-    });
+    await runQueryWithErrorInstrumentation(pgClient, body, filename);
     if (committedMigration) {
       const { hash, previousHash, filename } = committedMigration;
       await pgClient.query({
@@ -233,6 +233,7 @@ export async function runCommittedMigration(
     parsedSettings,
     context,
     body,
+    filename,
     committedMigration
   );
 }

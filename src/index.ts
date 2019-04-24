@@ -20,23 +20,23 @@ import { promisify } from "util";
 import { calculateHash } from "./hash";
 import * as pgMinify from "pg-minify";
 import chalk from "chalk";
-
-function indent(text: string, spaces: number) {
-  const indentString = " ".repeat(spaces);
-  return indentString + text.replace(/\n(?!$)/g, "\n" + indentString);
-}
+import indent from "./indent";
 
 const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
 
 const exec = promisify(rawExec);
-//
+
 const logDbError = (e: Error) => {
   // tslint:disable no-console
   console.error();
-  console.error(
-    chalk.red.bold(`🛑 Error occurred whilst processing migration`)
-  );
-  console.error(indent(e.stack ? e.stack : e.message, 4));
+  if (e["_gmMessageOverride"]) {
+    console.error(e["_gmMessageOverride"]);
+  } else {
+    console.error(
+      chalk.red.bold(`🛑 Error occurred whilst processing migration`)
+    );
+    console.error(indent(e.stack ? e.stack : e.message, 4));
+  }
   console.error();
   // tslint:enable no-console
 };
@@ -145,7 +145,13 @@ async function _watch(
         parsedSettings.connectionString,
         parsedSettings,
         (pgClient, context) =>
-          runStringMigration(pgClient, parsedSettings, context, body)
+          runStringMigration(
+            pgClient,
+            parsedSettings,
+            context,
+            body,
+            "current.sql"
+          )
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
