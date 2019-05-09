@@ -40,7 +40,7 @@
     "chokidar": "^2.1.1",
     "pg": ">=6.5 <8",
     "pg-connection-string": "^2.0.0",
-    "pg-minify": "^0.5.5"
+    "pg-minify": "^1.1.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",
