@@ -129,9 +129,15 @@ use library mode right now. CLI is more stable.
 Configuration goes in `.gmrc`, which is a JSON file with the following keys:
 
 - `connectionString` — optional, alternatively set `DATABASE_URL` environment
-  variable
+  variable, this is your main development database. If you run
+  `graphile-migrate reset` this will be dropped without warning, so be careful.
 - `shadowConnectionString` — optional, alternatively set `SHADOW_DATABASE_URL`
-  environment variable
+  environment variable. **Should not already exist.**
+- `rootConnectionString` — optional (defaults to "template1"), alternatively
+  set `ROOT_DATABASE_URL` environment variable; this is used to connect to
+  the database with superuser privileges to drop and re-create the relevant
+  databases (via the `reset` command directly, or via the `commit` command for
+  the shadow database).
 - `pgSettings` — optional string-string key-value object defining settings to
   set in PostgreSQL when migrating. Useful for setting `search_path` for
   example. Beware of changing this, a full reset will use the new values which

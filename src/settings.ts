@@ -76,7 +76,9 @@ export async function parseSettings(
 
   const rootConnectionString = await check(
     "rootConnectionString",
-    (rawRootConnectionString = "template1"): string => {
+    (
+      rawRootConnectionString = process.env.ROOT_DATABASE_URL || "template1"
+    ): string => {
       if (typeof rawRootConnectionString !== "string") {
         throw new Error(
           "Expected a string, or for DATABASE_URL envvar to be set"
