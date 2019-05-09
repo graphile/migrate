@@ -192,12 +192,19 @@ export async function _reset(parsedSettings: ParsedSettings, shadow: boolean) {
         ? parsedSettings.shadowDatabaseName
         : parsedSettings.databaseName;
       const databaseOwner = parsedSettings.databaseOwner;
+      const logSuffix = shadow ? "[shadow]" : "";
       await pgClient.query(`DROP DATABASE IF EXISTS ${databaseName};`);
+      console.log(
+        `graphile-migrate${logSuffix}: dropped database '${databaseName}'`
+      );
       await pgClient.query(
         `CREATE DATABASE ${databaseName} OWNER ${databaseOwner};`
       );
       await pgClient.query(
         `REVOKE ALL ON DATABASE ${databaseName} FROM PUBLIC;`
+      );
+      console.log(
+        `graphile-migrate${logSuffix}: recreated database '${databaseName}'`
       );
     }
   );
@@ -250,6 +257,7 @@ export async function _reset(parsedSettings: ParsedSettings, shadow: boolean) {
   }
   await _migrate(parsedSettings, shadow);
 }
+
 export async function _commit(parsedSettings: ParsedSettings) {
   const { migrationsFolder } = parsedSettings;
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
