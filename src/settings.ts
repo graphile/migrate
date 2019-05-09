@@ -14,6 +14,7 @@ export function isCommandSpec(o: unknown): o is CommandSpec {
 export interface Settings {
   connectionString?: string;
   shadowConnectionString?: string;
+  rootConnectionString?: string;
   databaseOwner?: string;
   pgSettings?: {
     [key: string]: string;
@@ -26,6 +27,7 @@ export interface Settings {
 
 export interface ParsedSettings extends Settings {
   connectionString: string;
+  rootConnectionString: string;
   databaseOwner: string;
   migrationsFolder: string;
   databaseName: string;
@@ -69,6 +71,18 @@ export async function parseSettings(
         );
       }
       return rawConnectionString;
+    }
+  );
+
+  const rootConnectionString = await check(
+    "rootConnectionString",
+    (rawRootConnectionString = "template1"): string => {
+      if (typeof rawRootConnectionString !== "string") {
+        throw new Error(
+          "Expected a string, or for DATABASE_URL envvar to be set"
+        );
+      }
+      return rawRootConnectionString;
     }
   );
 
@@ -228,6 +242,7 @@ export async function parseSettings(
   // tslint:enable no-string-literal
   return {
     ...settings,
+    rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
     databaseOwner: databaseOwner!,
     migrationsFolder,

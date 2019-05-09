@@ -51,21 +51,14 @@ export async function watch(settings: Settings, once = false, shadow = false) {
   return _watch(parsedSettings, once, shadow);
 }
 
-export async function reset(
-  settings: Settings,
-  shadow = false,
-  rootConnectionString = "template1"
-) {
+export async function reset(settings: Settings, shadow = false) {
   const parsedSettings = await parseSettings(settings, shadow);
-  return _reset(parsedSettings, shadow, rootConnectionString);
+  return _reset(parsedSettings, shadow);
 }
 
-export async function commit(
-  settings: Settings,
-  rootConnectionString = "template1"
-) {
+export async function commit(settings: Settings) {
   const parsedSettings = await parseSettings(settings, true);
-  return _commit(parsedSettings, rootConnectionString);
+  return _commit(parsedSettings);
 }
 /**********/
 
@@ -184,28 +177,30 @@ async function _watch(
   queue();
 }
 
-export async function _reset(
-  parsedSettings: ParsedSettings,
-  shadow: boolean,
-  rootConnectionString = "template1"
-) {
+export async function _reset(parsedSettings: ParsedSettings, shadow: boolean) {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
   if (!connectionString) {
     throw new Error("Could not determine connection string for reset");
   }
-  await withClient(rootConnectionString, parsedSettings, async pgClient => {
-    const databaseName = shadow
-      ? parsedSettings.shadowDatabaseName
-      : parsedSettings.databaseName;
-    const databaseOwner = parsedSettings.databaseOwner;
-    await pgClient.query(`DROP DATABASE IF EXISTS ${databaseName};`);
-    await pgClient.query(
-      `CREATE DATABASE ${databaseName} OWNER ${databaseOwner};`
-    );
-    await pgClient.query(`REVOKE ALL ON DATABASE ${databaseName} FROM PUBLIC;`);
-  });
+  await withClient(
+    parsedSettings.rootConnectionString,
+    parsedSettings,
+    async pgClient => {
+      const databaseName = shadow
+        ? parsedSettings.shadowDatabaseName
+        : parsedSettings.databaseName;
+      const databaseOwner = parsedSettings.databaseOwner;
+      await pgClient.query(`DROP DATABASE IF EXISTS ${databaseName};`);
+      await pgClient.query(
+        `CREATE DATABASE ${databaseName} OWNER ${databaseOwner};`
+      );
+      await pgClient.query(
+        `REVOKE ALL ON DATABASE ${databaseName} FROM PUBLIC;`
+      );
+    }
+  );
   if (parsedSettings.afterReset) {
     const afterReset = Array.isArray(parsedSettings.afterReset)
       ? parsedSettings.afterReset
@@ -255,10 +250,7 @@ export async function _reset(
   }
   await _migrate(parsedSettings, shadow);
 }
-export async function _commit(
-  parsedSettings: ParsedSettings,
-  rootConnectionString = "template1"
-) {
+export async function _commit(parsedSettings: ParsedSettings) {
   const { migrationsFolder } = parsedSettings;
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   const allMigrations = await getAllMigrations(parsedSettings);
@@ -282,7 +274,7 @@ export async function _commit(
   const finalBody = `--! Previous: ${
     lastMigration ? lastMigration.hash : "-"
   }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
-  await _reset(parsedSettings, true, rootConnectionString);
+  await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
   console.log(
