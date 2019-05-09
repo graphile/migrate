@@ -34,6 +34,10 @@ software so I can justify allocating additional time to it.
 
 **HIGHLY EXPERIMENTAL**
 
+The interface is raw and doesn't ask for confirmation (e.g. the
+`graphile-migrate reset` command will drop and re-create that database without
+asking for confirmation).
+
 There are no automated tests yet, and APIs may still change. (Pull requests to
 add tests welcome!)
 
