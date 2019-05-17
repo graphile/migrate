@@ -23,6 +23,7 @@ export interface Settings {
     [key: string]: string;
   };
   afterReset?: string | Array<string | CommandSpec>;
+  dumpCommand?: string;
 }
 
 export interface ParsedSettings extends Settings {
@@ -32,6 +33,7 @@ export interface ParsedSettings extends Settings {
   migrationsFolder: string;
   databaseName: string;
   shadowDatabaseName?: string;
+  dumpCommand?: string;
 }
 
 export async function parseSettings(
@@ -205,6 +207,15 @@ export async function parseSettings(
     }
   });
 
+  const dumpCommand = await check("dumpCommand", dumpCommand => {
+    if (!dumpCommand || typeof dumpCommand == "string") {
+      return dumpCommand;
+    } else {
+      throw new Error(
+        `Expected dumpCommand to be a string if present; recieved '${typeof dumpCommand}'`
+      );
+    }
+  });
   /******/
 
   const uncheckedKeys = keysToCheck.filter(key => checkedKeys.indexOf(key) < 0);
@@ -254,5 +265,6 @@ export async function parseSettings(
       : void 0,
     shadowDatabaseName: shadowDatabaseName ? shadowDatabaseName : void 0,
     placeholders,
+    dumpCommand,
   };
 }
