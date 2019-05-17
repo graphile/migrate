@@ -207,15 +207,18 @@ export async function parseSettings(
     }
   });
 
-  const dumpCommand = await check("dumpCommand", dumpCommand => {
-    if (!dumpCommand || typeof dumpCommand == "string") {
-      return dumpCommand;
-    } else {
-      throw new Error(
-        `Expected dumpCommand to be a string if present; recieved '${typeof dumpCommand}'`
-      );
+  const dumpCommand = await check(
+    "dumpCommand",
+    async (dumpCommand: string) => {
+      if (!dumpCommand || typeof dumpCommand == "string") {
+        return dumpCommand;
+      } else {
+        throw new Error(
+          `Expected dumpCommand to be a string if present; recieved '${typeof dumpCommand}'`
+        );
+      }
     }
-  });
+  );
   /******/
 
   const uncheckedKeys = keysToCheck.filter(key => checkedKeys.indexOf(key) < 0);

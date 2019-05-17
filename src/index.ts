@@ -90,7 +90,23 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
         );
       }
 
+      // tslint:disable-next-line no-console
+      console.log(
+        `graphile-migrate${logSuffix}: ${
+          lastMigration
+            ? "Up to date"
+            : remainingMigrations.length
+            ? `Up to date — ${
+                remainingMigrations.length
+              } committed migrations executed`
+            : `Up to date — no committed migrations to run`
+        }`
+      );
+
       if (parsedSettings.dumpCommand) {
+        // tslint:disable-next-line no-console
+        console.log(`graphile-migrate${logSuffix}: running dump`);
+
         const { stdout, stderr } = await exec(parsedSettings.dumpCommand, {
           env: {
             PATH: process.env.PATH,
@@ -108,19 +124,6 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
           console.error(stderr);
         }
       }
-
-      // tslint:disable-next-line no-console
-      console.log(
-        `graphile-migrate${logSuffix}: ${
-          lastMigration
-            ? "Up to date"
-            : remainingMigrations.length
-            ? `Up to date — ${
-                remainingMigrations.length
-              } committed migrations executed`
-            : `Up to date — no committed migrations to run`
-        }`
-      );
     }
   );
 }
