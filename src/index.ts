@@ -89,6 +89,26 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
           logSuffix
         );
       }
+
+      if (parsedSettings.dumpCommand) {
+        const { stdout, stderr } = await exec(parsedSettings.dumpCommand, {
+          env: {
+            PATH: process.env.PATH,
+            DATABASE_URL: connectionString,
+          },
+          encoding: "utf8",
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        if (stdout) {
+          // tslint:disable-next-line no-console
+          console.log(stdout);
+        }
+        if (stderr) {
+          // tslint:disable-next-line no-console
+          console.error(stderr);
+        }
+      }
+
       // tslint:disable-next-line no-console
       console.log(
         `graphile-migrate${logSuffix}: ${
