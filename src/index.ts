@@ -103,33 +103,46 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
         }`
       );
 
-      if (parsedSettings.dumpCommand) {
-        // tslint:disable-next-line no-console
-        console.log(`graphile-migrate${logSuffix}: running dump`);
-
-        const { stdout, stderr } = await exec(parsedSettings.dumpCommand, {
-          env: {
-            PATH: process.env.PATH,
-            DATABASE_URL: connectionString,
-          },
-          encoding: "utf8",
-          maxBuffer: 10 * 1024 * 1024,
-        });
-        if (stdout) {
-          // tslint:disable-next-line no-console
-          console.log(stdout);
-        }
-        if (stderr) {
-          // tslint:disable-next-line no-console
-          console.error(stderr);
-        }
-      }
+      await _dump(parsedSettings, shadow);
     }
   );
 }
 
 function getCurrentMigrationPath(parsedSettings: ParsedSettings) {
   return `${parsedSettings.migrationsFolder}/current.sql`;
+}
+
+async function _dump(parsedSettings: ParsedSettings, shadow = false) {
+  if (parsedSettings.dumpCommand) {
+    const logSuffix = shadow ? "[shadow]" : "";
+
+    // tslint:disable-next-line no-console
+    console.log(`graphile-migrate${logSuffix}: running dump`);
+
+    const connectionString = shadow
+      ? parsedSettings.shadowConnectionString
+      : parsedSettings.connectionString;
+    if (!connectionString) {
+      throw new Error("Could not determine connection string for dump");
+    }
+
+    const { stdout, stderr } = await exec(parsedSettings.dumpCommand, {
+      env: {
+        PATH: process.env.PATH,
+        DATABASE_URL: connectionString,
+      },
+      encoding: "utf8",
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    if (stdout) {
+      // tslint:disable-next-line no-console
+      console.log(stdout);
+    }
+    if (stderr) {
+      // tslint:disable-next-line no-console
+      console.error(stderr);
+    }
+  }
 }
 
 async function _watch(
@@ -175,6 +188,8 @@ async function _watch(
       console.log(
         `[${new Date().toISOString()}]: Finished (${duration.toFixed(0)}ms)`
       );
+
+      await _dump(parsedSettings, shadow);
     } catch (e) {
       logDbError(e);
     }
