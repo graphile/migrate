@@ -185,7 +185,7 @@ export async function _reset(parsedSettings: ParsedSettings, shadow: boolean) {
     throw new Error("Could not determine connection string for reset");
   }
   await withClient(
-    parsedSettings.rootConnectionString,
+    connectionString,
     parsedSettings,
     async pgClient => {
       const databaseName = shadow
