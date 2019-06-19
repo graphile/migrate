@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as fs from "fs";
-import { migrate, watch, reset, commit } from "./index";
+import { migrate, watch, reset, commit, status } from "./index";
 
 function getSettings() {
   let data;
@@ -33,6 +33,31 @@ async function main() {
     await reset(getSettings(), shadow);
   } else if (cmd === "commit") {
     await commit(getSettings());
+  } else if (cmd === "status") {
+    let exitCode = 0;
+    const details = await status(getSettings());
+    const remainingCount = details.remainingMigrations.length;
+    if (remainingCount) {
+      console.log(
+        `There are ${remainingCount} committed migrations pending:\n\n  ${details.remainingMigrations.join(
+          "\n  "
+        )}`
+      );
+      exitCode += 1;
+    }
+    if (details.hasCurrentMigration) {
+      if (exitCode) {
+        console.log();
+      }
+      console.log(
+        "The current.sql migration is not empty and has not been committed."
+      );
+      exitCode += 2;
+    }
+    process.exitCode = exitCode;
+    if (exitCode === 0) {
+      console.log("Up to date.");
+    }
   } else {
     // tslint:disable-next-line no-console
     console.error(`Command '${cmd || ""}' not understood`);
