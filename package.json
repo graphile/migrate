@@ -1,6 +1,6 @@
 {
   "name": "graphile-migrate",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Opinionated SQL-powered migration tool for PostgreSQL",
   "main": "dist/index.js",
   "scripts": {
@@ -64,7 +64,16 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "__tests__/.*\\.test\\.[tj]s$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }
