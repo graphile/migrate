@@ -42,9 +42,11 @@ export const generatePlaceholderReplacement = memoize(
     };
 
     const regexp = new RegExp(
-      Object.keys(placeholders)
-        .map(escapeRegexp)
-        .join("|"),
+      "(?:" +
+        Object.keys(placeholders)
+          .map(escapeRegexp)
+          .join("|") +
+        ")\\b",
       "g"
     );
     return str => str.replace(regexp, keyword => placeholders[keyword] || "");
