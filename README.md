@@ -115,6 +115,30 @@ Drop and re-create the database, and re-run all the committed migrations from th
 
 If `--shadow` is specified, the shadow database will be reset rather than the main database.
 
+### `graphile-migrate status`
+
+[EXPERIMENTAL!]
+
+Exits with a bitmap status code indicating statuses:
+
+- 1 if there are committed migrations that have not been executed yet
+- 2 if the `current.sql` file is non-empty (ignoring comments)
+
+If both of the above are true then the output status will be 3 (1+2). If
+neither are true, exit status will be 0 (success).
+
+Also outputs helpful messages:
+
+```
+There are 3 committed migrations pending:
+
+  000001.sql
+  000002.sql
+  000003.sql
+
+The current.sql migration is not empty and has not been committed.
+```
+
 ## Library usage
 
 It's possible to consume this module as a JavaScript library rather than via
