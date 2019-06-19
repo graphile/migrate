@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "eslint 'src/**/*'",
     "prepack": "tsc && chmod +x dist/cli.js",
+    "test": "jest",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && tsc --watch"
   },
   "bin": {
@@ -58,7 +59,12 @@
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.3.3333"
   },
-  "files": [
-    "dist"
-  ]
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "__tests__/.*\\.test\\.[tj]s$",
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+  },
+  "files": ["dist"]
 }
