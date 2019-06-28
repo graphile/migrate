@@ -157,11 +157,13 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   `graphile-migrate reset` this will be dropped without warning, so be careful.
 - `shadowConnectionString` — optional, alternatively set `SHADOW_DATABASE_URL`
   environment variable. **Should not already exist.**
-- `rootConnectionString` — optional (defaults to "template1"), alternatively
+- `rootConnectionString` — optional, alternatively
   set `ROOT_DATABASE_URL` environment variable; this is used to connect to
   the database with superuser privileges to drop and re-create the relevant
   databases (via the `reset` command directly, or via the `commit` command for
-  the shadow database).
+  the shadow database). It defaults to "template1" if the key or environment variable
+  is not set so it may result in PG connection errors if a default PG `template1`
+  database is not available.
 - `pgSettings` — optional string-string key-value object defining settings to
   set in PostgreSQL when migrating. Useful for setting `search_path` for
   example. Beware of changing this, a full reset will use the new values which
