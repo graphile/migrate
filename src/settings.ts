@@ -5,6 +5,8 @@ export interface CommandSpec {
   command: string;
 }
 
+export type Commands = string | Array<string | CommandSpec>;
+
 export function isCommandSpec(o: unknown): o is CommandSpec {
   return (
     (typeof o === "object" && o && typeof o["command"] === "string") || false
@@ -22,7 +24,7 @@ export interface Settings {
   placeholders?: {
     [key: string]: string;
   };
-  afterReset?: string | Array<string | CommandSpec>;
+  afterReset?: Commands;
 }
 
 export interface ParsedSettings extends Settings {
