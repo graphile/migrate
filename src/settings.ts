@@ -185,6 +185,9 @@ export async function parseSettings(
   );
 
   await check("afterReset", async (rawAfterReset: unknown) => {
+    if (!rawAfterReset) {
+      return;
+    }
     const afterResetArray = Array.isArray(rawAfterReset)
       ? rawAfterReset
       : [rawAfterReset];
