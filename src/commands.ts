@@ -66,3 +66,29 @@ export async function runCommands(
     }
   }
 }
+
+export function makeValidateCommandCallback(migrationsFolder: string) {
+  return async (rawAfterReset: unknown) => {
+    if (!rawAfterReset) {
+      return;
+    }
+    const afterResetArray = Array.isArray(rawAfterReset)
+      ? rawAfterReset
+      : [rawAfterReset];
+    for (const afterReset of afterResetArray) {
+      if (afterReset && typeof afterReset === "string") {
+        await fsp.stat(`${migrationsFolder}/${afterReset}`);
+      } else if (
+        afterReset &&
+        typeof afterReset === "object" &&
+        typeof afterReset["command"] === "string"
+      ) {
+        // OK.
+      } else {
+        throw new Error(
+          `Expected afterReset to contain an array of strings or command specs; received '${typeof afterReset}'`
+        );
+      }
+    }
+  };
+}

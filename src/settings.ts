@@ -1,5 +1,6 @@
 import { parse } from "pg-connection-string";
 import * as fsp from "./fsp";
+import { makeValidateCommandCallback } from "./commands";
 
 export interface CommandSpec {
   command: string;
@@ -186,29 +187,9 @@ export async function parseSettings(
     }
   );
 
-  await check("afterReset", async (rawAfterReset: unknown) => {
-    if (!rawAfterReset) {
-      return;
-    }
-    const afterResetArray = Array.isArray(rawAfterReset)
-      ? rawAfterReset
-      : [rawAfterReset];
-    for (const afterReset of afterResetArray) {
-      if (afterReset && typeof afterReset === "string") {
-        await fsp.stat(`${migrationsFolder}/${afterReset}`);
-      } else if (
-        afterReset &&
-        typeof afterReset === "object" &&
-        typeof afterReset["command"] === "string"
-      ) {
-        // OK.
-      } else {
-        throw new Error(
-          `Expected afterReset to contain an array of strings or command specs; received '${typeof afterReset}'`
-        );
-      }
-    }
-  });
+  const validateCommand = makeValidateCommandCallback(migrationsFolder);
+
+  await check("afterReset", validateCommand);
 
   /******/
 
