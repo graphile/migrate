@@ -1,12 +1,26 @@
 # graphile-migrate
 
-[![Patreon sponsor button](https://img.shields.io/badge/sponsor-via%20Patreon-orange.svg)](https://patreon.com/benjie)
 [![Discord chat room](https://img.shields.io/discord/489127045289476126.svg)](http://discord.gg/graphile)
 [![Package on npm](https://img.shields.io/npm/v/graphile-migrate.svg?style=flat)](https://www.npmjs.com/package/graphile-migrate)
 ![MIT license](https://img.shields.io/npm/l/graphile-migrate.svg)
 [![Follow](https://img.shields.io/badge/twitter-@GraphileHQ-blue.svg)](https://twitter.com/GraphileHQ)
 
 Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
+
+## Crowd-funded open-source software
+
+To help us develop this software sustainably under the MIT license, we ask
+all individuals and businesses that use it to help support its ongoing
+maintenance and development via sponsorship.
+
+### [Click here to find out more about sponsors and sponsorship.](https://www.graphile.org/sponsor/)
+
+And please give some love to our featured sponsors 🤩:
+
+<table><tr>
+<td align="center"><a href="http://chads.website/"><img src="https://www.graphile.org/images/sponsors/chadf.png" width="90" height="90" alt="Chad Furman" /><br />Chad Furman</a></td>
+<td align="center"><a href="https://timescale.com/"><img src="https://www.graphile.org/images/sponsors/timescale.svg" width="90" height="90" alt="Timescale" /><br />Timescale</a></td>
+</tr></table>
 
 ## Why?
 
@@ -21,18 +35,12 @@ Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
   is instantly regenerated (without server restart) whenever the database
   changes
 
-## Crowd-funded open-source software
-
-To advance and improve this software more rapidly, I need your support. Please
-[sponsor ongoing maintenance and development via
-Patreon](https://www.patreon.com/benjie).
-
-If you're already a Patreon sponsor, please let me know you're using this
-software so I can justify allocating additional time to it.
-
 ## Status
 
 **HIGHLY EXPERIMENTAL**
+
+If you're a sponsor and you're using this software, let me know so I can
+justify allocating additional time to it.
 
 The interface is raw and doesn't ask for confirmation (e.g. the
 `graphile-migrate reset` command will drop and re-create that database without
