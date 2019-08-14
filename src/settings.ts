@@ -185,13 +185,12 @@ export async function parseSettings(
   );
 
   await check("afterReset", async (rawAfterReset: unknown) => {
-    let afterResetArray;
-    afterResetArray = !rawAfterReset ? [] : [rawAfterReset];
-
-    if (Array.isArray(rawAfterReset)) {
-      afterResetArray = rawAfterReset;
+    if (!rawAfterReset) {
+      return;
     }
-
+    const afterResetArray = Array.isArray(rawAfterReset)
+      ? rawAfterReset
+      : [rawAfterReset];
     for (const afterReset of afterResetArray) {
       if (afterReset && typeof afterReset === "string") {
         await fsp.stat(`${migrationsFolder}/${afterReset}`);
