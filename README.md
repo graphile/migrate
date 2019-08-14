@@ -219,7 +219,7 @@ environmental variables being set:
   ],
   "afterAllMigrations": [
     {
-      "command": "pg_dump --schema-only --no-owner --file=data/schema.sql \"$GM_DBURL\""
+      "command": "pg_dump --schema-only --no-owner --exclude-schema=graphile_migrate --file=data/schema.sql \"$GM_DBURL\""
     }
   ]
 }
