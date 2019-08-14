@@ -1,14 +1,13 @@
 import { parse } from "pg-connection-string";
-import * as fsp from "./fsp";
-import { makeValidateCommandCallback } from "./commands";
+import { makeValidateActionCallback } from "./actions";
 
-export interface CommandSpec {
+export interface CommandActionSpec {
   command: string;
 }
 
-export type Commands = string | Array<string | CommandSpec>;
+export type Actions = string | Array<string | CommandActionSpec>;
 
-export function isCommandSpec(o: unknown): o is CommandSpec {
+export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
   return (
     (typeof o === "object" && o && typeof o["command"] === "string") || false
   );
@@ -25,7 +24,7 @@ export interface Settings {
   placeholders?: {
     [key: string]: string;
   };
-  afterReset?: Commands;
+  afterReset?: Actions;
 }
 
 export interface ParsedSettings extends Settings {
@@ -187,9 +186,9 @@ export async function parseSettings(
     }
   );
 
-  const validateCommand = makeValidateCommandCallback(migrationsFolder);
+  const validateAction = makeValidateActionCallback(migrationsFolder);
 
-  await check("afterReset", validateCommand);
+  await check("afterReset", validateAction);
 
   /******/
 

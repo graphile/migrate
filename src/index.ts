@@ -13,7 +13,7 @@ import { calculateHash } from "./hash";
 import * as pgMinify from "pg-minify";
 import chalk from "chalk";
 import indent from "./indent";
-import { runCommands } from "./commands";
+import { executeActions } from "./actions";
 
 const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
 
@@ -225,7 +225,7 @@ export async function _reset(parsedSettings: ParsedSettings, shadow: boolean) {
       );
     }
   );
-  await runCommands(parsedSettings, shadow, parsedSettings.afterReset);
+  await executeActions(parsedSettings, shadow, parsedSettings.afterReset);
   await _migrate(parsedSettings, shadow);
 }
 

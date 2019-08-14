@@ -186,11 +186,9 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   The special value `!ENV` will tell graphile-migrate to
   load the setting from the environment variable with the same name.
 - `afterReset` — optional list of actions to execute after the database has
-  been created but before the migrations run. String values are interpreted as
-  the name of a file in the migrations folder to execute once the database has
-  been reset; useful for setting default permissions, installing extensions,
-  and the like. Objects with a `command` key specify shell actions (e.g.
-  installing a separately managed worker schema into the database).
+  been created but before the migrations run, useful to set default
+  permissions, install extensions or install external schemas like
+  `graphile-worker` that your migrations may depend on. See "Actions" below.
 
 ```json
 {
@@ -204,6 +202,23 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   "afterReset": ["afterReset.sql", { "command": "graphile-worker --once" }]
 }
 ```
+
+## Actions
+
+We support certain "actions" after certain events happen; for example see
+`afterReset` mentioned above. Actions should be
+specified as a list of strings or action spec objects.
+
+String values are interpreted as the name of a SQL file in the `migrations/`
+folder to execute against the database (e.g. to set permissions, load data,
+install extensions, etc).
+
+Objects with a `command` key specify shell actions (e.g. running an external
+command such as `graphile-worker` which might install a separately managed
+worker schema into the database, or running something like `pg_dump` to dump
+the schema).
+
+Objects with other keys are reserved for future usage.
 
 ## Collaboration
 

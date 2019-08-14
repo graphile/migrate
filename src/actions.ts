@@ -1,5 +1,5 @@
 import { withClient } from "./pg";
-import { ParsedSettings, Commands, isCommandSpec } from "./settings";
+import { ParsedSettings, Actions, isCommandActionSpec } from "./settings";
 import { generatePlaceholderReplacement } from "./migration";
 import * as fsp from "./fsp";
 import { exec as rawExec } from "child_process";
@@ -7,12 +7,12 @@ import { promisify } from "util";
 
 const exec = promisify(rawExec);
 
-export async function runCommands(
+export async function executeActions(
   parsedSettings: ParsedSettings,
   shadow = false,
-  rawCommands: Commands | undefined
+  rawActions: Actions | undefined
 ) {
-  if (!rawCommands) {
+  if (!rawActions) {
     return;
   }
   const connectionString = shadow
@@ -23,16 +23,16 @@ export async function runCommands(
       "Could not determine connection string for running commands"
     );
   }
-  const allCommands = Array.isArray(rawCommands) ? rawCommands : [rawCommands];
-  for (const commandSpec of allCommands) {
-    if (typeof commandSpec === "string") {
+  const allActions = Array.isArray(rawActions) ? rawActions : [rawActions];
+  for (const actionSpec of allActions) {
+    if (typeof actionSpec === "string") {
       // SQL
       await withClient(
         connectionString,
         parsedSettings,
         async (pgClient, context) => {
           const body = await fsp.readFile(
-            `${parsedSettings.migrationsFolder}/${commandSpec}`,
+            `${parsedSettings.migrationsFolder}/${actionSpec}`,
             "utf8"
           );
           const query = generatePlaceholderReplacement(parsedSettings, context)(
@@ -45,9 +45,9 @@ export async function runCommands(
           });
         }
       );
-    } else if (isCommandSpec(commandSpec)) {
+    } else if (isCommandActionSpec(actionSpec)) {
       // Run the command
-      const { stdout, stderr } = await exec(commandSpec.command, {
+      const { stdout, stderr } = await exec(actionSpec.command, {
         env: {
           PATH: process.env.PATH,
           DATABASE_URL: connectionString,
@@ -67,7 +67,7 @@ export async function runCommands(
   }
 }
 
-export function makeValidateCommandCallback(migrationsFolder: string) {
+export function makeValidateActionCallback(migrationsFolder: string) {
   return async (rawAfterReset: unknown) => {
     if (!rawAfterReset) {
       return;
