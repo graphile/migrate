@@ -189,6 +189,10 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   been created but before the migrations run, useful to set default
   permissions, install extensions or install external schemas like
   `graphile-worker` that your migrations may depend on. See "Actions" below.
+- `afterAllMigrations` — optional list of actions to execute after all the
+  migrations have ran, useful for performing a tasks like dumping the database
+  or regenerating dependent data (GraphQL schema, type definitions, etc). See
+  "Actions" below.
 
 ```json
 {
@@ -206,7 +210,7 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
 ## Actions
 
 We support certain "actions" after certain events happen; for example see
-`afterReset` mentioned above. Actions should be
+`afterReset` and `afterAllMigrations` mentioned above. Actions should be
 specified as a list of strings or action spec objects.
 
 String values are interpreted as the name of a SQL file in the `migrations/`

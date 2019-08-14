@@ -107,17 +107,26 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
         );
       }
       // tslint:disable-next-line no-console
-      console.log(
-        `graphile-migrate${logSuffix}: ${
-          lastMigration
-            ? "Up to date"
-            : remainingMigrations.length
-            ? `Up to date — ${
-                remainingMigrations.length
-              } committed migrations executed`
-            : `Up to date — no committed migrations to run`
-        }`
-      );
+      if (remainingMigrations.length > 0) {
+        await executeActions(
+          parsedSettings,
+          shadow,
+          parsedSettings.afterAllMigrations
+        );
+        console.log(
+          `graphile-migrate${logSuffix}: Up to date — ${
+            remainingMigrations.length
+          } committed migrations executed`
+        );
+      } else {
+        console.log(
+          `graphile-migrate${logSuffix}: ${
+            lastMigration
+              ? "Already up to date"
+              : `Up to date — no committed migrations to run`
+          }`
+        );
+      }
     }
   );
 }

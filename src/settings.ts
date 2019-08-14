@@ -25,6 +25,7 @@ export interface Settings {
     [key: string]: string;
   };
   afterReset?: Actions;
+  afterAllMigrations?: Actions;
 }
 
 export interface ParsedSettings extends Settings {
@@ -189,6 +190,7 @@ export async function parseSettings(
   const validateAction = makeValidateActionCallback(migrationsFolder);
 
   await check("afterReset", validateAction);
+  await check("afterAllMigrations", validateAction);
 
   /******/
 
