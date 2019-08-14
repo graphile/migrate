@@ -218,7 +218,9 @@ environmental variables being set:
     { "command": "npx --no-install graphile-worker --once" }
   ],
   "afterAllMigrations": [
-    { "command": "pg_dump -s -O -f data/schema.sql \"$DATABASE_URL\"" }
+    {
+      "command": "pg_dump --schema-only --no-owner --file=data/schema.sql \"$GM_DBURL\""
+    }
   ]
 }
 ```
@@ -236,8 +238,9 @@ install extensions, etc).
 Objects with a `command` key specify shell actions (e.g. running an external
 command such as `graphile-worker` which might install a separately managed
 worker schema into the database, or running something like `pg_dump` to dump
-the schema). Commands have access to the `$DATABASE_URL` envvar which will be
-set to the relevant database URL (e.g. the one that was just reset/migrated).
+the schema). Commands have access to the `$GM_DBURL` envvar which will be set
+to the relevant database URL (e.g. the one that was just reset/migrated) and
+`$GM_SHADOW` which will be set to `1` if we're dealing with the shadow DB.
 
 Objects with other keys are reserved for future usage.
 
