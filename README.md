@@ -92,11 +92,13 @@ required).
 
 ## Usage
 
-### `graphile-migrate migrate [--shadow]`
+### `graphile-migrate migrate [--shadow] [--force]`
 
 Runs any un-executed committed migrations. Does **not** run `current.sql`. For use in production and development.
 
 If `--shadow` is specified, migrates the shadow database instead.
+
+If `--force` is specified, it will run any `afterAllMigrations` actions even if no migrations are actually ran.
 
 ### `graphile-migrate watch [--shadow] [--once]`
 
@@ -197,7 +199,7 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
 ```json
 {
   "pgSettings": {
-    "search_path": "app,app_private,app_hidden,public"
+    "search_path": "app_public,app_private,app_hidden,public"
   },
   "placeholders": {
     ":DATABASE_AUTHENTICATOR": "!ENV",

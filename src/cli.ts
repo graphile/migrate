@@ -23,7 +23,8 @@ async function main() {
   const [cmd] = argv;
   if (argv.length === 0 || cmd === "migrate") {
     const shadow = argv.indexOf("--shadow") >= 0;
-    await migrate(getSettings(), shadow);
+    const force = argv.indexOf("--force") >= 0;
+    await migrate(getSettings(), shadow, force);
   } else if (cmd === "watch") {
     const once = argv.indexOf("--once") >= 0;
     const shadow = argv.indexOf("--shadow") >= 0;

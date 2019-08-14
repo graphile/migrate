@@ -32,9 +32,13 @@ const logDbError = (e: Error) => {
   // tslint:enable no-console
 };
 
-export async function migrate(settings: Settings, shadow = false) {
+export async function migrate(
+  settings: Settings,
+  shadow = false,
+  force = false
+) {
   const parsedSettings = await parseSettings(settings, shadow);
-  return _migrate(parsedSettings, shadow);
+  return _migrate(parsedSettings, shadow, force);
 }
 
 export async function watch(settings: Settings, once = false, shadow = false) {
@@ -79,7 +83,11 @@ async function _status(parsedSettings: ParsedSettings) {
   });
 }
 
-async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
+async function _migrate(
+  parsedSettings: ParsedSettings,
+  shadow = false,
+  force = false
+) {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
@@ -106,27 +114,23 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
           logSuffix
         );
       }
-      // tslint:disable-next-line no-console
-      if (remainingMigrations.length > 0) {
+      if (remainingMigrations.length > 0 || force) {
         await executeActions(
           parsedSettings,
           shadow,
           parsedSettings.afterAllMigrations
         );
-        console.log(
-          `graphile-migrate${logSuffix}: Up to date — ${
-            remainingMigrations.length
-          } committed migrations executed`
-        );
-      } else {
-        console.log(
-          `graphile-migrate${logSuffix}: ${
-            lastMigration
-              ? "Already up to date"
-              : `Up to date — no committed migrations to run`
-          }`
-        );
       }
+      // tslint:disable-next-line no-console
+      console.log(
+        `graphile-migrate${logSuffix}: ${
+          remainingMigrations.length > 0
+            ? `${remainingMigrations.length} committed migrations executed`
+            : lastMigration
+            ? "Already up to date"
+            : `Up to date — no committed migrations to run`
+        }`
+      );
     }
   );
 }
