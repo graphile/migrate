@@ -46,28 +46,30 @@ export async function executeActions(
         }
       );
     } else if (isCommandActionSpec(actionSpec)) {
-      // Run the command
-      const { stdout, stderr } = await exec(actionSpec.command, {
-        env: {
-          PATH: process.env.PATH,
-          DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleadling.
-          GM_DBURL: connectionString,
-          ...(shadow
-            ? {
-                GM_SHADOW: "1",
-              }
-            : null),
-        },
-        encoding: "utf8",
-        maxBuffer: 10 * 1024 * 1024,
-      });
-      if (stdout) {
-        // tslint:disable-next-line no-console
-        console.log(stdout);
-      }
-      if (stderr) {
-        // tslint:disable-next-line no-console
-        console.error(stderr);
+      if (actionSpec.shadow === undefined || actionSpec.shadow === shadow) {
+        // Run the command
+        const { stdout, stderr } = await exec(actionSpec.command, {
+          env: {
+            PATH: process.env.PATH,
+            DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleadling.
+            GM_DBURL: connectionString,
+            ...(shadow
+              ? {
+                  GM_SHADOW: "1",
+                }
+              : null),
+          },
+          encoding: "utf8",
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        if (stdout) {
+          // tslint:disable-next-line no-console
+          console.log(stdout);
+        }
+        if (stderr) {
+          // tslint:disable-next-line no-console
+          console.error(stderr);
+        }
       }
     }
   }
