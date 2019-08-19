@@ -40,7 +40,7 @@
     "@types/pg": "^7.11.0",
     "chalk": "^2.4.2",
     "chokidar": "^3.0.2",
-    "pg": "^7.12.1",
+    "pg": ">=6.5 <8",
     "pg-connection-string": "^2.1.0",
     "pg-minify": "^1.4.1"
   },
