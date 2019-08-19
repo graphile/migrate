@@ -367,14 +367,19 @@ CREATE OR REPLACE FUNCTION ...;
 DROP FUNCTION IF EXISTS ... CASCADE;
 CREATE OR REPLACE FUNCTION ...
 ```
+## Disable Transaction
+Some migrations require execution outside of a transaction (e.g. to enable augmenting non-DDL-safe things, such as ENUMs in PostgreSQL). To disable wrapping a given migration file in a transaction, use the special comment `--! no-transaction` at the top of the migration file, e.g.
+
+```sql
+--! no-transaction
+ALTER TYPE user_role ADD VALUE 'Admin';
+```
 
 ## TODO:
 
 - [ ] Use a proper CLI parsing library
 
 - [ ] Store pgSettings with committed transactions to protect against user edits
-
-- [ ] Ability to disable transaction in a single migration
 
 - [ ] Add automated tests
 
