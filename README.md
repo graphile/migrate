@@ -92,11 +92,13 @@ required).
 
 ## Usage
 
-### `graphile-migrate migrate [--shadow]`
+### `graphile-migrate migrate [--shadow] [--force]`
 
 Runs any un-executed committed migrations. Does **not** run `current.sql`. For use in production and development.
 
 If `--shadow` is specified, migrates the shadow database instead.
+
+If `--force` is specified, it will run any `afterAllMigrations` actions even if no migrations are actually ran.
 
 ### `graphile-migrate watch [--shadow] [--once]`
 
@@ -160,18 +162,19 @@ use library mode right now. CLI is more stable.
 
 Configuration goes in `.gmrc`, which is a JSON file with the following keys:
 
-- `connectionString` — optional, alternatively set `DATABASE_URL` environment
-  variable, this is your main development database. If you run
+- `connectionString` (or `DATABASE_URL` envvar) — this is your main development database. If you run
   `graphile-migrate reset` this will be dropped without warning, so be careful.
-- `shadowConnectionString` — optional, alternatively set `SHADOW_DATABASE_URL`
-  environment variable. **Should not already exist.**
-- `rootConnectionString` — optional, alternatively
-  set `ROOT_DATABASE_URL` environment variable; this is used to connect to
-  the database with superuser privileges to drop and re-create the relevant
-  databases (via the `reset` command directly, or via the `commit` command for
-  the shadow database). It defaults to "template1" if the key or environment variable
-  is not set so it may result in PG connection errors if a default PG `template1`
-  database is not available.
+- `shadowConnectionString` (or `SHADOW_DATABASE_URL` envvar) — the shadow
+  database which will be dropped frequently, so don't store anything to it that
+  you care about. **This database should not already exist.**
+- `rootConnectionString` (or `ROOT_DATABASE_URL` envvar) — this is used to
+  connect to the database server with superuser privileges to drop and
+  re-create the relevant databases (via the `reset` command directly, or via
+  the `commit` command for the shadow database). It **must not** be a
+  connection to the database in `connectionString` or `shadowConnectionString`.
+  It defaults to "template1" if the key or environment variable is not set so
+  it may result in PG connection errors if a default PG `template1` database is
+  not available.
 - `pgSettings` — optional string-string key-value object defining settings to
   set in PostgreSQL when migrating. Useful for setting `search_path` for
   example. Beware of changing this, a full reset will use the new values which
@@ -186,24 +189,60 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   The special value `!ENV` will tell graphile-migrate to
   load the setting from the environment variable with the same name.
 - `afterReset` — optional list of actions to execute after the database has
-  been created but before the migrations run. String values are interpreted as
-  the name of a file in the migrations folder to execute once the database has
-  been reset; useful for setting default permissions, installing extensions,
-  and the like. Objects with a `command` key specify shell actions (e.g.
-  installing a separately managed worker schema into the database).
+  been created but before the migrations run, useful to set default
+  permissions, install extensions or install external schemas like
+  `graphile-worker` that your migrations may depend on. See "Actions" below.
+- `afterAllMigrations` — optional list of actions to execute after all the
+  migrations have ran, useful for performing a tasks like dumping the database
+  or regenerating dependent data (GraphQL schema, type definitions, etc). See
+  "Actions" below.
+
+What follows is an example configuration file that depends on the following
+environmental variables being set:
+
+- `ROOT_DATABASE_URL` - equivalent to `rootConnectionString` above, e.g. `postgres://localhost/template1`
+- `DATABASE_URL` - equivalent to `connectionString` above, e.g. `postgres://my_user:my_password@localhost/my_db`
+- `SHADOW_DATABASE_URL` - equivalent to `shadowConnectionString` above, e.g. `postgres://my_user:my_password@localhost/my_db_shadow` (should use same credentials as the )
 
 ```json
 {
   "pgSettings": {
-    "search_path": "app,app_private,app_hidden,public"
+    "search_path": "app_public,app_private,app_hidden,public"
   },
   "placeholders": {
     ":DATABASE_AUTHENTICATOR": "!ENV",
     ":DATABASE_VISITOR": "!ENV"
   },
-  "afterReset": ["afterReset.sql", { "command": "graphile-worker --once" }]
+  "afterReset": [
+    "afterReset.sql",
+    { "command": "npx --no-install graphile-worker --once" }
+  ],
+  "afterAllMigrations": [
+    {
+      "command": "pg_dump --schema-only --no-owner --exclude-schema=graphile_migrate --file=data/schema.sql \"$GM_DBURL\""
+    }
+  ]
 }
 ```
+
+## Actions
+
+We support certain "actions" after certain events happen; for example see
+`afterReset` and `afterAllMigrations` mentioned above. Actions should be
+specified as a list of strings or action spec objects.
+
+String values are interpreted as the name of a SQL file in the `migrations/`
+folder to execute against the database (e.g. to set permissions, load data,
+install extensions, etc).
+
+Objects with a `command` key specify shell actions (e.g. running an external
+command such as `graphile-worker` which might install a separately managed
+worker schema into the database, or running something like `pg_dump` to dump
+the schema). Commands have access to the `$GM_DBURL` envvar which will be set
+to the relevant database URL (e.g. the one that was just reset/migrated) and
+`$GM_SHADOW` which will be set to `1` if we're dealing with the shadow DB.
+
+Objects with other keys are reserved for future usage.
 
 ## Collaboration
 

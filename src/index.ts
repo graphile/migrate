@@ -1,11 +1,6 @@
 import * as chokidar from "chokidar";
 import { withClient } from "./pg";
-import {
-  Settings,
-  ParsedSettings,
-  parseSettings,
-  isCommandSpec,
-} from "./settings";
+import { Settings, ParsedSettings, parseSettings } from "./settings";
 import * as fsp from "./fsp";
 import {
   getAllMigrations,
@@ -13,18 +8,14 @@ import {
   getMigrationsAfter,
   runCommittedMigration,
   runStringMigration,
-  generatePlaceholderReplacement,
 } from "./migration";
-import { exec as rawExec } from "child_process";
-import { promisify } from "util";
 import { calculateHash } from "./hash";
 import * as pgMinify from "pg-minify";
 import chalk from "chalk";
 import indent from "./indent";
+import { executeActions } from "./actions";
 
 const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
-
-const exec = promisify(rawExec);
 
 const logDbError = (e: Error) => {
   // tslint:disable no-console
@@ -41,9 +32,13 @@ const logDbError = (e: Error) => {
   // tslint:enable no-console
 };
 
-export async function migrate(settings: Settings, shadow = false) {
+export async function migrate(
+  settings: Settings,
+  shadow = false,
+  force = false
+) {
   const parsedSettings = await parseSettings(settings, shadow);
-  return _migrate(parsedSettings, shadow);
+  return _migrate(parsedSettings, shadow, force);
 }
 
 export async function watch(settings: Settings, once = false, shadow = false) {
@@ -88,7 +83,11 @@ async function _status(parsedSettings: ParsedSettings) {
   });
 }
 
-async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
+async function _migrate(
+  parsedSettings: ParsedSettings,
+  shadow = false,
+  force = false
+) {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
@@ -115,15 +114,20 @@ async function _migrate(parsedSettings: ParsedSettings, shadow = false) {
           logSuffix
         );
       }
+      if (remainingMigrations.length > 0 || force) {
+        await executeActions(
+          parsedSettings,
+          shadow,
+          parsedSettings.afterAllMigrations
+        );
+      }
       // tslint:disable-next-line no-console
       console.log(
         `graphile-migrate${logSuffix}: ${
-          lastMigration
-            ? "Up to date"
-            : remainingMigrations.length
-            ? `Up to date — ${
-                remainingMigrations.length
-              } committed migrations executed`
+          remainingMigrations.length > 0
+            ? `${remainingMigrations.length} committed migrations executed`
+            : lastMigration
+            ? "Already up to date"
             : `Up to date — no committed migrations to run`
         }`
       );
@@ -234,53 +238,7 @@ export async function _reset(parsedSettings: ParsedSettings, shadow: boolean) {
       );
     }
   );
-  if (parsedSettings.afterReset) {
-    const afterReset = Array.isArray(parsedSettings.afterReset)
-      ? parsedSettings.afterReset
-      : [parsedSettings.afterReset];
-    for (const afterResetItem of afterReset) {
-      if (typeof afterResetItem === "string") {
-        // SQL
-        await withClient(
-          connectionString,
-          parsedSettings,
-          async (pgClient, context) => {
-            const body = await fsp.readFile(
-              `${parsedSettings.migrationsFolder}/${afterResetItem}`,
-              "utf8"
-            );
-            const query = generatePlaceholderReplacement(
-              parsedSettings,
-              context
-            )(body);
-            // tslint:disable-next-line no-console
-            console.log(query);
-            await pgClient.query({
-              text: query,
-            });
-          }
-        );
-      } else if (isCommandSpec(afterResetItem)) {
-        // Run the command
-        const { stdout, stderr } = await exec(afterResetItem.command, {
-          env: {
-            PATH: process.env.PATH,
-            DATABASE_URL: connectionString,
-          },
-          encoding: "utf8",
-          maxBuffer: 10 * 1024 * 1024,
-        });
-        if (stdout) {
-          // tslint:disable-next-line no-console
-          console.log(stdout);
-        }
-        if (stderr) {
-          // tslint:disable-next-line no-console
-          console.error(stderr);
-        }
-      }
-    }
-  }
+  await executeActions(parsedSettings, shadow, parsedSettings.afterReset);
   await _migrate(parsedSettings, shadow);
 }
 
