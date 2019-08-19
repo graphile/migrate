@@ -67,6 +67,7 @@ export interface Settings {
   };
   afterReset?: Actions;
   afterAllMigrations?: Actions;
+  afterCurrent?: Actions;
 }
 
 export interface ParsedSettings extends Settings {
@@ -78,6 +79,7 @@ export interface ParsedSettings extends Settings {
   shadowDatabaseName?: string;
   afterReset: ActionSpec[];
   afterAllMigrations: ActionSpec[];
+  afterCurrent: ActionSpec[];
 }
 
 export async function parseSettings(
@@ -234,6 +236,7 @@ export async function parseSettings(
 
   const afterReset = await check("afterReset", validateAction);
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
+  const afterCurrent = await check("afterCurrent", validateAction);
 
   /******/
 
@@ -276,6 +279,7 @@ export async function parseSettings(
     ...settings,
     afterReset: afterReset!,
     afterAllMigrations: afterAllMigrations!,
+    afterCurrent: afterCurrent!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
     databaseOwner: databaseOwner!,

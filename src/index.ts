@@ -178,9 +178,16 @@ async function _watch(
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
+      await executeActions(parsedSettings, shadow, parsedSettings.afterCurrent);
+      const interval2 = process.hrtime(start);
+      const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
       // tslint:disable-next-line no-console
       console.log(
-        `[${new Date().toISOString()}]: Finished (${duration.toFixed(0)}ms)`
+        `[${new Date().toISOString()}]: Finished (${duration2.toFixed(0)}ms${
+          duration2 - duration >= 5
+            ? `; excluding actions: ${duration.toFixed(0)}ms`
+            : ""
+        })`
       );
     } catch (e) {
       logDbError(e);
