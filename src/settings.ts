@@ -1,22 +1,12 @@
 import { parse } from "pg-connection-string";
-import { makeValidateActionCallback } from "./actions";
+import {
+  makeValidateActionCallback,
+  ActionSpec,
+  SqlActionSpec,
+  CommandActionSpec,
+} from "./actions";
 
-export interface ActionSpec {
-  _: string;
-  shadow?: boolean;
-}
-
-export interface SqlActionSpec extends ActionSpec {
-  _: "sql";
-  file: string;
-}
-
-export interface CommandActionSpec extends ActionSpec {
-  _: "command";
-  command: string;
-}
-
-export type Actions = string | Array<string | CommandActionSpec>;
+export type Actions = string | Array<string | ActionSpec>;
 
 export function isActionSpec(o: unknown): o is ActionSpec {
   if (!(typeof o === "object" && o && typeof o["_"] === "string")) {
@@ -86,6 +76,8 @@ export interface ParsedSettings extends Settings {
   migrationsFolder: string;
   databaseName: string;
   shadowDatabaseName?: string;
+  afterReset: ActionSpec[];
+  afterAllMigrations: ActionSpec[];
 }
 
 export async function parseSettings(
@@ -238,10 +230,10 @@ export async function parseSettings(
     }
   );
 
-  const validateAction = makeValidateActionCallback(migrationsFolder);
+  const validateAction = makeValidateActionCallback();
 
-  await check("afterReset", validateAction);
-  await check("afterAllMigrations", validateAction);
+  const afterReset = await check("afterReset", validateAction);
+  const afterAllMigrations = await check("afterAllMigrations", validateAction);
 
   /******/
 
@@ -282,6 +274,8 @@ export async function parseSettings(
   // tslint:enable no-string-literal
   return {
     ...settings,
+    afterReset: afterReset!,
+    afterAllMigrations: afterAllMigrations!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
     databaseOwner: databaseOwner!,
