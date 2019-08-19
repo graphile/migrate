@@ -107,6 +107,27 @@ describe("actions", () => {
     expect(parsedSettings).toMatchSnapshot();
   });
 
+  it("is backwards-compatible with untagged command specs", async () => {
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      afterAllMigrations: [
+        "foo.sql",
+        { _: "sql", file: "bar.sql" },
+        { command: "pg_dump --schema-only" } as any,
+        { _: "command", command: "graphile-worker --once" },
+      ],
+    });
+    expect(parsedSettings.afterReset).toEqual([]);
+    expect(parsedSettings.afterAllMigrations).toEqual([
+      { _: "sql", file: "foo.sql" },
+      { _: "sql", file: "bar.sql" },
+      { _: "command", command: "pg_dump --schema-only" },
+      { _: "command", command: "graphile-worker --once" },
+    ]);
+    sanitise(parsedSettings);
+    expect(parsedSettings).toMatchSnapshot();
+  });
+
   it("throws on unknown action type", async () => {
     await expect(
       parseSettings({

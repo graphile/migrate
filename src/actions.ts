@@ -103,7 +103,22 @@ export function makeValidateActionCallback() {
       const rawSpecArray = Array.isArray(inputValue)
         ? inputValue
         : [inputValue];
-      for (const rawSpec of rawSpecArray) {
+      for (const trueRawSpec of rawSpecArray) {
+        // This fudge is for backwards compatibility with v0.0.3
+        const isV003OrBelowCommand =
+          typeof trueRawSpec === "object" &&
+          trueRawSpec &&
+          !trueRawSpec["_"] &&
+          typeof trueRawSpec["command"] === "string";
+        if (isV003OrBelowCommand) {
+          console.warn(
+            "DEPRECATED: graphile-migrate now requires command action specs to have an `_: 'command'` property; we'll back-fill this for now, but please update your configuration"
+          );
+        }
+        const rawSpec = isV003OrBelowCommand
+          ? { _: "command", ...trueRawSpec }
+          : trueRawSpec;
+
         if (rawSpec && typeof rawSpec === "string") {
           const sqlSpec: SqlActionSpec = {
             _: "sql",
