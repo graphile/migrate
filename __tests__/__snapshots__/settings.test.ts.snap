@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`actions parses SQL actions 1`] = `
+Object {
+  "afterAllMigrations": Array [
+    Object {
+      "_": "sql",
+      "file": "bar.sql",
+    },
+    Object {
+      "_": "sql",
+      "file": "baz.sql",
+    },
+  ],
+  "afterReset": Array [
+    Object {
+      "_": "sql",
+      "file": "foo.sql",
+    },
+  ],
+  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "databaseName": "dbname",
+  "databaseOwner": "dbname",
+  "migrationsFolder": "./migrations",
+  "placeholders": undefined,
+  "rootConnectionString": "template1",
+  "shadowConnectionString": undefined,
+  "shadowDatabaseName": undefined,
+}
+`;
+
+exports[`actions parses command actions 1`] = `
+Object {
+  "afterAllMigrations": Array [
+    Object {
+      "_": "command",
+      "command": "pg_dump --schema-only",
+    },
+    Object {
+      "_": "command",
+      "command": "graphile-worker --once",
+    },
+  ],
+  "afterReset": Array [],
+  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "databaseName": "dbname",
+  "databaseOwner": "dbname",
+  "migrationsFolder": "./migrations",
+  "placeholders": undefined,
+  "rootConnectionString": "template1",
+  "shadowConnectionString": undefined,
+  "shadowDatabaseName": undefined,
+}
+`;
+
+exports[`actions parses mixed actions 1`] = `
+Object {
+  "afterAllMigrations": Array [
+    Object {
+      "_": "sql",
+      "file": "foo.sql",
+    },
+    Object {
+      "_": "sql",
+      "file": "bar.sql",
+    },
+    Object {
+      "_": "command",
+      "command": "pg_dump --schema-only",
+    },
+    Object {
+      "_": "command",
+      "command": "graphile-worker --once",
+    },
+  ],
+  "afterReset": Array [],
+  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "databaseName": "dbname",
+  "databaseOwner": "dbname",
+  "migrationsFolder": "./migrations",
+  "placeholders": undefined,
+  "rootConnectionString": "template1",
+  "shadowConnectionString": undefined,
+  "shadowDatabaseName": undefined,
+}
+`;
+
+exports[`actions parses string values into SQL actions 1`] = `
+Object {
+  "afterAllMigrations": Array [
+    Object {
+      "_": "sql",
+      "file": "bar.sql",
+    },
+    Object {
+      "_": "sql",
+      "file": "baz.sql",
+    },
+  ],
+  "afterReset": Array [
+    Object {
+      "_": "sql",
+      "file": "foo.sql",
+    },
+  ],
+  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "databaseName": "dbname",
+  "databaseOwner": "dbname",
+  "migrationsFolder": "./migrations",
+  "placeholders": undefined,
+  "rootConnectionString": "template1",
+  "shadowConnectionString": undefined,
+  "shadowDatabaseName": undefined,
+}
+`;
