@@ -1,11 +1,26 @@
 import { withClient } from "./pg";
-import { ParsedSettings, Actions, isCommandActionSpec } from "./settings";
+import {
+  ParsedSettings,
+  Actions,
+  isCommandActionSpec,
+  ActionSpec,
+  SqlActionSpec,
+  isSqlActionSpec,
+} from "./settings";
 import { generatePlaceholderReplacement } from "./migration";
 import * as fsp from "./fsp";
 import { exec as rawExec } from "child_process";
 import { promisify } from "util";
 
 const exec = promisify(rawExec);
+
+function stringActionToSql(action: string | ActionSpec): ActionSpec {
+  if (typeof action === "string") {
+    const spec: SqlActionSpec = { _: "sql", file: action };
+    return spec;
+  }
+  return action;
+}
 
 export async function executeActions(
   parsedSettings: ParsedSettings,
@@ -23,9 +38,12 @@ export async function executeActions(
       "Could not determine connection string for running commands"
     );
   }
-  const allActions = Array.isArray(rawActions) ? rawActions : [rawActions];
+  const allActions: ActionSpec[] = (Array.isArray(rawActions)
+    ? rawActions
+    : [rawActions]
+  ).map(stringActionToSql);
   for (const actionSpec of allActions) {
-    if (typeof actionSpec === "string") {
+    if (isSqlActionSpec(actionSpec)) {
       // SQL
       await withClient(
         connectionString,

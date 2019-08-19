@@ -6,6 +6,11 @@ export interface ActionSpec {
   shadow?: boolean;
 }
 
+export interface SqlActionSpec extends ActionSpec {
+  _: "sql";
+  file: string;
+}
+
 export interface CommandActionSpec extends ActionSpec {
   _: "command";
   command: string;
@@ -32,11 +37,18 @@ export function isActionSpec(o: unknown): o is ActionSpec {
   return true;
 }
 
-export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
-  if (!isActionSpec(o)) {
+export function isSqlActionSpec(o: unknown): o is SqlActionSpec {
+  if (!isActionSpec(o) || o._ !== "sql") {
     return false;
   }
-  if (o._ !== "command") {
+  if (typeof o["file"] !== "string") {
+    throw new Error("SQL command requires 'file' property to be set");
+  }
+  return true;
+}
+
+export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
+  if (!isActionSpec(o) || o._ !== "command") {
     return false;
   }
 
