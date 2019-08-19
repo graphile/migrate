@@ -215,10 +215,11 @@ environmental variables being set:
   },
   "afterReset": [
     "afterReset.sql",
-    { "command": "npx --no-install graphile-worker --once" }
+    { "_": "command", "command": "npx --no-install graphile-worker --once" }
   ],
   "afterAllMigrations": [
     {
+      "_": "command",
       "command": "pg_dump --schema-only --no-owner --exclude-schema=graphile_migrate --file=data/schema.sql \"$GM_DBURL\""
     }
   ]
@@ -231,18 +232,59 @@ We support certain "actions" after certain events happen; for example see
 `afterReset` and `afterAllMigrations` mentioned above. Actions should be
 specified as a list of strings or action spec objects.
 
-String values are interpreted as the name of a SQL file in the `migrations/`
-folder to execute against the database (e.g. to set permissions, load data,
-install extensions, etc).
+### Actions spec strings
 
-Objects with a `command` key specify shell actions (e.g. running an external
+String values are converted to `sql` action specs (see below) with the `file`
+property set to the string. I.e. they indicate a file within the `migrations`
+folder to execute against the database.
+
+### Action spec objects
+
+Action spec objects are plain JSON objects with the following properties:
+
+- `_` - specifies the type of object (see supported types below)
+- `shadow` (optional) - if set, must be a boolean; `true` indicates the
+  action should only occur against the shadow DB, `false` indicates that the
+  action should not occur against the shadow DB, unset runs against both
+  databases
+
+Each action spec subtype can have its own properties
+
+#### `sql` action spec
+
+e.g.
+
+```json
+{
+  "_": "sql",
+  "file": "install_extensions.sql"
+}
+```
+
+The `file` indicates the name of a SQL file in the `migrations/` folder to
+execute against the database (e.g. to set permissions, load data, install
+extensions, etc).
+
+#### `command` action spec
+
+e.g.
+
+```json
+{
+  "_": "command",
+  "command": "npx --no-install graphile-worker --once"
+}
+```
+
+`command` actions specify shell actions (e.g. running an external
 command such as `graphile-worker` which might install a separately managed
 worker schema into the database, or running something like `pg_dump` to dump
-the schema). Commands have access to the `$GM_DBURL` envvar which will be set
-to the relevant database URL (e.g. the one that was just reset/migrated) and
-`$GM_SHADOW` which will be set to `1` if we're dealing with the shadow DB.
+the schema).
 
-Objects with other keys are reserved for future usage.
+When the command is invoked it will have access to the following envvars:
+
+- `GM_DBURL` - the relevant database URL (e.g. the one that was just reset/migrated)
+- `$GM_SHADOW` - set to `1` if we're dealing with the shadow DB, unset otherwise
 
 ## Collaboration
 

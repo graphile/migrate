@@ -1,30 +1,51 @@
 import { parse } from "pg-connection-string";
 import { makeValidateActionCallback } from "./actions";
 
-export interface CommandActionSpec {
-  command: string;
+export interface ActionSpec {
+  _: string;
   shadow?: boolean;
+}
+
+export interface CommandActionSpec extends ActionSpec {
+  _: "command";
+  command: string;
 }
 
 export type Actions = string | Array<string | CommandActionSpec>;
 
-export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
-  if (!o || typeof o !== "object") {
-    return false;
-  }
-  const obj = o!;
-  if (typeof obj["command"] !== "string") {
+export function isActionSpec(o: unknown): o is ActionSpec {
+  if (!(typeof o === "object" && o && typeof o["_"] === "string")) {
     return false;
   }
 
-  // After here it's definitely a command action spec; but we should still
-  // validate the other properties.
+  // After here it's definitely an action spec; but we should still validate the
+  // other properties.
 
-  if ("shadow" in obj && typeof obj["shadow"] !== "boolean") {
+  if ("shadow" in o && typeof o["shadow"] !== "boolean") {
     throw new Error(
-      `Command action has 'shadow' property of type '${typeof obj[
+      `'${o["_"]}' action has 'shadow' property of type '${typeof o[
         "shadow"
       ]}'; expected 'boolean' (or not set)`
+    );
+  }
+
+  return true;
+}
+
+export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
+  if (!isActionSpec(o)) {
+    return false;
+  }
+  if (o._ !== "command") {
+    return false;
+  }
+
+  // Validations
+  if (typeof o["command"] !== "string") {
+    throw new Error(
+      `Command action has 'command' property of type '${typeof o[
+        "command"
+      ]}'; expected 'string'`
     );
   }
 
