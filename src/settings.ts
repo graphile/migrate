@@ -1,16 +1,57 @@
 import { parse } from "pg-connection-string";
-import { makeValidateActionCallback } from "./actions";
+import {
+  makeValidateActionCallback,
+  ActionSpec,
+  SqlActionSpec,
+  CommandActionSpec,
+} from "./actions";
 
-export interface CommandActionSpec {
-  command: string;
+export type Actions = string | Array<string | ActionSpec>;
+
+export function isActionSpec(o: unknown): o is ActionSpec {
+  if (!(typeof o === "object" && o && typeof o["_"] === "string")) {
+    return false;
+  }
+
+  // After here it's definitely an action spec; but we should still validate the
+  // other properties.
+
+  if ("shadow" in o && typeof o["shadow"] !== "boolean") {
+    throw new Error(
+      `'${o["_"]}' action has 'shadow' property of type '${typeof o[
+        "shadow"
+      ]}'; expected 'boolean' (or not set)`
+    );
+  }
+
+  return true;
 }
 
-export type Actions = string | Array<string | CommandActionSpec>;
+export function isSqlActionSpec(o: unknown): o is SqlActionSpec {
+  if (!isActionSpec(o) || o._ !== "sql") {
+    return false;
+  }
+  if (typeof o["file"] !== "string") {
+    throw new Error("SQL command requires 'file' property to be set");
+  }
+  return true;
+}
 
 export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
-  return (
-    (typeof o === "object" && o && typeof o["command"] === "string") || false
-  );
+  if (!isActionSpec(o) || o._ !== "command") {
+    return false;
+  }
+
+  // Validations
+  if (typeof o["command"] !== "string") {
+    throw new Error(
+      `Command action has 'command' property of type '${typeof o[
+        "command"
+      ]}'; expected 'string'`
+    );
+  }
+
+  return true;
 }
 
 export interface Settings {
@@ -35,6 +76,8 @@ export interface ParsedSettings extends Settings {
   migrationsFolder: string;
   databaseName: string;
   shadowDatabaseName?: string;
+  afterReset: ActionSpec[];
+  afterAllMigrations: ActionSpec[];
 }
 
 export async function parseSettings(
@@ -135,61 +178,62 @@ export async function parseSettings(
     }
   });
 
-  const placeholders = await check("placeholders", (rawPlaceholders):
-    | { [key: string]: string }
-    | undefined => {
-    if (rawPlaceholders) {
-      if (typeof rawPlaceholders !== "object" || rawPlaceholders === null) {
-        throw new Error("Expected settings.placeholders to be an object");
-      }
-      const badKeys = Object.keys(rawPlaceholders).filter(
-        key => !key.match(/^:[A-Z][0-9A-Z_]+$/)
-      );
-      if (badKeys.length) {
-        throw new Error(
-          `Invalid placeholders keys '${badKeys.join(
-            ", "
-          )}' - expected to follow format ':ABCD_EFG_HIJ'`
+  const placeholders = await check(
+    "placeholders",
+    (rawPlaceholders): { [key: string]: string } | undefined => {
+      if (rawPlaceholders) {
+        if (typeof rawPlaceholders !== "object" || rawPlaceholders === null) {
+          throw new Error("Expected settings.placeholders to be an object");
+        }
+        const badKeys = Object.keys(rawPlaceholders).filter(
+          key => !key.match(/^:[A-Z][0-9A-Z_]+$/)
         );
-      }
-      const badValueKeys = Object.keys(rawPlaceholders).filter(key => {
-        const value = rawPlaceholders[key];
-        return typeof value !== "string";
-      });
-      if (badValueKeys.length) {
-        throw new Error(
-          `Invalid placeholders values for keys '${badValueKeys.join(
-            ", "
-          )}' - expected string`
-        );
-      }
-      return Object.entries(rawPlaceholders).reduce(
-        (
-          memo: { [key: string]: string },
-          [key, value]
-        ): { [key: string]: string } => {
-          if (value === "!ENV") {
-            const envvarKey = key.substr(1);
-            const envvar = process.env[envvarKey];
-            if (!envvar) {
-              throw new Error(
-                `Could not find environmental variable '${envvarKey}'`
-              );
+        if (badKeys.length) {
+          throw new Error(
+            `Invalid placeholders keys '${badKeys.join(
+              ", "
+            )}' - expected to follow format ':ABCD_EFG_HIJ'`
+          );
+        }
+        const badValueKeys = Object.keys(rawPlaceholders).filter(key => {
+          const value = rawPlaceholders[key];
+          return typeof value !== "string";
+        });
+        if (badValueKeys.length) {
+          throw new Error(
+            `Invalid placeholders values for keys '${badValueKeys.join(
+              ", "
+            )}' - expected string`
+          );
+        }
+        return Object.entries(rawPlaceholders).reduce(
+          (
+            memo: { [key: string]: string },
+            [key, value]
+          ): { [key: string]: string } => {
+            if (value === "!ENV") {
+              const envvarKey = key.substr(1);
+              const envvar = process.env[envvarKey];
+              if (!envvar) {
+                throw new Error(
+                  `Could not find environmental variable '${envvarKey}'`
+                );
+              }
+              memo[key] = envvar;
             }
-            memo[key] = envvar;
-          }
-          return memo;
-        },
-        { ...rawPlaceholders }
-      );
+            return memo;
+          },
+          { ...rawPlaceholders }
+        );
+      }
+      return undefined;
     }
-    return undefined;
-  });
+  );
 
-  const validateAction = makeValidateActionCallback(migrationsFolder);
+  const validateAction = makeValidateActionCallback();
 
-  await check("afterReset", validateAction);
-  await check("afterAllMigrations", validateAction);
+  const afterReset = await check("afterReset", validateAction);
+  const afterAllMigrations = await check("afterAllMigrations", validateAction);
 
   /******/
 
@@ -230,6 +274,8 @@ export async function parseSettings(
   // tslint:enable no-string-literal
   return {
     ...settings,
+    afterReset: afterReset!,
+    afterAllMigrations: afterAllMigrations!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
     databaseOwner: databaseOwner!,

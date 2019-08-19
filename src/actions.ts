@@ -1,18 +1,40 @@
 import { withClient } from "./pg";
-import { ParsedSettings, Actions, isCommandActionSpec } from "./settings";
+import {
+  ParsedSettings,
+  isCommandActionSpec,
+  isSqlActionSpec,
+  isActionSpec,
+} from "./settings";
 import { generatePlaceholderReplacement } from "./migration";
 import * as fsp from "./fsp";
 import { exec as rawExec } from "child_process";
 import { promisify } from "util";
+
+interface ActionSpecBase {
+  _: string;
+  shadow?: boolean;
+}
+
+export interface SqlActionSpec extends ActionSpecBase {
+  _: "sql";
+  file: string;
+}
+
+export interface CommandActionSpec extends ActionSpecBase {
+  _: "command";
+  command: string;
+}
+
+export type ActionSpec = SqlActionSpec | CommandActionSpec;
 
 const exec = promisify(rawExec);
 
 export async function executeActions(
   parsedSettings: ParsedSettings,
   shadow = false,
-  rawActions: Actions | undefined
+  actions: ActionSpec[]
 ) {
-  if (!rawActions) {
+  if (!actions) {
     return;
   }
   const connectionString = shadow
@@ -23,10 +45,11 @@ export async function executeActions(
       "Could not determine connection string for running commands"
     );
   }
-  const allActions = Array.isArray(rawActions) ? rawActions : [rawActions];
-  for (const actionSpec of allActions) {
-    if (typeof actionSpec === "string") {
-      // SQL
+  for (const actionSpec of actions) {
+    if (actionSpec.shadow !== undefined && actionSpec.shadow !== shadow) {
+      continue;
+    }
+    if (actionSpec._ === "sql") {
       await withClient(
         connectionString,
         parsedSettings,
@@ -45,7 +68,7 @@ export async function executeActions(
           });
         }
       );
-    } else if (isCommandActionSpec(actionSpec)) {
+    } else if (actionSpec._ === "command") {
       // Run the command
       const { stdout, stderr } = await exec(actionSpec.command, {
         env: {
@@ -73,28 +96,52 @@ export async function executeActions(
   }
 }
 
-export function makeValidateActionCallback(migrationsFolder: string) {
-  return async (rawAfterReset: unknown) => {
-    if (!rawAfterReset) {
-      return;
-    }
-    const afterResetArray = Array.isArray(rawAfterReset)
-      ? rawAfterReset
-      : [rawAfterReset];
-    for (const afterReset of afterResetArray) {
-      if (afterReset && typeof afterReset === "string") {
-        await fsp.stat(`${migrationsFolder}/${afterReset}`);
-      } else if (
-        afterReset &&
-        typeof afterReset === "object" &&
-        typeof afterReset["command"] === "string"
-      ) {
-        // OK.
-      } else {
-        throw new Error(
-          `Expected afterReset to contain an array of strings or command specs; received '${typeof afterReset}'`
-        );
+export function makeValidateActionCallback() {
+  return async (inputValue: unknown): Promise<ActionSpec[]> => {
+    const specs: ActionSpec[] = [];
+    if (inputValue) {
+      const rawSpecArray = Array.isArray(inputValue)
+        ? inputValue
+        : [inputValue];
+      for (const trueRawSpec of rawSpecArray) {
+        // This fudge is for backwards compatibility with v0.0.3
+        const isV003OrBelowCommand =
+          typeof trueRawSpec === "object" &&
+          trueRawSpec &&
+          !trueRawSpec["_"] &&
+          typeof trueRawSpec["command"] === "string";
+        if (isV003OrBelowCommand) {
+          console.warn(
+            "DEPRECATED: graphile-migrate now requires command action specs to have an `_: 'command'` property; we'll back-fill this for now, but please update your configuration"
+          );
+        }
+        const rawSpec = isV003OrBelowCommand
+          ? { _: "command", ...trueRawSpec }
+          : trueRawSpec;
+
+        if (rawSpec && typeof rawSpec === "string") {
+          const sqlSpec: SqlActionSpec = {
+            _: "sql",
+            file: rawSpec,
+          };
+          specs.push(sqlSpec);
+        } else if (isActionSpec(rawSpec)) {
+          if (isSqlActionSpec(rawSpec) || isCommandActionSpec(rawSpec)) {
+            specs.push(rawSpec);
+          } else {
+            throw new Error(
+              `Action spec of type '${
+                rawSpec["_"]
+              }' not supported; perhaps you need to upgrade?`
+            );
+          }
+        } else {
+          throw new Error(
+            `Expected action spec to contain an array of strings or action specs; received '${typeof rawSpec}'`
+          );
+        }
       }
     }
+    return specs;
   };
 }
