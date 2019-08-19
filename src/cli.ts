@@ -55,7 +55,11 @@ async function main() {
       );
       exitCode += 2;
     }
+
+    // ESLint false positive.
+    // eslint-disable-next-line require-atomic-updates
     process.exitCode = exitCode;
+
     if (exitCode === 0) {
       console.log("Up to date.");
     }
