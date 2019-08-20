@@ -50,14 +50,14 @@ export async function executeActions(
       continue;
     }
     if (actionSpec._ === "sql") {
+      const body = await fsp.readFile(
+        `${parsedSettings.migrationsFolder}/${actionSpec.file}`,
+        "utf8"
+      );
       await withClient(
         connectionString,
         parsedSettings,
         async (pgClient, context) => {
-          const body = await fsp.readFile(
-            `${parsedSettings.migrationsFolder}/${actionSpec}`,
-            "utf8"
-          );
           const query = generatePlaceholderReplacement(parsedSettings, context)(
             body
           );
