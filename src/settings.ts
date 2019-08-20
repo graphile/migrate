@@ -292,3 +292,9 @@ export async function parseSettings(
     placeholders,
   };
 }
+
+export function getCurrentMigrationPath(parsedSettings: ParsedSettings) {
+  return `${parsedSettings.migrationsFolder}/current.sql`;
+}
+
+export const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
