@@ -8,7 +8,7 @@
     "lint:fix": "eslint --fix 'src/**/*'",
     "prepack": "tsc && chmod +x dist/cli.js",
     "clean": "rm -Rf dist",
-    "test": "jest",
+    "test": "yarn lint && jest",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && tsc --watch"
   },
   "bin": {
