@@ -2,8 +2,7 @@ jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
 
-import { exec } from "child_process";
-import { parseSettings, Settings } from "../src/settings";
+import { parseSettings } from "../src/settings";
 import { Context } from "../src/pg";
 import {
   generatePlaceholderReplacement,
@@ -11,6 +10,7 @@ import {
   FileMigration,
 } from "../src/migration";
 import { _migrate } from "../src/commands/migrate";
+import { makeActionSpies } from "./helpers";
 
 it("doesn't mind about placeholder order", async () => {
   const context: Context = {
@@ -40,49 +40,6 @@ it("doesn't mind about placeholder order", async () => {
     `CREATE ROLE [DATABASE_AUTHENTICATOR] WITH LOGIN PASSWORD '[DATABASE_AUTHENTICATOR_PASSWORD]';`
   );
 });
-
-interface ActionSpies {
-  getActionCalls: () => string[];
-  settings: Pick<
-    Settings,
-    "afterAllMigrations" | "afterReset" | "afterCurrent"
-  >;
-}
-function makeActionSpies(shadow = false): ActionSpies {
-  const mockedExec = (exec as unknown) as jest.Mock<typeof exec>;
-  mockedExec.mockReset();
-  const calls: string[] = [];
-  mockedExec.mockImplementation(
-    (_cmd, _opts, cb): any => {
-      expect(_opts.env.PATH).toBe(process.env.PATH);
-      expect(typeof _opts.env.GM_DBURL).toBe("string");
-      if (shadow) {
-        expect(_opts.env.GM_SHADOW).toBe("1");
-      } else {
-        expect(typeof _opts.env.GM_SHADOW).toBe("undefined");
-      }
-      calls.push(_cmd.replace(/^touch /, ""));
-      cb(null, {
-        error: null,
-        stdout: "",
-        stderr: "",
-      });
-    }
-  );
-  function getActionCalls() {
-    return calls;
-  }
-  return {
-    getActionCalls,
-    settings: {
-      afterAllMigrations: [
-        { _: "command", command: "touch afterAllMigrations" },
-      ],
-      afterReset: [{ _: "command", command: "touch afterReset" }],
-      afterCurrent: [{ _: "command", command: "touch afterCurrent" }],
-    },
-  };
-}
 
 it("calls no actions if no migrations", async () => {
   const { settings, getActionCalls } = makeActionSpies();
