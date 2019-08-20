@@ -129,9 +129,7 @@ export function makeValidateActionCallback() {
             specs.push(rawSpec);
           } else {
             throw new Error(
-              `Action spec of type '${
-                rawSpec["_"]
-              }' not supported; perhaps you need to upgrade?`
+              `Action spec of type '${rawSpec["_"]}' not supported; perhaps you need to upgrade?`
             );
           }
         } else {

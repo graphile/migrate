@@ -144,17 +144,13 @@ export async function getAllMigrations(
     if (!previous) {
       if (migration.previousHash !== null) {
         throw new Error(
-          `Migration '${
-            migration.filename
-          }' expected a previous migration, but no correctly ordered previous migration was found`
+          `Migration '${migration.filename}' expected a previous migration, but no correctly ordered previous migration was found`
         );
       }
     } else {
       if (migration.previousHash !== previous.hash) {
         throw new Error(
-          `Previous migration with hash '${previous.hash}' doesn't match '${
-            migration.filename
-          }''s expected previous hash '${migration.previousHash}'`
+          `Previous migration with hash '${previous.hash}' doesn't match '${migration.filename}''s expected previous hash '${migration.previousHash}'`
         );
       }
     }
