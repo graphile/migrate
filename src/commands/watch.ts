@@ -18,7 +18,7 @@ export async function watch(settings: Settings, once = false, shadow = false) {
   return _watch(parsedSettings, once, shadow);
 }
 
-async function _watch(
+export async function _watch(
   parsedSettings: ParsedSettings,
   once = false,
   shadow = false
@@ -35,8 +35,6 @@ async function _watch(
       throw e;
     }
   }
-  let running = false;
-  let runAgain = false;
   async function run() {
     try {
       const body = await fsp.readFile(currentMigrationPath, "utf8");
@@ -72,23 +70,28 @@ async function _watch(
       logDbError(e);
     }
   }
-  function queue() {
-    if (running) {
-      runAgain = true;
-      return;
-    }
-    running = true;
-
-    run().finally(() => {
-      running = false;
-      if (runAgain) {
-        run();
+  if (once) {
+    return run();
+  } else {
+    let running = false;
+    let runAgain = false;
+    const queue = () => {
+      if (running) {
+        runAgain = true;
       }
-    });
-  }
-  if (!once) {
+      running = true;
+
+      return run().finally(() => {
+        running = false;
+        if (runAgain) {
+          runAgain = false;
+          queue();
+        }
+      });
+    };
     const watcher = chokidar.watch(currentMigrationPath);
     watcher.on("change", queue);
+    queue();
+    return Promise.resolve();
   }
-  queue();
 }
