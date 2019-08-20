@@ -50,19 +50,17 @@ export async function executeActions(
       continue;
     }
     if (actionSpec._ === "sql") {
+      const body = await fsp.readFile(
+        `${parsedSettings.migrationsFolder}/${actionSpec.file}`,
+        "utf8"
+      );
       await withClient(
         connectionString,
         parsedSettings,
         async (pgClient, context) => {
-          const body = await fsp.readFile(
-            `${parsedSettings.migrationsFolder}/${actionSpec}`,
-            "utf8"
-          );
           const query = generatePlaceholderReplacement(parsedSettings, context)(
             body
           );
-          // tslint:disable-next-line no-console
-          console.log(query);
           await pgClient.query({
             text: query,
           });
@@ -82,7 +80,8 @@ export async function executeActions(
             : null),
         },
         encoding: "utf8",
-        maxBuffer: 10 * 1024 * 1024,
+        // 50MB of log data should be enough for any reasonable migration... right?
+        maxBuffer: 50 * 1024 * 1024,
       });
       if (stdout) {
         // tslint:disable-next-line no-console
@@ -130,9 +129,7 @@ export function makeValidateActionCallback() {
             specs.push(rawSpec);
           } else {
             throw new Error(
-              `Action spec of type '${
-                rawSpec["_"]
-              }' not supported; perhaps you need to upgrade?`
+              `Action spec of type '${rawSpec["_"]}' not supported; perhaps you need to upgrade?`
             );
           }
         } else {

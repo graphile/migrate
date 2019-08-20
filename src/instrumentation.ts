@@ -55,3 +55,18 @@ export async function runQueryWithErrorInstrumentation(
     throw e;
   }
 }
+
+export const logDbError = (e: Error) => {
+  // tslint:disable no-console
+  console.error();
+  if (e["_gmMessageOverride"]) {
+    console.error(e["_gmMessageOverride"]);
+  } else {
+    console.error(
+      chalk.red.bold(`🛑 Error occurred whilst processing migration`)
+    );
+    console.error(indent(e.stack ? e.stack : e.message, 4));
+  }
+  console.error();
+  // tslint:enable no-console
+};

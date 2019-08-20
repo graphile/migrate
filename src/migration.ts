@@ -14,43 +14,45 @@ function escapeRegexp(str: string): string {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 }
 
-interface Migration {
+export interface Migration {
   filename: string;
   hash: string;
   previousHash: string | null;
 }
 
-interface DbMigration extends Migration {
+export interface DbMigration extends Migration {
   date: Date;
 }
 
-interface FileMigration extends Migration {
+export interface FileMigration extends Migration {
   body: string;
   fullPath: string;
   previous: FileMigration | null;
 }
 
-export const generatePlaceholderReplacement = memoize(
-  (
-    parsedSettings: ParsedSettings,
-    { database }: Context
-  ): ((str: string) => string) => {
-    const placeholders = {
-      ...parsedSettings.placeholders,
-      ":DATABASE_NAME": database,
-      ":DATABASE_OWNER": parsedSettings.databaseOwner,
-    };
+export const slowGeneratePlaceholderReplacement = (
+  parsedSettings: ParsedSettings,
+  { database }: Context
+): ((str: string) => string) => {
+  const placeholders = {
+    ...parsedSettings.placeholders,
+    ":DATABASE_NAME": database,
+    ":DATABASE_OWNER": parsedSettings.databaseOwner,
+  };
 
-    const regexp = new RegExp(
-      "(?:" +
-        Object.keys(placeholders)
-          .map(escapeRegexp)
-          .join("|") +
-        ")\\b",
-      "g"
-    );
-    return str => str.replace(regexp, keyword => placeholders[keyword] || "");
-  }
+  const regexp = new RegExp(
+    "(?:" +
+      Object.keys(placeholders)
+        .map(escapeRegexp)
+        .join("|") +
+      ")\\b",
+    "g"
+  );
+  return str => str.replace(regexp, keyword => placeholders[keyword] || "");
+};
+
+export const generatePlaceholderReplacement = memoize(
+  slowGeneratePlaceholderReplacement
 );
 
 async function migrateMigrationSchema(

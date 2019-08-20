@@ -67,6 +67,7 @@ export interface Settings {
   };
   afterReset?: Actions;
   afterAllMigrations?: Actions;
+  afterCurrent?: Actions;
 }
 
 export interface ParsedSettings extends Settings {
@@ -78,6 +79,7 @@ export interface ParsedSettings extends Settings {
   shadowDatabaseName?: string;
   afterReset: ActionSpec[];
   afterAllMigrations: ActionSpec[];
+  afterCurrent: ActionSpec[];
 }
 
 export async function parseSettings(
@@ -178,62 +180,62 @@ export async function parseSettings(
     }
   });
 
-  const placeholders = await check(
-    "placeholders",
-    (rawPlaceholders): { [key: string]: string } | undefined => {
-      if (rawPlaceholders) {
-        if (typeof rawPlaceholders !== "object" || rawPlaceholders === null) {
-          throw new Error("Expected settings.placeholders to be an object");
-        }
-        const badKeys = Object.keys(rawPlaceholders).filter(
-          key => !key.match(/^:[A-Z][0-9A-Z_]+$/)
-        );
-        if (badKeys.length) {
-          throw new Error(
-            `Invalid placeholders keys '${badKeys.join(
-              ", "
-            )}' - expected to follow format ':ABCD_EFG_HIJ'`
-          );
-        }
-        const badValueKeys = Object.keys(rawPlaceholders).filter(key => {
-          const value = rawPlaceholders[key];
-          return typeof value !== "string";
-        });
-        if (badValueKeys.length) {
-          throw new Error(
-            `Invalid placeholders values for keys '${badValueKeys.join(
-              ", "
-            )}' - expected string`
-          );
-        }
-        return Object.entries(rawPlaceholders).reduce(
-          (
-            memo: { [key: string]: string },
-            [key, value]
-          ): { [key: string]: string } => {
-            if (value === "!ENV") {
-              const envvarKey = key.substr(1);
-              const envvar = process.env[envvarKey];
-              if (!envvar) {
-                throw new Error(
-                  `Could not find environmental variable '${envvarKey}'`
-                );
-              }
-              memo[key] = envvar;
-            }
-            return memo;
-          },
-          { ...rawPlaceholders }
+  const placeholders = await check("placeholders", (rawPlaceholders):
+    | { [key: string]: string }
+    | undefined => {
+    if (rawPlaceholders) {
+      if (typeof rawPlaceholders !== "object" || rawPlaceholders === null) {
+        throw new Error("Expected settings.placeholders to be an object");
+      }
+      const badKeys = Object.keys(rawPlaceholders).filter(
+        key => !key.match(/^:[A-Z][0-9A-Z_]+$/)
+      );
+      if (badKeys.length) {
+        throw new Error(
+          `Invalid placeholders keys '${badKeys.join(
+            ", "
+          )}' - expected to follow format ':ABCD_EFG_HIJ'`
         );
       }
-      return undefined;
+      const badValueKeys = Object.keys(rawPlaceholders).filter(key => {
+        const value = rawPlaceholders[key];
+        return typeof value !== "string";
+      });
+      if (badValueKeys.length) {
+        throw new Error(
+          `Invalid placeholders values for keys '${badValueKeys.join(
+            ", "
+          )}' - expected string`
+        );
+      }
+      return Object.entries(rawPlaceholders).reduce(
+        (
+          memo: { [key: string]: string },
+          [key, value]
+        ): { [key: string]: string } => {
+          if (value === "!ENV") {
+            const envvarKey = key.substr(1);
+            const envvar = process.env[envvarKey];
+            if (!envvar) {
+              throw new Error(
+                `Could not find environmental variable '${envvarKey}'`
+              );
+            }
+            memo[key] = envvar;
+          }
+          return memo;
+        },
+        { ...rawPlaceholders }
+      );
     }
-  );
+    return undefined;
+  });
 
   const validateAction = makeValidateActionCallback();
 
   const afterReset = await check("afterReset", validateAction);
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
+  const afterCurrent = await check("afterCurrent", validateAction);
 
   /******/
 
@@ -276,6 +278,7 @@ export async function parseSettings(
     ...settings,
     afterReset: afterReset!,
     afterAllMigrations: afterAllMigrations!,
+    afterCurrent: afterCurrent!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
     databaseOwner: databaseOwner!,
@@ -288,3 +291,9 @@ export async function parseSettings(
     placeholders,
   };
 }
+
+export function getCurrentMigrationPath(parsedSettings: ParsedSettings) {
+  return `${parsedSettings.migrationsFolder}/current.sql`;
+}
+
+export const BLANK_MIGRATION_CONTENT = "-- Enter migration here";

@@ -20,6 +20,7 @@ Object {
       "command": "graphile-worker --once",
     },
   ],
+  "afterCurrent": Array [],
   "afterReset": Array [],
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
@@ -44,6 +45,7 @@ Object {
       "file": "baz.sql",
     },
   ],
+  "afterCurrent": Array [],
   "afterReset": Array [
     Object {
       "_": "sql",
@@ -73,6 +75,7 @@ Object {
       "command": "graphile-worker --once",
     },
   ],
+  "afterCurrent": Array [],
   "afterReset": Array [],
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
@@ -105,6 +108,7 @@ Object {
       "command": "graphile-worker --once",
     },
   ],
+  "afterCurrent": Array [],
   "afterReset": Array [],
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
@@ -129,6 +133,7 @@ Object {
       "file": "baz.sql",
     },
   ],
+  "afterCurrent": Array [],
   "afterReset": Array [
     Object {
       "_": "sql",
