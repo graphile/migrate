@@ -21,5 +21,6 @@
     "preserveWatchOutput": true,
     "lib": ["es2018", "esnext.asynciterable"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["**/__mocks__/*"]
 }

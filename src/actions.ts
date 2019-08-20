@@ -82,7 +82,8 @@ export async function executeActions(
             : null),
         },
         encoding: "utf8",
-        maxBuffer: 10 * 1024 * 1024,
+        // 50MB of log data should be enough for any reasonable migration... right?
+        maxBuffer: 50 * 1024 * 1024,
       });
       if (stdout) {
         // tslint:disable-next-line no-console
