@@ -41,17 +41,22 @@ export async function _watch(
       // tslint:disable-next-line no-console
       console.log(`[${new Date().toISOString()}]: Running current.sql`);
       const start = process.hrtime();
-      await withClient(
-        parsedSettings.connectionString,
-        parsedSettings,
-        (pgClient, context) =>
-          runStringMigration(
-            pgClient,
-            parsedSettings,
-            context,
-            body,
-            "current.sql"
-          )
+      const connectionString = shadow
+        ? parsedSettings.shadowConnectionString
+        : parsedSettings.connectionString;
+      if (!connectionString) {
+        throw new Error(
+          "Could not determine connection string for running commands"
+        );
+      }
+      await withClient(connectionString, parsedSettings, (pgClient, context) =>
+        runStringMigration(
+          pgClient,
+          parsedSettings,
+          context,
+          body,
+          "current.sql"
+        )
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
