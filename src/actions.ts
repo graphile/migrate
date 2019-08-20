@@ -61,8 +61,6 @@ export async function executeActions(
           const query = generatePlaceholderReplacement(parsedSettings, context)(
             body
           );
-          // tslint:disable-next-line no-console
-          console.log(query);
           await pgClient.query({
             text: query,
           });

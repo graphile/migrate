@@ -46,3 +46,9 @@ export function makeActionSpies(shadow = false): ActionSpies {
     },
   };
 }
+
+function makePgClientMock() {
+  return { query: jest.fn(async () => {}) };
+}
+
+export const mockPgClient = makePgClientMock();
