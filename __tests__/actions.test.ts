@@ -56,3 +56,57 @@ it("runs command actions", async () => {
   expect(mockedExec.mock.calls[0][1].env.GM_SHADOW).toBe(undefined);
   expect(typeof mockedExec.mock.calls[0][1].env.GM_DBURL).toBe("string");
 });
+
+it("run normal and non-shadow actions in non-shadow mode", async () => {
+  const parsedSettings = await parseSettings({
+    connectionString: "foo",
+    afterAllMigrations: [
+      { _: "sql", file: "non-shadow-only.sql", shadow: false },
+      { _: "sql", file: "shadow-only.sql", shadow: true },
+      { _: "sql", file: "everywhere.sql" },
+    ],
+  });
+  const mockedExec: jest.Mock<typeof exec> = exec as any;
+  mockedExec.mockClear();
+  mockPgClient.query.mockClear();
+  await executeActions(
+    parsedSettings,
+    false,
+    parsedSettings.afterAllMigrations
+  );
+  expect(mockedExec).toHaveBeenCalledTimes(0);
+  expect(mockPgClient.query).toHaveBeenCalledTimes(2);
+  expect(mockPgClient.query).toHaveBeenNthCalledWith(1, {
+    text: `[CONTENT:migrations/non-shadow-only.sql]`,
+  });
+  expect(mockPgClient.query).toHaveBeenNthCalledWith(2, {
+    text: `[CONTENT:migrations/everywhere.sql]`,
+  });
+});
+
+it("run normal and shadow actions in shadow mode", async () => {
+  const parsedSettings = await parseSettings(
+    {
+      connectionString: "foo",
+      shadowConnectionString: "foo_shadow",
+      afterAllMigrations: [
+        { _: "sql", file: "non-shadow-only.sql", shadow: false },
+        { _: "sql", file: "shadow-only.sql", shadow: true },
+        { _: "sql", file: "everywhere.sql" },
+      ],
+    },
+    true
+  );
+  const mockedExec: jest.Mock<typeof exec> = exec as any;
+  mockedExec.mockClear();
+  mockPgClient.query.mockClear();
+  await executeActions(parsedSettings, true, parsedSettings.afterAllMigrations);
+  expect(mockedExec).toHaveBeenCalledTimes(0);
+  expect(mockPgClient.query).toHaveBeenCalledTimes(2);
+  expect(mockPgClient.query).toHaveBeenNthCalledWith(1, {
+    text: `[CONTENT:migrations/shadow-only.sql]`,
+  });
+  expect(mockPgClient.query).toHaveBeenNthCalledWith(2, {
+    text: `[CONTENT:migrations/everywhere.sql]`,
+  });
+});
