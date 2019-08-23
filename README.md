@@ -284,7 +284,8 @@ the schema).
 When the command is invoked it will have access to the following envvars:
 
 - `GM_DBURL` - the relevant database URL (e.g. the one that was just reset/migrated)
-- `GM_DBNAME` - the relevant database name (e.g. the one that was just reset/migrated); useful in case you need to use superuser credentials to install extensions, for example
+- `GM_DBNAME` - the database name in `GM_DBURL`; you might use this if you need to use separate superuser credentials to install extensions against the database
+- `GM_DBUSER` - the database user in `GM_DBURL`
 - `GM_SHADOW` - set to `1` if we're dealing with the shadow DB, unset otherwise
 
 ## Collaboration
