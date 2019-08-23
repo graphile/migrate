@@ -9,6 +9,7 @@ import { generatePlaceholderReplacement } from "./migration";
 import * as fsp from "./fsp";
 import { exec as rawExec } from "child_process";
 import { promisify } from "util";
+import { parse } from "pg-connection-string";
 
 interface ActionSpecBase {
   _: string;
@@ -45,6 +46,10 @@ export async function executeActions(
       "Could not determine connection string for running commands"
     );
   }
+  const { database: databaseName } = parse(connectionString);
+  if (!databaseName) {
+    throw new Error("Could not extract database name from connection string");
+  }
   for (const actionSpec of actions) {
     if (actionSpec.shadow !== undefined && actionSpec.shadow !== shadow) {
       continue;
@@ -70,8 +75,10 @@ export async function executeActions(
       // Run the command
       const { stdout, stderr } = await exec(actionSpec.command, {
         env: {
+          ...process.env,
           PATH: process.env.PATH,
           DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleadling.
+          GM_DBNAME: databaseName,
           GM_DBURL: connectionString,
           ...(shadow
             ? {
