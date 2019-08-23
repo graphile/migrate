@@ -46,7 +46,7 @@ export async function executeActions(
       "Could not determine connection string for running commands"
     );
   }
-  const { database: databaseName } = parse(connectionString);
+  const { database: databaseName, user: databaseUser } = parse(connectionString);
   if (!databaseName) {
     throw new Error("Could not extract database name from connection string");
   }
@@ -79,6 +79,7 @@ export async function executeActions(
           PATH: process.env.PATH,
           DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleadling.
           GM_DBNAME: databaseName,
+          GM_DBUSER: databaseUser,
           GM_DBURL: connectionString,
           ...(shadow
             ? {
