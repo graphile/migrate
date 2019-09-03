@@ -123,7 +123,7 @@ export async function getAllMigrations(
         }
         const hash = secondLine.substring(HASH.length);
         if (contents[j + 1] !== "\n") {
-          throw new Error("Invalid migration header in '${fullPath}'");
+          throw new Error(`Invalid migration header in '${fullPath}'`);
         }
         const body = contents.substring(j + 2);
         return {
