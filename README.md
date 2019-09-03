@@ -226,6 +226,17 @@ environmental variables being set:
 }
 ```
 
+### Windows
+
+Since committed migrations utilize hashes to verify file integrity, the difference between LF and CRLF line endings on \*nix and Windows will cause the hash verification to fail. Git's default/recommended approach to line endings is to convert back and forth depending on your platform. To work around this, we recommend adding a `.gitattributes` file to force LF line endings for the committed migrations on all platforms:
+
+```
+migrations/committed/*.sql text eol=lf
+migrations/current.sql text eol=lf
+```
+
+After committing this change, you may run `git checkout-index --force --all` to rewrite the working copy with LF line endings. If that command does not replace the CRLF line endings, you may need to delete your copy of the repo and re-clone.
+
 ## Actions
 
 We support certain "actions" after certain events happen; for example see
