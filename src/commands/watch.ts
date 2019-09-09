@@ -94,7 +94,12 @@ export async function _watch(
         }
       });
     };
-    const watcher = chokidar.watch(currentMigrationPath);
+    const watcher = chokidar.watch(currentMigrationPath, {
+      awaitWriteFinish: {
+        stabilityThreshold: 200,
+        pollInterval: 100,
+      },
+    });
     watcher.on("change", queue);
     queue();
     return Promise.resolve();
