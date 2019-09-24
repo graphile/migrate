@@ -17,10 +17,11 @@ import pgMinify = require("pg-minify");
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
   _once = false,
-  shadow = false,
-  currentMigrationPath: string
+  shadow = false
 ): () => Promise<void> {
+  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
   async function run(): Promise<void> {
+    let migrationsAreEquivalent = false;
     try {
       const body = await fsp.readFile(currentMigrationPath, "utf8");
       // eslint-disable-next-line no-console
@@ -53,16 +54,21 @@ export function _makeCurrentMigrationRunner(
           );
 
           // 3: minify and compare last current.sql with this current.sql.
-          const previousBody: string = previousCurrent.content;
-          const previousBodyMinified = pgMinify(previousBody);
+          const previousBody: string | void =
+            previousCurrent && previousCurrent.content;
+          const previousBodyMinified = previousBody
+            ? pgMinify(previousBody)
+            : null;
           const currentBodyMinified = pgMinify(body);
-          const migrationsAreEquivalent =
+          migrationsAreEquivalent =
             currentBodyMinified === previousBodyMinified;
 
           // 4: if different
           if (!migrationsAreEquivalent) {
             // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
-            await reverseMigration(lockingPgClient, previousBody);
+            if (previousBody) {
+              await reverseMigration(lockingPgClient, previousBody);
+            }
 
             // COMMIT ─ because we need to commit that the migration was reversed
             await lockingPgClient.query("commit");
@@ -88,7 +94,7 @@ export function _makeCurrentMigrationRunner(
                 migrationsAreEquivalent // if true, don't do the migration just generate the SQL
               )
           );
-          if (!migrationsAreEquivalent) {
+          if (migrationsAreEquivalent) {
             // eslint-disable-next-line no-console
             console.log(
               `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`
@@ -113,7 +119,13 @@ export function _makeCurrentMigrationRunner(
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
-      await executeActions(parsedSettings, shadow, parsedSettings.afterCurrent);
+      if (!migrationsAreEquivalent) {
+        await executeActions(
+          parsedSettings,
+          shadow,
+          parsedSettings.afterCurrent
+        );
+      }
       const interval2 = process.hrtime(start);
       const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
       // eslint-disable-next-line no-console
@@ -148,12 +160,7 @@ export async function _watch(
       throw e;
     }
   }
-  const run = _makeCurrentMigrationRunner(
-    parsedSettings,
-    once,
-    shadow,
-    currentMigrationPath
-  );
+  const run = _makeCurrentMigrationRunner(parsedSettings, once, shadow);
   if (once) {
     return run();
   } else {

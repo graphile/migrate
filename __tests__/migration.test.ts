@@ -10,11 +10,15 @@ import {
   FileMigration,
 } from "../src/migration";
 import { _migrate } from "../src/commands/migrate";
-import { makeActionSpies } from "./helpers";
+import {
+  makeActionSpies,
+  TEST_DATABASE_NAME,
+  TEST_DATABASE_URL,
+} from "./helpers";
 
 it("doesn't mind about placeholder order", async () => {
   const context: Context = {
-    database: "foo",
+    database: TEST_DATABASE_NAME,
   };
   const parsedSettings = await parseSettings({
     connectionString: "[connectionString]",
@@ -44,7 +48,7 @@ it("doesn't mind about placeholder order", async () => {
 it("calls no actions if no migrations", async () => {
   const { settings, getActionCalls } = makeActionSpies();
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_NAME,
     ...settings,
   });
   await _migrate(parsedSettings, false, false);
@@ -54,7 +58,7 @@ it("calls no actions if no migrations", async () => {
 it("calls afterAllMigrations action (only) if force is true", async () => {
   const { settings, getActionCalls } = makeActionSpies();
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_URL,
     ...settings,
   });
   await _migrate(parsedSettings, false, true);
@@ -78,7 +82,7 @@ it("calls afterAllMigrations action (only) if we did some migrations", async () 
   );
   const { settings, getActionCalls } = makeActionSpies();
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_URL,
     ...settings,
   });
   await _migrate(parsedSettings, false, false);

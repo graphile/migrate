@@ -1,4 +1,4 @@
-import * as pg from "pg";
+import { PoolClient, Pool } from "pg";
 import { ParsedSettings } from "./settings";
 import { parse } from "pg-connection-string";
 
@@ -6,17 +6,17 @@ export interface Context {
   database: string;
 }
 
-export type Client = pg.PoolClient;
+export type Client = PoolClient;
 export async function withClient<T = void>(
   connectionString: string,
   parsedSettings: ParsedSettings,
-  callback: (pgClient: pg.PoolClient, context: Context) => Promise<T>
+  callback: (pgClient: PoolClient, context: Context) => Promise<T>
 ): Promise<T> {
   const { database } = parse(connectionString);
   if (!database) {
     throw new Error("Connection string does not specify a database");
   }
-  const pgPool = new pg.Pool({ connectionString });
+  const pgPool = new Pool({ connectionString });
   pgPool.on("error", (err: Error) => {
     // eslint-disable-next-line no-console
     console.error("An error occurred in the PgPool", err);
@@ -56,7 +56,7 @@ export async function withClient<T = void>(
 }
 
 export async function withTransaction<T>(
-  pgClient: pg.PoolClient,
+  pgClient: PoolClient,
   callback: () => Promise<T>
 ): Promise<T> {
   await pgClient.query("begin");

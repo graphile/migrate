@@ -56,7 +56,7 @@ export const generatePlaceholderReplacement = memoize(
   slowGeneratePlaceholderReplacement
 );
 
-async function migrateMigrationSchema(
+export async function _migrateMigrationSchema(
   pgClient: Client,
   _parsedSettings: ParsedSettings
 ): Promise<void> {
@@ -82,7 +82,7 @@ export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings
 ): Promise<DbMigration | null> {
-  await migrateMigrationSchema(pgClient, parsedSettings);
+  await _migrateMigrationSchema(pgClient, parsedSettings);
   const {
     rows: [row],
   } = await pgClient.query(
