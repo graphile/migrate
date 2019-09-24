@@ -159,13 +159,13 @@ export async function _watch(
   } else {
     let running = false;
     let runAgain = false;
-    const queue = (): Promise<void> => {
+    const queue = (): void => {
       if (running) {
         runAgain = true;
       }
       running = true;
 
-      return run().finally(() => {
+      run().finally(() => {
         running = false;
         if (runAgain) {
           runAgain = false;

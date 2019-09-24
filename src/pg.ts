@@ -48,7 +48,7 @@ export async function withClient<T = void>(
       };
       return await callback(pgClient, context);
     } finally {
-      await pgClient.release();
+      await Promise.resolve(pgClient.release());
     }
   } finally {
     await pgPool.end();

@@ -5,12 +5,14 @@ module.exports = {
     "plugin:prettier/recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "prettier/@typescript-eslint",
   ],
   plugins: ["jest", "@typescript-eslint", "prettier"],
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module",
+    project: "tsconfig.lint.json",
   },
   env: {
     node: true,
@@ -18,6 +20,8 @@ module.exports = {
     es6: true,
   },
   rules: {
+    // If something might be async in future, using `await` guarantees it will return a promise
+    "@typescript-eslint/require-await": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {

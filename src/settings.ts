@@ -187,7 +187,7 @@ export async function parseSettings(
         throw new Error("Expected settings.placeholders to be an object");
       }
       const badKeys = Object.keys(rawPlaceholders).filter(
-        key => !key.match(/^:[A-Z][0-9A-Z_]+$/)
+        key => !/^:[A-Z][0-9A-Z_]+$/.exec(key)
       );
       if (badKeys.length) {
         throw new Error(
@@ -238,7 +238,7 @@ export async function parseSettings(
 
   /******/
 
-  const uncheckedKeys = keysToCheck.filter(key => checkedKeys.indexOf(key) < 0);
+  const uncheckedKeys = keysToCheck.filter(key => !checkedKeys.includes(key));
   if (uncheckedKeys.length) {
     errors.push(
       `The following config settings were not understood: '${uncheckedKeys.join(

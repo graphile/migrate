@@ -8,18 +8,14 @@ export const generatePlaceholderReplacement = jest.fn(
 
 export const migrateMigrationSchema = jest.fn(async (_client, _settings) => {});
 
-export const getLastMigration = jest.fn(async (_client, _settings) => {
-  return null;
-});
+export const getLastMigration = jest.fn((_client, _settings) =>
+  Promise.resolve(null)
+);
 
-export const getAllMigrations = jest.fn(async _settings => {
-  return [];
-});
+export const getAllMigrations = jest.fn(_settings => Promise.resolve([]));
 
-export const getMigrationsAfter = jest.fn(
-  async (_settings, _previousMigration) => {
-    return [];
-  }
+export const getMigrationsAfter = jest.fn((_settings, _previousMigration) =>
+  Promise.resolve([])
 );
 
 export const runStringMigration = jest.fn(

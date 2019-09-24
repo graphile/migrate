@@ -108,7 +108,7 @@ export async function getAllMigrations(
   }
   const files = await fsp.readdir(committedMigrationsFolder);
   const isMigration = (filename: string): RegExpMatchArray | null =>
-    filename.match(/^[0-9]{6,}\.sql/);
+    /^[0-9]{6,}\.sql/.exec(filename);
   const migrations: Array<FileMigration> = await Promise.all(
     files.filter(isMigration).map(
       async (filename): Promise<FileMigration> => {
@@ -194,7 +194,7 @@ export async function runStringMigration(
   const sql = placeholderReplacement(rawBody);
   const i = sql.indexOf("\n");
   const firstLine = sql.substring(0, i);
-  const transaction = !firstLine.match(/^--!\s*no-transaction\b/);
+  const transaction = !/^--!\s*no-transaction\b/.exec(firstLine);
   if (dryRun) {
     return { sql, transaction };
   }
