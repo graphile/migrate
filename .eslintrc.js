@@ -2,8 +2,10 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   extends: [
     "eslint:recommended",
-    "prettier/@typescript-eslint",
     "plugin:prettier/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
   ],
   plugins: ["jest", "@typescript-eslint", "prettier"],
   parserOptions: {
@@ -13,28 +15,19 @@ module.exports = {
   env: {
     node: true,
     jest: true,
-    es6: true
+    es6: true,
   },
   rules: {
-    "no-unused-vars": [
-      "error",
-      {
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_",
-        args: "after-used",
-        ignoreRestSiblings: true
-      }
-    ],
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_",
         args: "after-used",
-        ignoreRestSiblings: true
-      }
+        ignoreRestSiblings: true,
+      },
     ],
-    "curly": "error",
+    curly: "error",
     "no-console": 0,
     "no-else-return": 0,
     "no-return-assign": [2, "except-parens"],
@@ -45,19 +38,19 @@ module.exports = {
     "prefer-arrow-callback": [
       "error",
       {
-        allowNamedFunctions: true
-      }
+        allowNamedFunctions: true,
+      },
     ],
     "class-methods-use-this": 0,
     "no-restricted-syntax": 0,
     "no-param-reassign": [
       "error",
       {
-        props: false
-      }
+        props: false,
+      },
     ],
 
     "arrow-body-style": 0,
     "no-nested-ternary": 0,
-  }
+  },
 };

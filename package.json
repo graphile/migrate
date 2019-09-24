@@ -57,8 +57,6 @@
     "jest": "^24.9.0",
     "prettier": "^1.18.2",
     "ts-jest": "^24.0.2",
-    "tslint": "^5.18.0",
-    "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.5.3"
   },
   "jest": {
