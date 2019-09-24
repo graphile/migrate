@@ -13,12 +13,7 @@ import { _reset } from "./reset";
 import { _migrate } from "./migrate";
 import { logDbError } from "../instrumentation";
 
-export async function commit(settings: Settings) {
-  const parsedSettings = await parseSettings(settings, true);
-  return _commit(parsedSettings);
-}
-
-export async function _commit(parsedSettings: ParsedSettings) {
+export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   const { migrationsFolder } = parsedSettings;
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   const allMigrations = await getAllMigrations(parsedSettings);
@@ -45,6 +40,7 @@ export async function _commit(parsedSettings: ParsedSettings) {
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
+  // eslint-disable-next-line no-console
   console.log(
     `graphile-migrate: New migration '${newMigrationFilename}' created`
   );
@@ -54,10 +50,17 @@ export async function _commit(parsedSettings: ParsedSettings) {
     await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
   } catch (e) {
     logDbError(e);
+    // eslint-disable-next-line no-console
     console.error("ABORTING...");
     await fsp.writeFile(currentMigrationPath, body);
     await fsp.unlink(newMigrationFilepath);
+    // eslint-disable-next-line no-console
     console.error("ABORTED AND ROLLED BACK");
     process.exitCode = 1;
   }
+}
+
+export async function commit(settings: Settings): Promise<void> {
+  const parsedSettings = await parseSettings(settings, true);
+  return _commit(parsedSettings);
 }

@@ -7,20 +7,11 @@ import {
 } from "../migration";
 import { executeActions } from "../actions";
 
-export async function migrate(
-  settings: Settings,
-  shadow = false,
-  force = false
-) {
-  const parsedSettings = await parseSettings(settings, shadow);
-  return _migrate(parsedSettings, shadow, force);
-}
-
 export async function _migrate(
   parsedSettings: ParsedSettings,
   shadow = false,
   force = false
-) {
+): Promise<void> {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
@@ -54,7 +45,7 @@ export async function _migrate(
           parsedSettings.afterAllMigrations
         );
       }
-      // tslint:disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(
         `graphile-migrate${logSuffix}: ${
           remainingMigrations.length > 0
@@ -66,4 +57,13 @@ export async function _migrate(
       );
     }
   );
+}
+
+export async function migrate(
+  settings: Settings,
+  shadow = false,
+  force = false
+): Promise<void> {
+  const parsedSettings = await parseSettings(settings, shadow);
+  return _migrate(parsedSettings, shadow, force);
 }

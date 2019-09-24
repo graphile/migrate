@@ -1,4 +1,4 @@
-import * as pg from "pg";
+import { PoolClient, Pool } from "pg";
 import { ParsedSettings } from "./settings";
 import { parse } from "pg-connection-string";
 
@@ -6,19 +6,19 @@ export interface Context {
   database: string;
 }
 
-export type Client = pg.PoolClient;
+export type Client = PoolClient;
 export async function withClient<T = void>(
   connectionString: string,
   parsedSettings: ParsedSettings,
-  callback: (pgClient: pg.PoolClient, context: Context) => Promise<T>
+  callback: (pgClient: PoolClient, context: Context) => Promise<T>
 ): Promise<T> {
   const { database } = parse(connectionString);
   if (!database) {
     throw new Error("Connection string does not specify a database");
   }
-  const pgPool = new pg.Pool({ connectionString });
+  const pgPool = new Pool({ connectionString });
   pgPool.on("error", (err: Error) => {
-    // tslint:disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.error("An error occurred in the PgPool", err);
     process.exit(1);
   });
@@ -48,9 +48,24 @@ export async function withClient<T = void>(
       };
       return await callback(pgClient, context);
     } finally {
-      await pgClient.release();
+      await Promise.resolve(pgClient.release());
     }
   } finally {
     await pgPool.end();
+  }
+}
+
+export async function withTransaction<T>(
+  pgClient: PoolClient,
+  callback: () => Promise<T>
+): Promise<T> {
+  await pgClient.query("begin");
+  try {
+    const result = await callback();
+    await pgClient.query("commit");
+    return result;
+  } catch (e) {
+    await pgClient.query("rollback");
+    throw e;
   }
 }

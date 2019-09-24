@@ -48,17 +48,18 @@ export const slowGeneratePlaceholderReplacement = (
       ")\\b",
     "g"
   );
-  return str => str.replace(regexp, keyword => placeholders[keyword] || "");
+  return (str: string): string =>
+    str.replace(regexp, (keyword): string => placeholders[keyword] || "");
 };
 
 export const generatePlaceholderReplacement = memoize(
   slowGeneratePlaceholderReplacement
 );
 
-async function migrateMigrationSchema(
+export async function _migrateMigrationSchema(
   pgClient: Client,
   _parsedSettings: ParsedSettings
-) {
+): Promise<void> {
   await pgClient.query(`
     create schema if not exists graphile_migrate;
 
@@ -68,6 +69,12 @@ async function migrateMigrationSchema(
       filename text not null,
       date timestamptz not null default now()
     );
+
+    create table if not exists graphile_migrate.current (
+      filename text primary key default 'current.sql',
+      content text not null,
+      date timestamptz not null default now()
+    );
   `);
 }
 
@@ -75,7 +82,7 @@ export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings
 ): Promise<DbMigration | null> {
-  await migrateMigrationSchema(pgClient, parsedSettings);
+  await _migrateMigrationSchema(pgClient, parsedSettings);
   const {
     rows: [row],
   } = await pgClient.query(
@@ -100,7 +107,8 @@ export async function getAllMigrations(
     // noop
   }
   const files = await fsp.readdir(committedMigrationsFolder);
-  const isMigration = (filename: string) => filename.match(/^[0-9]{6,}\.sql/);
+  const isMigration = (filename: string): RegExpMatchArray | null =>
+    /^[0-9]{6,}\.sql/.exec(filename);
   const migrations: Array<FileMigration> = await Promise.all(
     files.filter(isMigration).map(
       async (filename): Promise<FileMigration> => {
@@ -176,21 +184,25 @@ export async function runStringMigration(
   context: Context,
   rawBody: string,
   filename: string,
-  committedMigration?: FileMigration
-) {
+  committedMigration?: FileMigration,
+  dryRun?: boolean
+): Promise<{ sql: string; transaction: boolean }> {
   const placeholderReplacement = generatePlaceholderReplacement(
     parsedSettings,
     context
   );
-  const body = placeholderReplacement(rawBody);
-  const i = body.indexOf("\n");
-  const firstLine = body.substring(0, i);
-  const transaction = !firstLine.match(/^--!\s*no-transaction\b/);
+  const sql = placeholderReplacement(rawBody);
+  const i = sql.indexOf("\n");
+  const firstLine = sql.substring(0, i);
+  const transaction = !/^--!\s*no-transaction\b/.exec(firstLine);
+  if (dryRun) {
+    return { sql, transaction };
+  }
   if (transaction) {
     await pgClient.query("begin");
   }
   try {
-    await runQueryWithErrorInstrumentation(pgClient, body, filename);
+    await runQueryWithErrorInstrumentation(pgClient, sql, filename);
     if (committedMigration) {
       const { hash, previousHash, filename } = committedMigration;
       await pgClient.query({
@@ -203,6 +215,7 @@ export async function runStringMigration(
     if (transaction) {
       await pgClient.query("commit");
     }
+    return { sql, transaction };
   } catch (e) {
     if (transaction) {
       await pgClient.query("rollback");
@@ -217,7 +230,7 @@ export async function runCommittedMigration(
   context: Context,
   committedMigration: FileMigration,
   logSuffix: string
-) {
+): Promise<void> {
   const { hash, filename, body, previousHash } = committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
@@ -226,7 +239,7 @@ export async function runCommittedMigration(
       `Hash for ${filename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`
     );
   }
-  // tslint:disable-next-line no-console
+  // eslint-disable-next-line no-console
   console.log(`graphile-migrate${logSuffix}: Running migration '${filename}'`);
   await runStringMigration(
     pgClient,
@@ -235,5 +248,17 @@ export async function runCommittedMigration(
     body,
     filename,
     committedMigration
+  );
+}
+
+export async function reverseMigration(
+  pgClient: Client,
+  _body: string
+): Promise<void> {
+  // TODO: reverse the migration
+
+  // Clean up graphile_migrate.current
+  await pgClient.query(
+    `delete from graphile_migrate.current where filename = 'current.sql'`
   );
 }

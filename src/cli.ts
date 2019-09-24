@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/explicit-function-return-type,no-console */
 import * as fs from "fs";
 import { migrate, watch, reset, commit, status } from "./index";
 
@@ -22,15 +23,15 @@ async function main() {
   const argv = process.argv.slice(2);
   const [cmd] = argv;
   if (argv.length === 0 || cmd === "migrate") {
-    const shadow = argv.indexOf("--shadow") >= 0;
-    const force = argv.indexOf("--force") >= 0;
+    const shadow = argv.includes("--shadow");
+    const force = argv.includes("--force");
     await migrate(getSettings(), shadow, force);
   } else if (cmd === "watch") {
-    const once = argv.indexOf("--once") >= 0;
-    const shadow = argv.indexOf("--shadow") >= 0;
+    const once = argv.includes("--once");
+    const shadow = argv.includes("--shadow");
     await watch(getSettings(), once, shadow);
   } else if (cmd === "reset") {
-    const shadow = argv.indexOf("--shadow") >= 0;
+    const shadow = argv.includes("--shadow");
     await reset(getSettings(), shadow);
   } else if (cmd === "commit") {
     await commit(getSettings());
@@ -64,14 +65,14 @@ async function main() {
       console.log("Up to date.");
     }
   } else {
-    // tslint:disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.error(`Command '${cmd || ""}' not understood`);
     process.exit(1);
   }
 }
 
 main().catch(e => {
-  // tslint:disable-next-line no-console
+  // eslint-disable-next-line no-console
   console.error(e);
   process.exit(1);
 });

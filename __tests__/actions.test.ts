@@ -6,12 +6,12 @@ jest.mock("../src/fsp");
 import { parseSettings } from "../src/settings";
 import { _migrate } from "../src/commands/migrate";
 import { executeActions } from "../src/actions";
-import { mockPgClient } from "./helpers";
+import { mockPgClient, TEST_DATABASE_URL } from "./helpers";
 import { exec } from "child_process";
 
 it("runs SQL actions", async () => {
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_URL,
     afterAllMigrations: ["sqlfile1.sql", { _: "sql", file: "sqlfile2.sql" }],
   });
   const mockedExec: jest.Mock<typeof exec> = exec as any;
@@ -34,7 +34,7 @@ it("runs SQL actions", async () => {
 
 it("runs command actions", async () => {
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_URL,
     afterAllMigrations: [{ _: "command", command: "touch testCommandAction" }],
   });
   const mockedExec: jest.Mock<typeof exec> = exec as any;
@@ -59,7 +59,7 @@ it("runs command actions", async () => {
 
 it("run normal and non-shadow actions in non-shadow mode", async () => {
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_URL,
     afterAllMigrations: [
       { _: "sql", file: "non-shadow-only.sql", shadow: false },
       { _: "sql", file: "shadow-only.sql", shadow: true },
@@ -87,7 +87,7 @@ it("run normal and non-shadow actions in non-shadow mode", async () => {
 it("run normal and shadow actions in shadow mode", async () => {
   const parsedSettings = await parseSettings(
     {
-      connectionString: "foo",
+      connectionString: TEST_DATABASE_URL,
       shadowConnectionString: "foo_shadow",
       afterAllMigrations: [
         { _: "sql", file: "non-shadow-only.sql", shadow: false },

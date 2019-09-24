@@ -9,12 +9,12 @@ import { getLastMigration, getMigrationsAfter } from "../migration";
 import pgMinify = require("pg-minify");
 import * as fsp from "../fsp";
 
-export async function status(settings: Settings) {
-  const parsedSettings = await parseSettings(settings, true);
-  return _status(parsedSettings);
+interface Status {
+  remainingMigrations: Array<string>;
+  hasCurrentMigration: boolean;
 }
 
-async function _status(parsedSettings: ParsedSettings) {
+async function _status(parsedSettings: ParsedSettings): Promise<Status> {
   const connectionString = parsedSettings.connectionString;
   if (!connectionString) {
     throw new Error("Could not determine connection string");
@@ -34,4 +34,9 @@ async function _status(parsedSettings: ParsedSettings) {
       hasCurrentMigration,
     };
   });
+}
+
+export async function status(settings: Settings): Promise<Status> {
+  const parsedSettings = await parseSettings(settings, true);
+  return _status(parsedSettings);
 }

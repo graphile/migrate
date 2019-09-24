@@ -1,30 +1,59 @@
 jest.mock("child_process");
-jest.mock("../src/pg");
-jest.mock("../src/migration");
-jest.mock("../src/fsp");
 
+import {
+  makeActionSpies,
+  TEST_DATABASE_URL,
+  mockCurrentSqlContentOnce,
+  resetDb,
+  setup,
+} from "./helpers";
 import { parseSettings } from "../src/settings";
-import { _watch } from "../src/commands/watch";
-import { makeActionSpies } from "./helpers";
-import * as fsp from "../src/fsp";
+import { _watch, _makeCurrentMigrationRunner } from "../src/commands/watch";
 
-it("calls afterCurrent when ran once", async () => {
+beforeEach(resetDb);
+
+it("doesn't run current.sql if it's already up to date", async () => {
   const { settings, getActionCalls } = makeActionSpies();
   const parsedSettings = await parseSettings({
-    connectionString: "foo",
+    connectionString: TEST_DATABASE_URL,
     ...settings,
   });
-  // @ts-ignore
-  fsp.stat.mockImplementationOnce(async (filename, _options) => {
-    expect(filename).toEqual(parsedSettings.migrationsFolder + "/current.sql");
-    return {};
-  });
-  // @ts-ignore
-  fsp.readFile.mockImplementationOnce(async (filename, encoding) => {
-    expect(encoding).toEqual("utf8");
-    expect(filename).toEqual(parsedSettings.migrationsFolder + "/current.sql");
-    return "SQL";
-  });
-  await _watch(parsedSettings, true, false);
+  await setup(parsedSettings);
+  const migrationRunner = _makeCurrentMigrationRunner(
+    parsedSettings,
+    false,
+    false
+  );
+
+  expect(getActionCalls()).toEqual([]);
+  mockCurrentSqlContentOnce(
+    parsedSettings,
+    `\
+-- First migration
+SELECT 1;
+`
+  );
+  await migrationRunner();
   expect(getActionCalls()).toEqual(["afterCurrent"]);
+
+  // This one is identical
+  mockCurrentSqlContentOnce(
+    parsedSettings,
+    `\
+-- Second migration; identical except for this comment
+SELECT 1;
+`
+  );
+  await migrationRunner();
+  expect(getActionCalls()).toEqual(["afterCurrent"]);
+
+  mockCurrentSqlContentOnce(
+    parsedSettings,
+    `\
+-- Third migration; DIFFERENT!
+SELECT 2 * 2;
+`
+  );
+  await migrationRunner();
+  expect(getActionCalls()).toEqual(["afterCurrent", "afterCurrent"]);
 });
