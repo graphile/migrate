@@ -10,3 +10,9 @@ export const withClient = jest.fn(
     return callback(mockPgClient, mockContext);
   }
 );
+
+const { withTransaction: originalWithTransaction } = jest.requireActual(
+  "../migration"
+);
+
+export const withTransaction = jest.fn(originalWithTransaction);

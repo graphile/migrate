@@ -68,6 +68,12 @@ async function migrateMigrationSchema(
       filename text not null,
       date timestamptz not null default now()
     );
+
+    create table if not exists graphile_migrate.current (
+      filename text primary key default 'current.sql',
+      content text not null,
+      date timestamptz not null default now()
+    );
   `);
 }
 
@@ -176,21 +182,25 @@ export async function runStringMigration(
   context: Context,
   rawBody: string,
   filename: string,
-  committedMigration?: FileMigration
-) {
+  committedMigration?: FileMigration,
+  dryRun?: boolean
+): Promise<{ sql: string; transaction: boolean }> {
   const placeholderReplacement = generatePlaceholderReplacement(
     parsedSettings,
     context
   );
-  const body = placeholderReplacement(rawBody);
-  const i = body.indexOf("\n");
-  const firstLine = body.substring(0, i);
+  const sql = placeholderReplacement(rawBody);
+  const i = sql.indexOf("\n");
+  const firstLine = sql.substring(0, i);
   const transaction = !firstLine.match(/^--!\s*no-transaction\b/);
+  if (dryRun) {
+    return { sql, transaction };
+  }
   if (transaction) {
     await pgClient.query("begin");
   }
   try {
-    await runQueryWithErrorInstrumentation(pgClient, body, filename);
+    await runQueryWithErrorInstrumentation(pgClient, sql, filename);
     if (committedMigration) {
       const { hash, previousHash, filename } = committedMigration;
       await pgClient.query({
@@ -203,6 +213,7 @@ export async function runStringMigration(
     if (transaction) {
       await pgClient.query("commit");
     }
+    return { sql, transaction };
   } catch (e) {
     if (transaction) {
       await pgClient.query("rollback");
@@ -235,5 +246,14 @@ export async function runCommittedMigration(
     body,
     filename,
     committedMigration
+  );
+}
+
+export async function reverseMigration(pgClient: Client, _body: string) {
+  // TODO: reverse the migration
+
+  // Clean up graphile_migrate.current
+  await pgClient.query(
+    `delete from graphile_migrate.current where filename = 'current.sql'`
   );
 }

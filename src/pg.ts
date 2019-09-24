@@ -54,3 +54,18 @@ export async function withClient<T = void>(
     await pgPool.end();
   }
 }
+
+export async function withTransaction<T>(
+  pgClient: pg.PoolClient,
+  callback: () => Promise<T>
+): Promise<T> {
+  await pgClient.query("begin");
+  try {
+    const result = await callback();
+    await pgClient.query("commit");
+    return result;
+  } catch (e) {
+    await pgClient.query("rollback");
+    throw e;
+  }
+}

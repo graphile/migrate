@@ -58,7 +58,7 @@ export async function runQueryWithErrorInstrumentation(
 
 export const logDbError = (e: Error) => {
   // tslint:disable no-console
-  console.error();
+  console.error("");
   if (e["_gmMessageOverride"]) {
     console.error(e["_gmMessageOverride"]);
   } else {
@@ -67,6 +67,6 @@ export const logDbError = (e: Error) => {
     );
     console.error(indent(e.stack ? e.stack : e.message, 4));
   }
-  console.error();
+  console.error("");
   // tslint:enable no-console
 };
