@@ -57,4 +57,14 @@ module.exports = {
     "arrow-body-style": 0,
     "no-nested-ternary": 0,
   },
+  overrides: [
+    {
+      files: "__tests__/**/*.ts",
+      rules: {
+        "@typescript-eslint/ban-ts-ignore": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/explicit-function-return-type": "off",
+      },
+    },
+  ],
 };

@@ -4,8 +4,8 @@
   "description": "Opinionated SQL-powered migration tool for PostgreSQL",
   "main": "dist/index.js",
   "scripts": {
-    "lint": "eslint 'src/**/*'",
-    "lint:fix": "eslint --fix 'src/**/*'",
+    "lint": "eslint --ext ts,js .",
+    "lint:fix": "eslint --fix --ext ts,js .",
     "prepack": "tsc && chmod +x dist/cli.js",
     "clean": "rm -Rf dist",
     "test": "yarn lint && jest",

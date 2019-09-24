@@ -15,23 +15,21 @@ export function makeActionSpies(shadow = false): ActionSpies {
   }
   mockedExec.mockReset();
   const calls: string[] = [];
-  mockedExec.mockImplementation(
-    (_cmd, _opts, cb): any => {
-      expect(_opts.env.PATH).toBe(process.env.PATH);
-      expect(typeof _opts.env.GM_DBURL).toBe("string");
-      if (shadow) {
-        expect(_opts.env.GM_SHADOW).toBe("1");
-      } else {
-        expect(typeof _opts.env.GM_SHADOW).toBe("undefined");
-      }
-      calls.push(_cmd.replace(/^touch /, ""));
-      cb(null, {
-        error: null,
-        stdout: "",
-        stderr: "",
-      });
+  mockedExec.mockImplementation((_cmd, _opts, cb): any => {
+    expect(_opts.env.PATH).toBe(process.env.PATH);
+    expect(typeof _opts.env.GM_DBURL).toBe("string");
+    if (shadow) {
+      expect(_opts.env.GM_SHADOW).toBe("1");
+    } else {
+      expect(typeof _opts.env.GM_SHADOW).toBe("undefined");
     }
-  );
+    calls.push(_cmd.replace(/^touch /, ""));
+    cb(null, {
+      error: null,
+      stdout: "",
+      stderr: "",
+    });
+  });
   function getActionCalls() {
     return calls;
   }
