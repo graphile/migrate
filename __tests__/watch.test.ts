@@ -30,7 +30,7 @@ it("doesn't run current.sql if it's already up to date", async () => {
     parsedSettings,
     `\
 -- First migration
-SELECT 1;
+SELECT ':DATABASE_NAME';
 `
   );
   await migrationRunner();
@@ -41,7 +41,7 @@ SELECT 1;
     parsedSettings,
     `\
 -- Second migration; identical except for this comment
-SELECT 1;
+SELECT ':DATABASE_NAME';
 `
   );
   await migrationRunner();
@@ -51,7 +51,7 @@ SELECT 1;
     parsedSettings,
     `\
 -- Third migration; DIFFERENT!
-SELECT 2 * 2;
+SELECT ':DATABASE_NAME', 2 * 2;
 `
   );
   await migrationRunner();

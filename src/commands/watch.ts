@@ -35,87 +35,99 @@ export function _makeCurrentMigrationRunner(
           "Could not determine connection string for running commands"
         );
       }
-      await withClient(connectionString, parsedSettings, lockingPgClient =>
-        withTransaction(lockingPgClient, async () => {
-          // 1: lock graphile_migrate.current so no concurrent migrations can occur
-          await lockingPgClient.query(
-            "lock graphile_migrate.current in EXCLUSIVE mode"
-          );
+      await withClient(
+        connectionString,
+        parsedSettings,
+        (lockingPgClient, context) =>
+          withTransaction(lockingPgClient, async () => {
+            // 1: lock graphile_migrate.current so no concurrent migrations can occur
+            await lockingPgClient.query(
+              "lock graphile_migrate.current in EXCLUSIVE mode"
+            );
 
-          // 2: Get last current.sql from graphile_migrate.current
-          const {
-            rows: [previousCurrent],
-          } = await lockingPgClient.query(
-            `
+            // 2: Get last current.sql from graphile_migrate.current
+            const {
+              rows: [previousCurrent],
+            } = await lockingPgClient.query(
+              `
               select *
               from graphile_migrate.current
               where filename = 'current.sql'
             `
-          );
+            );
 
-          // 3: minify and compare last current.sql with this current.sql.
-          const previousBody: string | void =
-            previousCurrent && previousCurrent.content;
-          const previousBodyMinified = previousBody
-            ? pgMinify(previousBody)
-            : null;
-          const currentBodyMinified = pgMinify(body);
-          migrationsAreEquivalent =
-            currentBodyMinified === previousBodyMinified;
+            // 3: minify and compare last ran current.sql with this _COMPILED_ current.sql.
+            const previousBody: string | void =
+              previousCurrent && previousCurrent.content;
+            const { sql: currentBodyFromDryRun } = await runStringMigration(
+              lockingPgClient,
+              parsedSettings,
+              context,
+              body,
+              "current.sql",
+              undefined,
+              true
+            );
+            const previousBodyMinified = previousBody
+              ? pgMinify(previousBody)
+              : null;
+            const currentBodyMinified = pgMinify(currentBodyFromDryRun);
+            migrationsAreEquivalent =
+              currentBodyMinified === previousBodyMinified;
 
-          // 4: if different
-          if (!migrationsAreEquivalent) {
-            // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
-            if (previousBody) {
-              await reverseMigration(lockingPgClient, previousBody);
+            // 4: if different
+            if (!migrationsAreEquivalent) {
+              // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
+              if (previousBody) {
+                await reverseMigration(lockingPgClient, previousBody);
+              }
+
+              // COMMIT ─ because we need to commit that the migration was reversed
+              await lockingPgClient.query("commit");
+              await lockingPgClient.query("begin");
+              // Re-establish a lock ASAP to continue with migration
+              await lockingPgClient.query(
+                "lock graphile_migrate.current in EXCLUSIVE mode"
+              );
+
+              // 4b: run this current (in its own independent transaction) if not empty
+              if (currentBodyMinified !== "") {
+                await withClient(
+                  connectionString,
+                  parsedSettings,
+                  (independentPgClient, context) =>
+                    runStringMigration(
+                      independentPgClient,
+                      parsedSettings,
+                      context,
+                      body,
+                      "current.sql",
+                      undefined
+                    )
+                );
+              }
+            } else {
+              // eslint-disable-next-line no-console
+              console.log(
+                `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`
+              );
             }
 
-            // COMMIT ─ because we need to commit that the migration was reversed
-            await lockingPgClient.query("commit");
-            await lockingPgClient.query("begin");
-            // Re-establish a lock ASAP to continue with migration
-            await lockingPgClient.query(
-              "lock graphile_migrate.current in EXCLUSIVE mode"
-            );
-          }
-
-          // 4b: run this current (in its own independent transaction)
-          const { sql } = await withClient(
-            connectionString,
-            parsedSettings,
-            (independentPgClient, context) =>
-              runStringMigration(
-                independentPgClient,
-                parsedSettings,
-                context,
-                body,
-                "current.sql",
-                undefined,
-                migrationsAreEquivalent // if true, don't do the migration just generate the SQL
-              )
-          );
-          if (migrationsAreEquivalent) {
-            // eslint-disable-next-line no-console
-            console.log(
-              `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`
-            );
-          }
-
-          // 5: update graphile_migrate.current with latest content
-          //   (NOTE: we update even if the minified versions don't differ since
-          //    the comments may have changed.)
-          await lockingPgClient.query({
-            name: "current-insert",
-            text: `
+            // 5: update graphile_migrate.current with latest content
+            //   (NOTE: we update even if the minified versions don't differ since
+            //    the comments may have changed.)
+            await lockingPgClient.query({
+              name: "current-insert",
+              text: `
               insert into graphile_migrate.current(content)
               values ($1)
               on conflict (filename)
               do update
               set content = excluded.content, date = excluded.date
             `,
-            values: [sql],
-          });
-        })
+              values: [currentBodyFromDryRun],
+            });
+          })
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
