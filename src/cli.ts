@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/explicit-function-return-type,no-console */
 import * as fs from "fs";
 import { migrate, watch, reset, commit, status } from "./index";
 
@@ -64,14 +65,14 @@ async function main() {
       console.log("Up to date.");
     }
   } else {
-    // tslint:disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.error(`Command '${cmd || ""}' not understood`);
     process.exit(1);
   }
 }
 
 main().catch(e => {
-  // tslint:disable-next-line no-console
+  // eslint-disable-next-line no-console
   console.error(e);
   process.exit(1);
 });

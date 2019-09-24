@@ -6,7 +6,7 @@ export async function runQueryWithErrorInstrumentation(
   pgClient: Client,
   body: string,
   filename: string
-) {
+): Promise<void> {
   try {
     await pgClient.query({
       text: body,
@@ -56,17 +56,20 @@ export async function runQueryWithErrorInstrumentation(
   }
 }
 
-export const logDbError = (e: Error) => {
-  // tslint:disable no-console
+export const logDbError = (e: Error): void => {
+  // eslint-disable-next-line no-console
   console.error("");
   if (e["_gmMessageOverride"]) {
+    // eslint-disable-next-line no-console
     console.error(e["_gmMessageOverride"]);
   } else {
+    // eslint-disable-next-line no-console
     console.error(
       chalk.red.bold(`🛑 Error occurred whilst processing migration`)
     );
+    // eslint-disable-next-line no-console
     console.error(indent(e.stack ? e.stack : e.message, 4));
   }
+  // eslint-disable-next-line no-console
   console.error("");
-  // tslint:enable no-console
 };

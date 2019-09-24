@@ -112,7 +112,6 @@ export async function parseSettings(
   const connectionString = await check(
     "connectionString",
     (rawConnectionString = process.env.DATABASE_URL): string => {
-      // tslint:disable no-string-literal
       if (typeof rawConnectionString !== "string") {
         throw new Error(
           "Expected a string, or for DATABASE_URL envvar to be set"
@@ -273,7 +272,7 @@ export async function parseSettings(
       `Errors occurred during settings validation:\n- ${errors.join("\n- ")}`
     );
   }
-  // tslint:enable no-string-literal
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   return {
     ...settings,
     afterReset: afterReset!,
@@ -290,9 +289,12 @@ export async function parseSettings(
     shadowDatabaseName: shadowDatabaseName ? shadowDatabaseName : void 0,
     placeholders,
   };
+  /* eslint-enable */
 }
 
-export function getCurrentMigrationPath(parsedSettings: ParsedSettings) {
+export function getCurrentMigrationPath(
+  parsedSettings: ParsedSettings
+): string {
   return `${parsedSettings.migrationsFolder}/current.sql`;
 }
 

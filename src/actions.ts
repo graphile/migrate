@@ -34,7 +34,7 @@ export async function executeActions(
   parsedSettings: ParsedSettings,
   shadow = false,
   actions: ActionSpec[]
-) {
+): Promise<void> {
   if (!actions) {
     return;
   }
@@ -94,11 +94,11 @@ export async function executeActions(
         maxBuffer: 50 * 1024 * 1024,
       });
       if (stdout) {
-        // tslint:disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(stdout);
       }
       if (stderr) {
-        // tslint:disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error(stderr);
       }
     }
@@ -120,6 +120,7 @@ export function makeValidateActionCallback() {
           !trueRawSpec["_"] &&
           typeof trueRawSpec["command"] === "string";
         if (isV003OrBelowCommand) {
+          // eslint-disable-next-line no-console
           console.warn(
             "DEPRECATED: graphile-migrate now requires command action specs to have an `_: 'command'` property; we'll back-fill this for now, but please update your configuration"
           );

@@ -18,7 +18,7 @@ export async function withClient<T = void>(
   }
   const pgPool = new pg.Pool({ connectionString });
   pgPool.on("error", (err: Error) => {
-    // tslint:disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.error("An error occurred in the PgPool", err);
     process.exit(1);
   });

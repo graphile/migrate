@@ -28,7 +28,7 @@ module.exports = {
       },
     ],
     curly: "error",
-    "no-console": 0,
+    "no-console": "error",
     "no-else-return": 0,
     "no-return-assign": [2, "except-parens"],
     "no-underscore-dangle": 0,

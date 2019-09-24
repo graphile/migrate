@@ -2,8 +2,8 @@ import * as crypto from "crypto";
 export const calculateHash = (
   str: string,
   previousHash: string | null,
-  algorithm: string = "sha1"
-) =>
+  algorithm = "sha1"
+): string =>
   algorithm +
   ":" +
   crypto

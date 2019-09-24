@@ -14,32 +14,16 @@ import { _migrate } from "./migrate";
 import { logDbError } from "../instrumentation";
 import pgMinify = require("pg-minify");
 
-export async function watch(settings: Settings, once = false, shadow = false) {
-  const parsedSettings = await parseSettings(settings, shadow);
-  return _watch(parsedSettings, once, shadow);
-}
-
-export async function _watch(
+export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
-  once = false,
-  shadow = false
-) {
-  await _migrate(parsedSettings, shadow);
-  // Watch the file
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-  try {
-    await fsp.stat(currentMigrationPath);
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
-    } else {
-      throw e;
-    }
-  }
-  async function run() {
+  _once = false,
+  shadow = false,
+  currentMigrationPath: string
+): () => Promise<void> {
+  async function run(): Promise<void> {
     try {
       const body = await fsp.readFile(currentMigrationPath, "utf8");
-      // tslint:disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(`[${new Date().toISOString()}]: Running current.sql`);
       const start = process.hrtime();
       const connectionString = shadow
@@ -105,7 +89,7 @@ export async function _watch(
               )
           );
           if (!migrationsAreEquivalent) {
-            // tslint:disable-next-line no-console
+            // eslint-disable-next-line no-console
             console.log(
               `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`
             );
@@ -132,7 +116,7 @@ export async function _watch(
       await executeActions(parsedSettings, shadow, parsedSettings.afterCurrent);
       const interval2 = process.hrtime(start);
       const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
-      // tslint:disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(
         `[${new Date().toISOString()}]: Finished (${duration2.toFixed(0)}ms${
           duration2 - duration >= 5
@@ -144,12 +128,38 @@ export async function _watch(
       logDbError(e);
     }
   }
+  return run;
+}
+
+export async function _watch(
+  parsedSettings: ParsedSettings,
+  once = false,
+  shadow = false
+): Promise<void> {
+  await _migrate(parsedSettings, shadow);
+  // Watch the file
+  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
+  try {
+    await fsp.stat(currentMigrationPath);
+  } catch (e) {
+    if (e.code === "ENOENT") {
+      await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
+    } else {
+      throw e;
+    }
+  }
+  const run = _makeCurrentMigrationRunner(
+    parsedSettings,
+    once,
+    shadow,
+    currentMigrationPath
+  );
   if (once) {
     return run();
   } else {
     let running = false;
     let runAgain = false;
-    const queue = () => {
+    const queue = (): Promise<void> => {
       if (running) {
         runAgain = true;
       }
@@ -173,4 +183,13 @@ export async function _watch(
     queue();
     return Promise.resolve();
   }
+}
+
+export async function watch(
+  settings: Settings,
+  once = false,
+  shadow = false
+): Promise<void> {
+  const parsedSettings = await parseSettings(settings, shadow);
+  return _watch(parsedSettings, once, shadow);
 }

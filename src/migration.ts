@@ -48,7 +48,8 @@ export const slowGeneratePlaceholderReplacement = (
       ")\\b",
     "g"
   );
-  return str => str.replace(regexp, keyword => placeholders[keyword] || "");
+  return (str: string): string =>
+    str.replace(regexp, (keyword): string => placeholders[keyword] || "");
 };
 
 export const generatePlaceholderReplacement = memoize(
@@ -58,7 +59,7 @@ export const generatePlaceholderReplacement = memoize(
 async function migrateMigrationSchema(
   pgClient: Client,
   _parsedSettings: ParsedSettings
-) {
+): Promise<void> {
   await pgClient.query(`
     create schema if not exists graphile_migrate;
 
@@ -106,7 +107,8 @@ export async function getAllMigrations(
     // noop
   }
   const files = await fsp.readdir(committedMigrationsFolder);
-  const isMigration = (filename: string) => filename.match(/^[0-9]{6,}\.sql/);
+  const isMigration = (filename: string): RegExpMatchArray | null =>
+    filename.match(/^[0-9]{6,}\.sql/);
   const migrations: Array<FileMigration> = await Promise.all(
     files.filter(isMigration).map(
       async (filename): Promise<FileMigration> => {
@@ -228,7 +230,7 @@ export async function runCommittedMigration(
   context: Context,
   committedMigration: FileMigration,
   logSuffix: string
-) {
+): Promise<void> {
   const { hash, filename, body, previousHash } = committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
@@ -237,7 +239,7 @@ export async function runCommittedMigration(
       `Hash for ${filename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`
     );
   }
-  // tslint:disable-next-line no-console
+  // eslint-disable-next-line no-console
   console.log(`graphile-migrate${logSuffix}: Running migration '${filename}'`);
   await runStringMigration(
     pgClient,
@@ -249,7 +251,10 @@ export async function runCommittedMigration(
   );
 }
 
-export async function reverseMigration(pgClient: Client, _body: string) {
+export async function reverseMigration(
+  pgClient: Client,
+  _body: string
+): Promise<void> {
   // TODO: reverse the migration
 
   // Clean up graphile_migrate.current
