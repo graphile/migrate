@@ -1,5 +1,5 @@
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { withClient } from "../pg";
+import { withClient, escapeIdentifier } from "../pg";
 import { executeActions } from "../actions";
 import { _migrate } from "./migrate";
 
@@ -20,18 +20,25 @@ export async function _reset(
       const databaseName = shadow
         ? parsedSettings.shadowDatabaseName
         : parsedSettings.databaseName;
+      if (!databaseName) {
+        throw new Error("Database name unknown");
+      }
       const databaseOwner = parsedSettings.databaseOwner;
       const logSuffix = shadow ? "[shadow]" : "";
-      await pgClient.query(`DROP DATABASE IF EXISTS ${databaseName};`);
+      await pgClient.query(
+        `DROP DATABASE IF EXISTS ${escapeIdentifier(databaseName)};`
+      );
       // eslint-disable-next-line no-console
       console.log(
         `graphile-migrate${logSuffix}: dropped database '${databaseName}'`
       );
       await pgClient.query(
-        `CREATE DATABASE ${databaseName} OWNER ${databaseOwner};`
+        `CREATE DATABASE ${escapeIdentifier(
+          databaseName
+        )} OWNER ${escapeIdentifier(databaseOwner)};`
       );
       await pgClient.query(
-        `REVOKE ALL ON DATABASE ${databaseName} FROM PUBLIC;`
+        `REVOKE ALL ON DATABASE ${escapeIdentifier(databaseName)} FROM PUBLIC;`
       );
       // eslint-disable-next-line no-console
       console.log(

@@ -7,6 +7,7 @@ import * as fsp from "../src/fsp";
 import { parse } from "pg-connection-string";
 import { Pool } from "pg";
 import { _migrateMigrationSchema } from "../src/migration";
+import { escapeIdentifier } from "../src/pg";
 
 export const TEST_DATABASE_URL: string =
   process.env.TEST_DATABASE_URL || "graphile_migrate_test";
@@ -35,8 +36,12 @@ export async function resetDb() {
       connectionString: TEST_ROOT_DATABASE_URL,
     });
   }
-  await rootPgPool.query(`DROP DATABASE IF EXISTS ${TEST_DATABASE_NAME};`);
-  await rootPgPool.query(`CREATE DATABASE ${TEST_DATABASE_NAME};`);
+  await rootPgPool.query(
+    `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`
+  );
+  await rootPgPool.query(
+    `CREATE DATABASE ${escapeIdentifier(TEST_DATABASE_NAME)};`
+  );
 }
 
 interface ActionSpies {
