@@ -69,3 +69,7 @@ export async function withTransaction<T>(
     throw e;
   }
 }
+
+export function escapeIdentifier(str: string): string {
+  return '"' + str.replace(/"/g, '""') + '"';
+}
