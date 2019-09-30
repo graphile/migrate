@@ -119,6 +119,15 @@ If `--once` is specified, `current.sql` will be ran once and then the command wi
 - apply the current migration to the shadow database, and replace the dump
 - move the current migration to committed migrations (adding a hash to prevent tampering)
 
+### `graphile-migrate uncommit`
+
+Moves the latest committed migration back to `current.sql` and deletes the
+committed migration from the filesystem and from the database migrations
+table. Will only work when `current.sql` is empty(ish).
+
+Do **NOT** use it once other systems have ran the commit. This is for use
+during development only, probably before your changes are pushed/merged.
+
 ### `graphile-migrate reset [--shadow]`
 
 Drop and re-create the database, and re-run all the committed migrations from the start. **HIGHLY DESTRUCTIVE**

@@ -1,5 +1,5 @@
 import { calculateHash } from "./hash";
-import { Client, Context } from "./pg";
+import { Client, Context, withClient } from "./pg";
 import * as fsp from "./fsp";
 import { ParsedSettings } from "./settings";
 import memoize from "./memoize";
@@ -222,6 +222,24 @@ export async function runStringMigration(
     }
     throw e;
   }
+}
+
+export async function undoMigration(
+  parsedSettings: ParsedSettings,
+  committedMigration: FileMigration
+): Promise<void> {
+  const { hash } = committedMigration;
+  await withClient(
+    parsedSettings.connectionString,
+    parsedSettings,
+    async pgClient => {
+      await pgClient.query({
+        name: "migration-delete",
+        text: "delete from graphile_migrate.migrations where hash = $1",
+        values: [hash],
+      });
+    }
+  );
 }
 
 export async function runCommittedMigration(

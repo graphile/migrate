@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type,no-console */
 import * as fs from "fs";
 import { migrate, watch, reset, commit, status } from "./index";
+import { uncommit } from "./commands/uncommit";
 
 function getSettings() {
   let data;
@@ -35,6 +36,8 @@ async function main() {
     await reset(getSettings(), shadow);
   } else if (cmd === "commit") {
     await commit(getSettings());
+  } else if (cmd === "uncommit") {
+    await uncommit(getSettings());
   } else if (cmd === "status") {
     let exitCode = 0;
     const details = await status(getSettings());
