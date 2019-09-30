@@ -298,4 +298,4 @@ export function getCurrentMigrationPath(
   return `${parsedSettings.migrationsFolder}/current.sql`;
 }
 
-export const BLANK_MIGRATION_CONTENT = "-- Enter migration here";
+export const BLANK_MIGRATION_CONTENT = "-- Enter migration here\n";
