@@ -193,6 +193,17 @@ export async function _watch(
       });
     };
     const watcher = chokidar.watch(currentMigrationPath, {
+      /*
+       * Without `usePolling`, on Linux, you can prevent the watching from
+       * working by issuing `git stash && sleep 2 && git stash pop`. This is
+       * annoying.
+       */
+      usePolling: true,
+
+      /*
+       * Some editors stream the writes out a little at a time, we want to wait
+       * for the write to finish before triggering.
+       */
       awaitWriteFinish: {
         stabilityThreshold: 200,
         pollInterval: 100,
