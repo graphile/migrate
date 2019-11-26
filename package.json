@@ -44,7 +44,8 @@
     "chokidar": "^3.1.1",
     "pg": ">=6.5 <8",
     "pg-connection-string": "^2.1.0",
-    "pg-minify": "^1.5.1"
+    "pg-minify": "^1.5.1",
+    "tslib": "^1.10.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.18",
