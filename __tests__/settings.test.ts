@@ -30,7 +30,7 @@ it("throws if shadow attempted but no shadow DB", async () => {
     )
   ).rejects.toMatchInlineSnapshot(`
           [Error: Errors occurred during settings validation:
-          - Setting 'shadowConnectionString': Expected a string, or for TEST_DATABASE_URL to be set
+          - Setting 'shadowConnectionString': Expected \`shadowConnectionString\` to be a string, or for SHADOW_DATABASE_URL to be set
           - Could not determine the shadow database name, please ensure shadowConnectionString includes the database name.]
         `);
 });
