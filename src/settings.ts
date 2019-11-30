@@ -150,7 +150,7 @@ export async function parseSettings(
       if (requireShadow) {
         if (typeof rawShadowConnectionString !== "string") {
           throw new Error(
-            "Expected a string, or for TEST_DATABASE_URL to be set"
+            "Expected a string, or for SHADOW_DATABASE_URL to be set"
           );
         }
         return rawShadowConnectionString;
