@@ -1,5 +1,3 @@
-import { getAllMigrations } from "../migration";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
 
@@ -10,6 +8,8 @@ import {
 } from "../current";
 import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
+import { getAllMigrations, isMigrationFilename } from "../migration";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
@@ -24,9 +24,24 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   if (Number.isNaN(newMigrationNumber)) {
     throw new Error("Could not determine next migration number");
   }
-  const newMigrationFilename =
-    String(newMigrationNumber).padStart(6, "0") + ".sql";
 
+  // See if we have a message arg
+  const messageIndex =
+    process.argv.findIndex(arg => arg === "--message" || arg === "-m") + 1;
+
+  // If we do, fetch, and replace any whitespace with '_'
+  const message =
+    messageIndex && process.argv[messageIndex].trim().replace(/\s+/g, "_");
+
+  const newMigrationFilename = message
+    ? String(newMigrationNumber).padStart(6, "0") + "-" + message + ".sql"
+    : String(newMigrationNumber).padStart(6, "0") + ".sql";
+  if (!isMigrationFilename(newMigrationFilename)) {
+    throw Error("Could not construct migration filename");
+  }
+  if (!isMigrationFilename(newMigrationFilename)) {
+    throw Error("Could not construct migration filename");
+  }
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const body = await readCurrentMigration(parsedSettings, currentLocation);
 

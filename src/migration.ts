@@ -28,6 +28,7 @@ export interface DbMigration extends Migration {
 
 export interface FileMigration extends Migration {
   body: string;
+  title?: string;
   fullPath: string;
   previous: FileMigration | null;
 }
@@ -135,6 +136,11 @@ export async function _migrateMigrationSchema(
   `);
 }
 
+export const isMigrationFilename = (
+  filename: string
+): RegExpMatchArray | null =>
+  /^[0-9]{6,}(-[-_0-9A-Za-z]+)?\.sql$/.exec(filename);
+
 export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings,
@@ -165,12 +171,10 @@ export async function getAllMigrations(
     // noop
   }
   const files = await fsp.readdir(committedMigrationsFolder);
-  const isMigration = (filename: string): RegExpMatchArray | null =>
-    /^[0-9]{6,}\.sql/.exec(filename);
   const migrations: Array<FileMigration> = await Promise.all(
-    files.filter(isMigration).map(
-      async (filename): Promise<FileMigration> => {
-        const fullPath = `${committedMigrationsFolder}/${filename}`;
+    files.filter(isMigrationFilename).map(
+      async (rawFilename): Promise<FileMigration> => {
+        const fullPath = `${committedMigrationsFolder}/${rawFilename}`;
         const contents = await fsp.readFile(fullPath, "utf8");
         const i = contents.indexOf("\n");
         const firstLine = contents.substring(0, i);
@@ -192,8 +196,10 @@ export async function getAllMigrations(
           throw new Error(`Invalid migration header in '${fullPath}'`);
         }
         const body = contents.substring(j + 2);
+        const [filename, title] = rawFilename.replace(".sql", "").split("-");
         return {
-          filename,
+          filename: filename + ".sql",
+          title,
           fullPath,
           hash,
           previousHash,
