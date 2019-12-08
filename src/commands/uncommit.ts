@@ -30,7 +30,10 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   }
 
   // Restore current.sql from migration
-  const lastMigrationFilepath = `${committedMigrationsFolder}/${lastMigration.filename}`;
+  const lastMigrationFilename = lastMigration.title
+    ? lastMigration.filename.replace(".sql", `-${lastMigration.title}.sql`)
+    : lastMigration.filename;
+  const lastMigrationFilepath = `${committedMigrationsFolder}/${lastMigrationFilename}`;
   const body = await fsp.readFile(lastMigrationFilepath, "utf8");
   const nn = body.indexOf("\n\n");
   if (nn < 10) {
@@ -39,7 +42,17 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
     );
   }
   const bodyWithoutMetadata = body.substr(nn + 2);
-  await fsp.writeFile(currentMigrationPath, bodyWithoutMetadata);
+
+  // Slip in a title comment to allow for the migration to be uncommitted and recommitted without destroying the title
+  const titleMarker = "--! Title:";
+  const titleLine = lastMigration.title
+    ? `--! Title: ${lastMigration.title}\n`
+    : "";
+  const completeBody = bodyWithoutMetadata.includes(titleMarker)
+    ? bodyWithoutMetadata.replace(/--! Title: .*\n/, titleLine)
+    : `${titleLine}${bodyWithoutMetadata}`;
+
+  await fsp.writeFile(currentMigrationPath, completeBody);
 
   // Delete the migration from committed and from the DB
   await fsp.unlink(lastMigrationFilepath);

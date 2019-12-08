@@ -15,6 +15,10 @@ import { logDbError } from "../instrumentation";
 
 export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   const { migrationsFolder } = parsedSettings;
+
+  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
+  const body = await fsp.readFile(currentMigrationPath, "utf8");
+
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   const allMigrations = await getAllMigrations(parsedSettings);
   const lastMigration = allMigrations[allMigrations.length - 1];
@@ -30,11 +34,20 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     process.argv.findIndex(arg => arg === "--message" || arg === "-m") + 1;
 
   // If we do, fetch, and replace any whitespace with '_'
-  const message =
-    messageIndex && process.argv[messageIndex].trim().replace(/\s+/g, "_");
+  const messageFromCommandArgs = messageIndex && process.argv[messageIndex];
+  const messageFileContentsMatch = /--! Title:(.*)/.exec(body);
+  const messageFromFileComment =
+    messageFileContentsMatch && messageFileContentsMatch[1];
+
+  const message = messageFromCommandArgs || messageFromFileComment;
+
+  const sluggifiedMessage = message && message.trim().replace(/\s+/g, "_");
 
   const newMigrationFilename = message
-    ? String(newMigrationNumber).padStart(6, "0") + "-" + message + ".sql"
+    ? String(newMigrationNumber).padStart(6, "0") +
+      "-" +
+      sluggifiedMessage +
+      ".sql"
     : String(newMigrationNumber).padStart(6, "0") + ".sql";
   if (!isMigrationFilename(newMigrationFilename)) {
     throw Error("Could not construct migration filename");
@@ -42,9 +55,8 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   if (!isMigrationFilename(newMigrationFilename)) {
     throw Error("Could not construct migration filename");
   }
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-  const body = await fsp.readFile(currentMigrationPath, "utf8");
-  const minifiedBody = pgMinify(body);
+  const bodyWithoutTitle = body.replace(/--! Title:.*\n/, "");
+  const minifiedBody = pgMinify(bodyWithoutTitle);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
