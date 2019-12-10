@@ -206,6 +206,8 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   migrations have ran, useful for performing a tasks like dumping the database
   or regenerating dependent data (GraphQL schema, type definitions, etc). See
   "Actions" below.
+- `afterCurrent` — optional list of actions to execute after `current.sql` is
+  loaded into the database. See "Actions" below.
 
 What follows is an example configuration file that depends on the following
 environmental variables being set:
@@ -232,6 +234,9 @@ environmental variables being set:
       "_": "command",
       "command": "pg_dump --schema-only --no-owner --exclude-schema=graphile_migrate --file=data/schema.sql \"$GM_DBURL\""
     }
+  ],
+  "afterCurrent": [
+    "afterCurrent.sql"
   ]
 }
 ```
@@ -250,8 +255,8 @@ After committing this change, you may run `git checkout-index --force --all` to 
 ## Actions
 
 We support certain "actions" after certain events happen; for example see
-`afterReset` and `afterAllMigrations` mentioned above. Actions should be
-specified as a list of strings or action spec objects.
+`afterReset`, `afterAllMigrations` and `afterCurrent` mentioned above.
+Actions should be specified as a list of strings or action spec objects.
 
 ### Actions spec strings
 
