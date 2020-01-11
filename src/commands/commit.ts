@@ -30,8 +30,10 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   }
 
   // See if we have a message arg
-  const messageIndex =
-    process.argv.findIndex(arg => arg === "--message" || arg === "-m") + 1;
+  const messageFlagIndex = process.argv.findIndex(
+    arg => arg === "--message" || arg === "-m"
+  );
+  const messageIndex = messageFlagIndex === -1 ? null : messageFlagIndex + 1;
 
   // If we do, fetch, and replace any whitespace with '_'
   const messageFromCommandArgs = messageIndex && process.argv[messageIndex];
