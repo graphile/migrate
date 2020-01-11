@@ -315,4 +315,10 @@ export function getCurrentMigrationPath(
   return `${parsedSettings.migrationsFolder}/current.sql`;
 }
 
+export function getCurrentMigrationFolderPath(
+  parsedSettings: ParsedSettings
+): string {
+  return `${parsedSettings.migrationsFolder}/current`;
+}
+
 export const BLANK_MIGRATION_CONTENT = "-- Enter migration here\n";

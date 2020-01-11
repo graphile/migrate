@@ -7,3 +7,5 @@ export const stat = promisify(fs.stat);
 export const readdir = promisify(fs.readdir);
 export const mkdir = promisify(fs.mkdir);
 export const unlink = promisify(fs.unlink);
+export const exists = promisify(fs.exists);
+export const lstat = promisify(fs.lstat);

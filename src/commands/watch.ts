@@ -6,6 +6,7 @@ import {
   parseSettings,
   getCurrentMigrationPath,
   BLANK_MIGRATION_CONTENT,
+  getCurrentMigrationFolderPath,
 } from "../settings";
 import * as fsp from "../fsp";
 import { runStringMigration, reverseMigration } from "../migration";
@@ -19,11 +20,59 @@ export function _makeCurrentMigrationRunner(
   _once = false,
   shadow = false
 ): () => Promise<void> {
+  const currentMigrationFolderPath = getCurrentMigrationFolderPath(parsedSettings);
   const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
+
+  
+
   async function run(): Promise<void> {
+    const folderExists = await fsp.exists(currentMigrationFolderPath) && !(await fsp.lstat(currentMigrationFolderPath)).isFile;
+    const fileExists = await fsp.exists(currentMigrationPath);
+    console.log('Folder exists:', folderExists);
+    console.log('File exists:', fileExists);
+
+    if(folderExists && fileExists) {
+      //TODO: invalid
+      console.log('Folder and file exists');
+      return;
+    }
+
+    let body: string;
+    if(folderExists) {
+      console.log('folder');
+      const files = await fsp.readdir(currentMigrationFolderPath);
+      console.log('Files:', files);
+
+      // necessary?
+      files.sort();
+
+      console.log('Files (after sort):', files);
+
+      const bodies = new Array<string>();
+      for(let file of files) {
+        const path = `${currentMigrationFolderPath}/${file}`;
+        const lstat = await fsp.lstat(path);
+        if(!lstat.isFile) {
+          console.log('Invalid file:', file);
+          return;
+        }
+
+        //TODO: validate filename
+        
+        const body = await fsp.readFile(path, "utf8");
+        bodies.push(body);
+      }
+
+      console.log('Bodies:', bodies.length);
+      body = bodies.join('')
+    } else {
+      body = await fsp.readFile(currentMigrationPath, "utf8");
+    }
+
     let migrationsAreEquivalent = false;
     try {
-      const body = await fsp.readFile(currentMigrationPath, "utf8");
+      // const body = await fsp.readFile(currentMigrationPath, "utf8");
+
       // eslint-disable-next-line no-console
       console.log(`[${new Date().toISOString()}]: Running current.sql`);
       const start = process.hrtime();
