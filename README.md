@@ -131,8 +131,8 @@ will exit.
 - apply the current migration to the shadow database, and replace the dump
 - move the current migration to committed migrations (adding a hash to prevent
   tampering)
-- any whitespace in commit messages will be replaced with `_` and appended to
-  the end of the filename separated by `-`
+- the message will be made "filesystem safe" and appended to the end of the
+  filename after a hyphen (`-`)
 - Do **NOT** change the filename or contents once you have committed. If you
   need to make changes, either add a new migration or, if the migration hasn't
   been used anywhere else yet, see `uncommit` below.
