@@ -82,7 +82,7 @@ export async function _migrateMigrationSchema(
 export const isMigrationFilename = (
   filename: string
 ): RegExpMatchArray | null =>
-  /^[0-9]{6,}(-[-_0-9A-Za-z]+)?\.sql$/.exec(filename);
+  /^[0-9]{6,}(-[-_0-9A-Za-z]*)?\.sql$/.exec(filename);
 
 export async function getLastMigration(
   pgClient: Client,
