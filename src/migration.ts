@@ -82,7 +82,10 @@ export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings
 ): Promise<DbMigration | null> {
-  await _migrateMigrationSchema(pgClient, parsedSettings);
+  if (!parsedSettings.skipOwnSchema) {
+    await _migrateMigrationSchema(pgClient, parsedSettings);
+  }
+
   const {
     rows: [row],
   } = await pgClient.query(

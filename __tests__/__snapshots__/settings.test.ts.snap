@@ -30,6 +30,7 @@ Object {
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
+  "skipOwnSchema": false,
 }
 `;
 
@@ -60,6 +61,7 @@ Object {
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
+  "skipOwnSchema": false,
 }
 `;
 
@@ -85,6 +87,7 @@ Object {
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
+  "skipOwnSchema": false,
 }
 `;
 
@@ -118,6 +121,7 @@ Object {
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
+  "skipOwnSchema": false,
 }
 `;
 
@@ -148,5 +152,6 @@ Object {
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
+  "skipOwnSchema": false,
 }
 `;
