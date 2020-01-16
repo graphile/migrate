@@ -59,6 +59,7 @@ export interface Settings {
   shadowConnectionString?: string;
   rootConnectionString?: string;
   databaseOwner?: string;
+  skipOwnSchema?: boolean;
   pgSettings?: {
     [key: string]: string;
   };
@@ -128,7 +129,7 @@ export async function parseSettings(
     ): string => {
       if (typeof rawRootConnectionString !== "string") {
         throw new Error(
-          "Expected a string, or for DATABASE_URL envvar to be set"
+          "Expected a string, or for ROOT_DATABASE_URL envvar to be set"
         );
       }
       return rawRootConnectionString;
@@ -236,6 +237,10 @@ export async function parseSettings(
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
   const afterCurrent = await check("afterCurrent", validateAction);
 
+  const skipOwnSchema = await check("skipOwnSchema", skip => {
+    return !!skip;
+  });
+
   /******/
 
   const uncheckedKeys = keysToCheck.filter(key => !checkedKeys.includes(key));
@@ -280,6 +285,7 @@ export async function parseSettings(
     afterCurrent: afterCurrent!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
+    skipOwnSchema: skipOwnSchema!,
     databaseOwner: databaseOwner!,
     migrationsFolder,
     databaseName: databaseName!,
