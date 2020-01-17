@@ -1,78 +1,22 @@
 import * as chokidar from "chokidar";
-import { withClient, withTransaction } from "../pg";
-import {
-  Settings,
-  ParsedSettings,
-  parseSettings,
-  getCurrentMigrationPath,
-  BLANK_MIGRATION_CONTENT,
-  getCurrentMigrationFolderPath,
-} from "../settings";
-import * as fsp from "../fsp";
-import { runStringMigration, reverseMigration } from "../migration";
 import { executeActions } from "../actions";
-import { _migrate } from "./migrate";
+import { Current, getCurrent, writeBlankCurrent } from "../current";
 import { logDbError } from "../instrumentation";
+import { reverseMigration, runStringMigration } from "../migration";
+import { withClient, withTransaction } from "../pg";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { _migrate } from "./migrate";
 import pgMinify = require("pg-minify");
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
+  current: Current,
   _once = false,
   shadow = false
 ): () => Promise<void> {
-  const currentMigrationFolderPath = getCurrentMigrationFolderPath(parsedSettings);
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-
-  
-
   async function run(): Promise<void> {
-    const folderExists = await fsp.exists(currentMigrationFolderPath) && !(await fsp.lstat(currentMigrationFolderPath)).isFile;
-    const fileExists = await fsp.exists(currentMigrationPath);
-    console.log('Folder exists:', folderExists);
-    console.log('File exists:', fileExists);
-
-    if(folderExists && fileExists) {
-      //TODO: invalid
-      console.log('Folder and file exists');
-      return;
-    }
-
-    let body: string;
-    if(folderExists) {
-      console.log('folder');
-      const files = await fsp.readdir(currentMigrationFolderPath);
-      console.log('Files:', files);
-
-      // necessary?
-      files.sort();
-
-      console.log('Files (after sort):', files);
-
-      const bodies = new Array<string>();
-      for(let file of files) {
-        const path = `${currentMigrationFolderPath}/${file}`;
-        const lstat = await fsp.lstat(path);
-        if(!lstat.isFile) {
-          console.log('Invalid file:', file);
-          return;
-        }
-
-        //TODO: validate filename
-        
-        const body = await fsp.readFile(path, "utf8");
-        bodies.push(body);
-      }
-
-      console.log('Bodies:', bodies.length);
-      body = bodies.join('')
-    } else {
-      body = await fsp.readFile(currentMigrationPath, "utf8");
-    }
-
     let migrationsAreEquivalent = false;
     try {
-      // const body = await fsp.readFile(currentMigrationPath, "utf8");
-
       // eslint-disable-next-line no-console
       console.log(`[${new Date().toISOString()}]: Running current.sql`);
       const start = process.hrtime();
@@ -112,7 +56,7 @@ export function _makeCurrentMigrationRunner(
               lockingPgClient,
               parsedSettings,
               context,
-              body,
+              current.body,
               "current.sql",
               undefined,
               true
@@ -149,7 +93,7 @@ export function _makeCurrentMigrationRunner(
                       independentPgClient,
                       parsedSettings,
                       context,
-                      body,
+                      current.body,
                       "current.sql",
                       undefined
                     )
@@ -210,18 +154,19 @@ export async function _watch(
   shadow = false
 ): Promise<void> {
   await _migrate(parsedSettings, shadow);
-  // Watch the file
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-  try {
-    await fsp.stat(currentMigrationPath);
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
-    } else {
-      throw e;
-    }
+
+  const current = await getCurrent(parsedSettings);
+
+  if (!current.exists) {
+    await writeBlankCurrent(current);
   }
-  const run = _makeCurrentMigrationRunner(parsedSettings, once, shadow);
+
+  const run = _makeCurrentMigrationRunner(
+    parsedSettings,
+    current,
+    once,
+    shadow
+  );
   if (once) {
     return run();
   } else {
@@ -241,7 +186,7 @@ export async function _watch(
         }
       });
     };
-    const watcher = chokidar.watch(currentMigrationPath, {
+    const watcher = chokidar.watch(current.path, {
       /*
        * Without `usePolling`, on Linux, you can prevent the watching from
        * working by issuing `git stash && sleep 2 && git stash pop`. This is

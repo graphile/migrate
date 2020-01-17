@@ -1,17 +1,17 @@
 import {
-  parseSettings,
-  Settings,
-  ParsedSettings,
-  getCurrentMigrationPath,
-  BLANK_MIGRATION_CONTENT,
-} from "../settings";
-import { getAllMigrations } from "../migration";
-import pgMinify = require("pg-minify");
+  getCurrent,
+  CurrentMigrationFormat,
+  writeBlankCurrent,
+  writeCurrentFromCommit,
+} from "../current";
 import * as fsp from "../fsp";
 import { calculateHash } from "../hash";
-import { _reset } from "./reset";
-import { _migrate } from "./migrate";
 import { logDbError } from "../instrumentation";
+import { getAllMigrations } from "../migration";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { _migrate } from "./migrate";
+import { _reset } from "./reset";
+import pgMinify = require("pg-minify");
 
 export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   const { migrationsFolder } = parsedSettings;
@@ -26,17 +26,21 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   }
   const newMigrationFilename =
     String(newMigrationNumber).padStart(6, "0") + ".sql";
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-  const body = await fsp.readFile(currentMigrationPath, "utf8");
-  const minifiedBody = pgMinify(body);
+
+  const current = await getCurrent(
+    parsedSettings,
+    CurrentMigrationFormat.Commit
+  );
+
+  const minifiedBody = pgMinify(current.body);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
 
-  const hash = calculateHash(body, lastMigration && lastMigration.hash);
+  const hash = calculateHash(current.body, lastMigration && lastMigration.hash);
   const finalBody = `--! Previous: ${
     lastMigration ? lastMigration.hash : "-"
-  }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
+  }\n--! Hash: ${hash}\n\n${current.body.trim()}\n`;
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
@@ -47,12 +51,12 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   try {
     await _migrate(parsedSettings, true);
     await _migrate(parsedSettings);
-    await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
+    writeBlankCurrent(current);
   } catch (e) {
     logDbError(e);
     // eslint-disable-next-line no-console
     console.error("ABORTING...");
-    await fsp.writeFile(currentMigrationPath, body);
+    await writeCurrentFromCommit(parsedSettings, current.body);
     await fsp.unlink(newMigrationFilepath);
     // eslint-disable-next-line no-console
     console.error("ABORTED AND ROLLED BACK");
