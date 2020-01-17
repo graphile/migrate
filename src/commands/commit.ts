@@ -51,7 +51,7 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   try {
     await _migrate(parsedSettings, true);
     await _migrate(parsedSettings);
-    writeBlankCurrent(current);
+    await writeBlankCurrent(current);
   } catch (e) {
     logDbError(e);
     // eslint-disable-next-line no-console
