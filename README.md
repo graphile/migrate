@@ -405,6 +405,8 @@ Some migrations require execution outside of a transaction (e.g. to enable augme
 ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Admin';
 ```
 
+**IMPORTANT**: `pg` always runs multi-statement queries in a pseudo-transaction, so `--! no-transaction` migrations must contain exactly one statement. You might be able to work around this with a `DO $$` block? (If this works, please send a PR to this paragraph.)
+
 ## TODO:
 
 - [ ] Use a proper CLI parsing library
