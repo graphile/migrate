@@ -34,7 +34,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
     );
   }
   const bodyWithoutMetadata = body.substr(nn + 2);
-  writeCurrentFromCommit(parsedSettings, bodyWithoutMetadata);
+  await writeCurrentFromCommit(parsedSettings, bodyWithoutMetadata);
 
   // Delete the migration from committed and from the DB
   await fsp.unlink(lastMigrationFilepath);
