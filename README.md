@@ -208,6 +208,8 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   "Actions" below.
 - `afterCurrent` — optional list of actions to execute after `current.sql` is
   loaded into the database. See "Actions" below.
+- `skipOwnSchema` - optional boolean parameter to skip creation of the `graphile_migrate` schema. 
+  This is useful in environments where the user running the migrations isn't granted schema creation privileges.
 
 What follows is an example configuration file that depends on the following
 environmental variables being set:
