@@ -135,14 +135,12 @@ export async function getCurrent(
     }
   }
 
-  const current: Current = {
+  return {
     path,
     isFile,
     exists,
     body,
   };
-
-  return current;
 }
 
 export async function writeBlankCurrent(current: Current): Promise<void> {
