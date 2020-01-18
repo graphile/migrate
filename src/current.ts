@@ -56,7 +56,7 @@ export async function getCurrent(
     path = filePath;
     isFile = true;
     exists = fileExists;
-    body = (await fsp.readFile(this.path, "utf8")).trim();
+    body = (await fsp.readFile(path, "utf8")).trim();
   } else {
     path = directoryPath;
     isFile = false;
