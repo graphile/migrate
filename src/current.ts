@@ -120,7 +120,7 @@ export async function getCurrent(
       }
 
       // Sort body parts
-      const ids = Array.from(parts.keys()).sort((a, b) => a - b);
+      const ids = [...parts.keys()].sort((a, b) => a - b);
 
       body = ids.map(id => parts.get(id)).join("\n\n") + "\n";
     } else {
