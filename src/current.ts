@@ -1,4 +1,5 @@
 import * as fsp from "./fsp";
+import { isNoTransactionDefined } from "./header";
 import { ParsedSettings } from "./settings";
 
 export interface CurrentOptions {
@@ -108,6 +109,12 @@ export async function getCurrent(
         } catch (e) {
           throw new Error(
             `Failed to read current migration file: ${filePath} (${e.message})`
+          );
+        }
+
+        if (isNoTransactionDefined(body) && files.length > 1) {
+          throw new Error(
+            "Cannot use --! no-transaction with multiple current migration files."
           );
         }
 
