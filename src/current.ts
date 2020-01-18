@@ -13,6 +13,21 @@ export interface Current {
   body: string;
 }
 
+const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-z0-9]+)?\.sql$/g;
+const SPLIT_REGEX = /^--! split: ([0-9]+)(-[-_a-z0-9]+)?\.sql\n$/gm;
+const SPLIT = "--! split: {file}\n";
+const BLANK_MIGRATION_CONTENT = "-- Enter migration here\n";
+
+function getCurrentMigrationFilePath(parsedSettings: ParsedSettings): string {
+  return `${parsedSettings.migrationsFolder}/current.sql`;
+}
+
+function getCurrentMigrationDirectoryPath(
+  parsedSettings: ParsedSettings
+): string {
+  return `${parsedSettings.migrationsFolder}/current`;
+}
+
 export async function getCurrent(
   parsedSettings: ParsedSettings,
   format: CurrentMigrationFormat = CurrentMigrationFormat.Minimal
@@ -69,7 +84,7 @@ export async function getCurrent(
       files.sort();
 
       const bodies = new Array<string>();
-      for (let file of files) {
+      for (const file of files) {
         if (file.match(VALID_FILE_REGEX) == null) {
           throw new Error(`Invalid current migration filename: ${file}`);
         }
@@ -85,7 +100,7 @@ export async function getCurrent(
         }
 
         if (format == CurrentMigrationFormat.Commit) {
-          let fileSplit = SPLIT.replace("{file}", file);
+          const fileSplit = SPLIT.replace("{file}", file);
           body = `${fileSplit}\n${body}`;
         }
 
@@ -108,24 +123,22 @@ export async function getCurrent(
   return current;
 }
 
-export async function writeBlankCurrent(current: Current) {
+export async function writeBlankCurrent(current: Current): Promise<void> {
   if (current.isFile) {
     await fsp.writeFile(current.path, BLANK_MIGRATION_CONTENT);
   } else {
     const files = await fsp.readdir(current.path);
-    for (let file of files) {
+    for (const file of files) {
       await fsp.unlink(`${current.path}/${file}`);
     }
     await fsp.writeFile(`${current.path}/1.sql`, BLANK_MIGRATION_CONTENT);
   }
-
-  current.exists = false;
 }
 
 export async function writeCurrentFromCommit(
   parsedSettings: ParsedSettings,
   body: string
-) {
+): Promise<void> {
   const parts: Array<RegExpMatchArray> = [...body.matchAll(SPLIT_REGEX)];
   if (parts.length == 0) {
     await fsp.writeFile(getCurrentMigrationFilePath(parsedSettings), body);
@@ -134,7 +147,7 @@ export async function writeCurrentFromCommit(
 
     try {
       const files = await fsp.readdir(directory);
-      for (let file of files) {
+      for (const file of files) {
         await fsp.unlink(`${directory}/${file}`);
       }
     } catch (e) {
@@ -145,6 +158,10 @@ export async function writeCurrentFromCommit(
 
     for (let i = 0; i < parts.length; ++i) {
       const part = parts[i];
+      if (part.index == undefined) {
+        // Not possible but required for compiler and lint validation
+        continue;
+      }
 
       const name =
         part
@@ -155,7 +172,7 @@ export async function writeCurrentFromCommit(
       const bodyPart =
         body
           .substring(
-            part.index! + part[0].length,
+            part.index + part[0].length,
             i < parts.length - 1 ? parts[i + 1].index : body.length
           )
           .trim() + "\n";
@@ -163,21 +180,4 @@ export async function writeCurrentFromCommit(
       fsp.writeFile(`${directory}/${name}`, bodyPart);
     }
   }
-}
-
-const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-z0-9]+)?\.sql$/g;
-const SPLIT_REGEX = /^--! split: ([0-9]+)(-[-_a-z0-9]+)?\.sql\n$/gm;
-const SPLIT = "--! split: {file}\n";
-const BLANK_MIGRATION_CONTENT = "-- Enter migration here\n";
-
-export function getCurrentMigrationFilePath(
-  parsedSettings: ParsedSettings
-): string {
-  return `${parsedSettings.migrationsFolder}/current.sql`;
-}
-
-export function getCurrentMigrationDirectoryPath(
-  parsedSettings: ParsedSettings
-): string {
-  return `${parsedSettings.migrationsFolder}/current`;
 }
