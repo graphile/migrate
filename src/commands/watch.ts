@@ -1,6 +1,6 @@
 import * as chokidar from "chokidar";
 import { executeActions } from "../actions";
-import { Current, getCurrent, writeBlankCurrent } from "../current";
+import { getCurrent, writeBlankCurrent } from "../current";
 import { logDbError } from "../instrumentation";
 import { reverseMigration, runStringMigration } from "../migration";
 import { withClient, withTransaction } from "../pg";
@@ -10,12 +10,13 @@ import pgMinify = require("pg-minify");
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
-  current: Current,
   _once = false,
   shadow = false
 ): () => Promise<void> {
   async function run(): Promise<void> {
+    const current = await getCurrent(parsedSettings);
     let migrationsAreEquivalent = false;
+
     try {
       // eslint-disable-next-line no-console
       console.log(`[${new Date().toISOString()}]: Running current.sql`);
@@ -156,17 +157,11 @@ export async function _watch(
   await _migrate(parsedSettings, shadow);
 
   const current = await getCurrent(parsedSettings);
-
   if (!current.exists) {
     await writeBlankCurrent(current);
   }
 
-  const run = _makeCurrentMigrationRunner(
-    parsedSettings,
-    current,
-    once,
-    shadow
-  );
+  const run = _makeCurrentMigrationRunner(parsedSettings, once, shadow);
   if (once) {
     return run();
   } else {
