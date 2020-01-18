@@ -14,7 +14,7 @@ export function _makeCurrentMigrationRunner(
   shadow = false
 ): () => Promise<void> {
   async function run(): Promise<void> {
-    const current = await getCurrent(parsedSettings);
+    const current = await getCurrent(parsedSettings, { readBody: true });
     let migrationsAreEquivalent = false;
 
     try {
@@ -156,7 +156,7 @@ export async function _watch(
 ): Promise<void> {
   await _migrate(parsedSettings, shadow);
 
-  const current = await getCurrent(parsedSettings);
+  const current = await getCurrent(parsedSettings, { readBody: false });
   if (!current.exists) {
     await writeBlankCurrent(current);
   }

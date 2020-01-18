@@ -20,7 +20,7 @@ async function _status(parsedSettings: ParsedSettings): Promise<Status> {
       parsedSettings,
       lastMigration
     );
-    const current = await getCurrent(parsedSettings);
+    const current = await getCurrent(parsedSettings, { readBody: true });
     const minifiedBody = pgMinify(current.body);
     const hasCurrentMigration = minifiedBody !== "";
     return {

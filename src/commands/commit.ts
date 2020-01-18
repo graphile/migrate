@@ -1,6 +1,5 @@
 import {
   getCurrent,
-  CurrentMigrationFormat,
   writeBlankCurrent,
   writeCurrentFromCommit,
 } from "../current";
@@ -27,10 +26,10 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   const newMigrationFilename =
     String(newMigrationNumber).padStart(6, "0") + ".sql";
 
-  const current = await getCurrent(
-    parsedSettings,
-    CurrentMigrationFormat.Commit
-  );
+  const current = await getCurrent(parsedSettings, {
+    readBody: true,
+    splitBody: true,
+  });
 
   const minifiedBody = pgMinify(current.body);
   if (minifiedBody === "") {

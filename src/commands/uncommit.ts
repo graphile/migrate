@@ -18,7 +18,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   }
 
   // Check current.sql is blank
-  const current = await getCurrent(parsedSettings);
+  const current = await getCurrent(parsedSettings, { readBody: true });
   const minifiedCurrentBody = pgMinify(current.body);
   if (minifiedCurrentBody !== "") {
     throw new Error("Cannot uncommit - current migration is not blank.");

@@ -1,9 +1,9 @@
 import * as fsp from "./fsp";
 import { ParsedSettings } from "./settings";
 
-export enum CurrentMigrationFormat {
-  Minimal,
-  Commit,
+export interface CurrentOptions {
+  readBody: boolean;
+  splitBody?: boolean;
 }
 
 export interface Current {
@@ -30,7 +30,7 @@ function getCurrentMigrationDirectoryPath(
 
 export async function getCurrent(
   parsedSettings: ParsedSettings,
-  format: CurrentMigrationFormat = CurrentMigrationFormat.Minimal
+  { readBody, splitBody = false }: CurrentOptions
 ): Promise<Current> {
   const filePath = getCurrentMigrationFilePath(parsedSettings);
   const directoryPath = getCurrentMigrationDirectoryPath(parsedSettings);
@@ -71,22 +71,34 @@ export async function getCurrent(
     path = filePath;
     isFile = true;
     exists = fileExists;
-    body = (await fsp.readFile(path, "utf8")).trim();
+
+    if (readBody) {
+      body = (await fsp.readFile(path, "utf8")).trim();
+    } else {
+      body = "";
+    }
   } else {
     path = directoryPath;
     isFile = false;
-
     const files = await fsp.readdir(directoryPath);
     exists = files.length > 0;
 
-    if (exists) {
-      // Is sorting necessary, or are files always sorted by filename asc?
-      files.sort();
-
-      const bodies = new Array<string>();
+    if (exists && readBody) {
+      const parts = new Map<number, string>();
       for (const file of files) {
-        if (file.match(VALID_FILE_REGEX) == null) {
-          throw new Error(`Invalid current migration filename: ${file}`);
+        const match = [...file.matchAll(VALID_FILE_REGEX)];
+        if (match.length != 1) {
+          throw new Error(
+            `Invalid current migration filename: ${file}. File must follow the naming 1.sql or 1-message.sql, where 1 is a unique number and message is optional.`
+          );
+        }
+
+        const matchResult = match[0];
+        const id = Number(matchResult[1]);
+        if (isNaN(id) || parts.has(id)) {
+          throw new Error(
+            `Invalid current migration filename: ${file}. File must start with a unique number.`
+          );
         }
 
         const filePath = `${path}/${file}`;
@@ -99,15 +111,18 @@ export async function getCurrent(
           );
         }
 
-        if (format == CurrentMigrationFormat.Commit) {
+        if (splitBody) {
           const fileSplit = SPLIT.replace("{file}", file);
           body = `${fileSplit}\n${body}`;
         }
 
-        bodies.push(body);
+        parts.set(id, body);
       }
 
-      body = bodies.join("\n\n") + "\n";
+      // Sort body parts
+      const ids = Array.from(parts.keys()).sort((a, b) => a - b);
+
+      body = ids.map(id => parts.get(id)).join("\n\n") + "\n";
     } else {
       body = "";
     }
