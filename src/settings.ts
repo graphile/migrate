@@ -59,7 +59,7 @@ export interface Settings {
   shadowConnectionString?: string;
   rootConnectionString?: string;
   databaseOwner?: string;
-  skipOwnSchema?: boolean;
+  manageGraphileMigrateSchema?: boolean;
   pgSettings?: {
     [key: string]: string;
   };
@@ -237,9 +237,12 @@ export async function parseSettings(
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
   const afterCurrent = await check("afterCurrent", validateAction);
 
-  const skipOwnSchema = await check("skipOwnSchema", skip => {
-    return !!skip;
-  });
+  const manageGraphileMigrateSchema = await check(
+    "manageGraphileMigrateSchema",
+    mgms => {
+      return !mgms;
+    }
+  );
 
   /******/
 
@@ -285,7 +288,7 @@ export async function parseSettings(
     afterCurrent: afterCurrent!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
-    skipOwnSchema: skipOwnSchema!,
+    manageGraphileMigrateSchema: manageGraphileMigrateSchema!,
     databaseOwner: databaseOwner!,
     migrationsFolder,
     databaseName: databaseName!,
