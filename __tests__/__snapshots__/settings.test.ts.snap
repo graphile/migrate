@@ -25,12 +25,12 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
-  "skipOwnSchema": false,
 }
 `;
 
@@ -56,12 +56,12 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
-  "skipOwnSchema": false,
 }
 `;
 
@@ -82,12 +82,12 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
-  "skipOwnSchema": false,
 }
 `;
 
@@ -116,12 +116,12 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
-  "skipOwnSchema": false,
 }
 `;
 
@@ -147,11 +147,11 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
   "rootConnectionString": "template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
-  "skipOwnSchema": false,
 }
 `;
