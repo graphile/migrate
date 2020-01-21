@@ -240,7 +240,7 @@ export async function parseSettings(
   const manageGraphileMigrateSchema = await check(
     "manageGraphileMigrateSchema",
     mgms => {
-      return !mgms;
+      return mgms === undefined || !!mgms;
     }
   );
 
@@ -288,7 +288,7 @@ export async function parseSettings(
     afterCurrent: afterCurrent!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
-    manageGraphileMigrateSchema: manageGraphileMigrateSchema!,
+    manageGraphileMigrateSchema: manageGraphileMigrateSchema,
     databaseOwner: databaseOwner!,
     migrationsFolder,
     databaseName: databaseName!,
