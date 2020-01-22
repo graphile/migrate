@@ -240,7 +240,7 @@ export async function parseSettings(
   const manageGraphileMigrateSchema = await check(
     "manageGraphileMigrateSchema",
     mgms => {
-      return mgms === undefined || !!mgms;
+      return mgms !== false;
     }
   );
 
