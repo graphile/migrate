@@ -56,32 +56,6 @@ export const generatePlaceholderReplacement = memoize(
   slowGeneratePlaceholderReplacement
 );
 
-export async function _migrateMigrationSchema(
-  pgClient: Client,
-  parsedSettings: ParsedSettings
-): Promise<void> {
-  if (!parsedSettings.manageGraphileMigrateSchema) {
-    // TODO: check the migrations schema is compatible, abort if not.
-    return;
-  }
-  await pgClient.query(`
-    create schema if not exists graphile_migrate;
-
-    create table if not exists graphile_migrate.migrations (
-      hash text primary key,
-      previous_hash text references graphile_migrate.migrations,
-      filename text not null,
-      date timestamptz not null default now()
-    );
-
-    create table if not exists graphile_migrate.current (
-      filename text primary key default 'current.sql',
-      content text not null,
-      date timestamptz not null default now()
-    );
-  `);
-}
-
 const TABLE_CHECKS = {
   current: {
     columns: 3,
@@ -127,17 +101,39 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
   return null;
 }
 
+export async function _migrateMigrationSchema(
+  pgClient: Client,
+  parsedSettings: ParsedSettings
+): Promise<void> {
+  if (!parsedSettings.manageGraphileMigrateSchema) {
+    // Verify schema
+    await verifyGraphileMigrateSchema(pgClient);
+    return;
+  }
+
+  await pgClient.query(`
+    create schema if not exists graphile_migrate;
+
+    create table if not exists graphile_migrate.migrations (
+      hash text primary key,
+      previous_hash text references graphile_migrate.migrations,
+      filename text not null,
+      date timestamptz not null default now()
+    );
+
+    create table if not exists graphile_migrate.current (
+      filename text primary key default 'current.sql',
+      content text not null,
+      date timestamptz not null default now()
+    );
+  `);
+}
+
 export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings
 ): Promise<DbMigration | null> {
-  // Create schema if managed internally
-  if (parsedSettings.manageGraphileMigrateSchema) {
-    await _migrateMigrationSchema(pgClient, parsedSettings);
-  }
-
-  // Verify schema
-  await verifyGraphileMigrateSchema(pgClient);
+  await _migrateMigrationSchema(pgClient, parsedSettings);
 
   const {
     rows: [row],
