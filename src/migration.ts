@@ -78,13 +78,62 @@ export async function _migrateMigrationSchema(
   `);
 }
 
+const TABLE_CHECKS = {
+  current: {
+    columns: 3,
+  },
+  migrations: {
+    columns: 4,
+  },
+};
+
+async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
+  // Verify that graphile_migrate schema exists
+  const schemaCheck = await pgClient.query(
+    `select oid from pg_namespace where nspname = 'graphile_migrate';`
+  );
+  if (schemaCheck.rows.length !== 1) {
+    throw new Error("Couldn't find graphile_migrate schema.");
+  }
+
+  await Promise.all(
+    Object.keys(TABLE_CHECKS).map(async tableName => {
+      // Check that table exists
+      const tableCheck = await pgClient.query(
+        `select oid from pg_class where relnamespace = ${schemaCheck.rows[0].oid} and relname = '${tableName}'  and relkind = 'r'`
+      );
+      if (tableCheck.rows.length !== 1) {
+        throw new Error(
+          `Couldn't find the ${tableName} table expected in graphile_migrate schema.`
+        );
+      }
+
+      // Check that it has the right number of columns
+      const columnCheck = await pgClient.query(
+        `select attrelid, attname from pg_attribute where attrelid = ${tableCheck.rows[0].oid} and attnum > 0`
+      );
+      if (columnCheck.rows.length !== TABLE_CHECKS[tableName].columns) {
+        throw new Error(
+          `The table ${tableName} doesn't have the right number of columns.`
+        );
+      }
+    })
+  );
+
+  return null;
+}
+
 export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings
 ): Promise<DbMigration | null> {
+  // Create schema if managed internally
   if (parsedSettings.manageGraphileMigrateSchema) {
     await _migrateMigrationSchema(pgClient, parsedSettings);
   }
+
+  // Verify schema
+  await verifyGraphileMigrateSchema(pgClient);
 
   const {
     rows: [row],
