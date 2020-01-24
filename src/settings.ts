@@ -240,7 +240,15 @@ export async function parseSettings(
   const manageGraphileMigrateSchema = await check(
     "manageGraphileMigrateSchema",
     mgms => {
-      return mgms === undefined || !!mgms;
+      const type = typeof mgms;
+      if (type !== "undefined" && type !== "boolean") {
+        throw new Error(
+          `Expected boolean, received '${
+            type === "object" && !mgms ? "null" : type
+          }'`
+        );
+      }
+      return mgms !== false;
     }
   );
 

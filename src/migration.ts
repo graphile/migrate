@@ -58,8 +58,12 @@ export const generatePlaceholderReplacement = memoize(
 
 export async function _migrateMigrationSchema(
   pgClient: Client,
-  _parsedSettings: ParsedSettings
+  parsedSettings: ParsedSettings
 ): Promise<void> {
+  if (!parsedSettings.manageGraphileMigrateSchema) {
+    // TODO: check the migrations schema is compatible, abort if not.
+    return;
+  }
   await pgClient.query(`
     create schema if not exists graphile_migrate;
 
