@@ -49,6 +49,24 @@ async function getError(initialSchema = ""): Promise<Error | null> {
 }
 
 describe("manageGraphlileMigrateSchema = false", () => {
+  it("throws error if we set the option to something strange", async () => {
+    let error;
+    try {
+      await parseSettings({
+        connectionString: TEST_DATABASE_URL,
+        // @ts-ignore Deliberate error - that's what we're testing
+        manageGraphileMigrateSchema: "false",
+      });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeTruthy();
+    expect(error).toMatchInlineSnapshot(`
+      [Error: Errors occurred during settings validation:
+      - Setting 'manageGraphileMigrateSchema': Expected boolean, received 'string']
+    `);
+  });
+
   it("throws error if schema doesn't exist", async () => {
     const error = await getError();
     expect(error).toBeTruthy();
