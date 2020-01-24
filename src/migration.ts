@@ -57,46 +57,50 @@ export const generatePlaceholderReplacement = memoize(
 );
 
 const TABLE_CHECKS = {
-  current: {
-    columns: 3,
-  },
   migrations: {
-    columns: 4,
+    columnCount: 4,
+  },
+  current: {
+    columnCount: 3,
   },
 };
 
 async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
   // Verify that graphile_migrate schema exists
-  const schemaCheck = await pgClient.query(
+  const {
+    rows: [graphileMigrateSchema],
+  } = await pgClient.query(
     `select oid from pg_namespace where nspname = 'graphile_migrate';`
   );
-  if (schemaCheck.rows.length !== 1) {
-    throw new Error("Couldn't find graphile_migrate schema.");
+  if (!graphileMigrateSchema) {
+    throw new Error(
+      "You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue."
+    );
   }
 
-  await Promise.all(
-    Object.keys(TABLE_CHECKS).map(async tableName => {
-      // Check that table exists
-      const tableCheck = await pgClient.query(
-        `select oid from pg_class where relnamespace = ${schemaCheck.rows[0].oid} and relname = '${tableName}'  and relkind = 'r'`
+  for (const [tableName, expected] of Object.entries(TABLE_CHECKS)) {
+    // Check that table exists
+    const {
+      rows: [table],
+    } = await pgClient.query(
+      `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`
+    );
+    if (!table) {
+      throw new Error(
+        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table couldn't be found - we cannot continue.`
       );
-      if (tableCheck.rows.length !== 1) {
-        throw new Error(
-          `Couldn't find the ${tableName} table expected in graphile_migrate schema.`
-        );
-      }
+    }
 
-      // Check that it has the right number of columns
-      const columnCheck = await pgClient.query(
-        `select attrelid, attname from pg_attribute where attrelid = ${tableCheck.rows[0].oid} and attnum > 0`
+    // Check that it has the right number of columns
+    const { rows: columns } = await pgClient.query(
+      `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`
+    );
+    if (columns.length !== expected.columnCount) {
+      throw new Error(
+        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table has the wrong number of columns (${columns.length} != ${expected.columnCount}) - we cannot continue.`
       );
-      if (columnCheck.rows.length !== TABLE_CHECKS[tableName].columns) {
-        throw new Error(
-          `The table ${tableName} doesn't have the right number of columns.`
-        );
-      }
-    })
-  );
+    }
+  }
 
   return null;
 }

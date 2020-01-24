@@ -53,7 +53,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     const error = await getError();
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: Couldn't find graphile_migrate schema.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue.]`
     );
   });
 
@@ -63,7 +63,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     `);
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: Couldn't find the current table expected in graphile_migrate schema.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.migrations' table couldn't be found - we cannot continue.]`
     );
   });
 
@@ -80,7 +80,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     `);
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: Couldn't find the current table expected in graphile_migrate schema.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.current' table couldn't be found - we cannot continue.]`
     );
   });
 
@@ -103,7 +103,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     `);
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: The table migrations doesn't have the right number of columns.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.migrations' table has the wrong number of columns (3 != 4) - we cannot continue.]`
     );
   });
 
