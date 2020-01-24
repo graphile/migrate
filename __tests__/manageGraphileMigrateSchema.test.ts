@@ -92,6 +92,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
         hash text primary key,
         previous_hash text references graphile_migrate.migrations,
         filename text not null
+        -- DELETED LINE
       );
 
       create table if not exists graphile_migrate.current (
@@ -104,5 +105,25 @@ describe("manageGraphlileMigrateSchema = false", () => {
     expect(error).toMatchInlineSnapshot(
       `[Error: The table migrations doesn't have the right number of columns.]`
     );
+  });
+
+  it("succeeds if everything is fine", async () => {
+    const error = await getError(`
+      create schema if not exists graphile_migrate;
+
+      create table if not exists graphile_migrate.migrations (
+        hash text primary key,
+        previous_hash text references graphile_migrate.migrations,
+        filename text not null,
+        date timestamptz not null default now()
+      );
+
+      create table if not exists graphile_migrate.current (
+        filename text primary key default 'current.sql',
+        content text not null,
+        date timestamptz not null default now()
+      );
+    `);
+    expect(error).toBeFalsy();
   });
 });
