@@ -56,10 +56,65 @@ export const generatePlaceholderReplacement = memoize(
   slowGeneratePlaceholderReplacement
 );
 
+const TABLE_CHECKS = {
+  migrations: {
+    columnCount: 4,
+  },
+  current: {
+    columnCount: 3,
+  },
+};
+
+async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
+  // Verify that graphile_migrate schema exists
+  const {
+    rows: [graphileMigrateSchema],
+  } = await pgClient.query(
+    `select oid from pg_namespace where nspname = 'graphile_migrate';`
+  );
+  if (!graphileMigrateSchema) {
+    throw new Error(
+      "You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue."
+    );
+  }
+
+  for (const [tableName, expected] of Object.entries(TABLE_CHECKS)) {
+    // Check that table exists
+    const {
+      rows: [table],
+    } = await pgClient.query(
+      `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`
+    );
+    if (!table) {
+      throw new Error(
+        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table couldn't be found - we cannot continue.`
+      );
+    }
+
+    // Check that it has the right number of columns
+    const { rows: columns } = await pgClient.query(
+      `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`
+    );
+    if (columns.length !== expected.columnCount) {
+      throw new Error(
+        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table has the wrong number of columns (${columns.length} != ${expected.columnCount}) - we cannot continue.`
+      );
+    }
+  }
+
+  return null;
+}
+
 export async function _migrateMigrationSchema(
   pgClient: Client,
-  _parsedSettings: ParsedSettings
+  parsedSettings: ParsedSettings
 ): Promise<void> {
+  if (!parsedSettings.manageGraphileMigrateSchema) {
+    // Verify schema
+    await verifyGraphileMigrateSchema(pgClient);
+    return;
+  }
+
   await pgClient.query(`
     create schema if not exists graphile_migrate;
 
@@ -83,6 +138,7 @@ export async function getLastMigration(
   parsedSettings: ParsedSettings
 ): Promise<DbMigration | null> {
   await _migrateMigrationSchema(pgClient, parsedSettings);
+
   const {
     rows: [row],
   } = await pgClient.query(

@@ -59,6 +59,7 @@ export interface Settings {
   shadowConnectionString?: string;
   rootConnectionString?: string;
   databaseOwner?: string;
+  manageGraphileMigrateSchema?: boolean;
   pgSettings?: {
     [key: string]: string;
   };
@@ -128,7 +129,7 @@ export async function parseSettings(
     ): string => {
       if (typeof rawRootConnectionString !== "string") {
         throw new Error(
-          "Expected a string, or for DATABASE_URL envvar to be set"
+          "Expected a string, or for ROOT_DATABASE_URL envvar to be set"
         );
       }
       return rawRootConnectionString;
@@ -236,6 +237,21 @@ export async function parseSettings(
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
   const afterCurrent = await check("afterCurrent", validateAction);
 
+  const manageGraphileMigrateSchema = await check(
+    "manageGraphileMigrateSchema",
+    mgms => {
+      const type = typeof mgms;
+      if (type !== "undefined" && type !== "boolean") {
+        throw new Error(
+          `Expected boolean, received '${
+            type === "object" && !mgms ? "null" : type
+          }'`
+        );
+      }
+      return mgms !== false;
+    }
+  );
+
   /******/
 
   const uncheckedKeys = keysToCheck.filter(key => !checkedKeys.includes(key));
@@ -280,6 +296,7 @@ export async function parseSettings(
     afterCurrent: afterCurrent!,
     rootConnectionString: rootConnectionString!,
     connectionString: connectionString!,
+    manageGraphileMigrateSchema: manageGraphileMigrateSchema,
     databaseOwner: databaseOwner!,
     migrationsFolder,
     databaseName: databaseName!,

@@ -208,6 +208,12 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   "Actions" below.
 - `afterCurrent` — optional list of actions to execute after `current.sql` is
   loaded into the database. See "Actions" below.
+- `manageGraphileMigrateSchema` (defaults to `true`) — if set to `false`, you
+  assume responsibility for managing the `graphile_migrate` schema. **Not
+  recommended.** This is useful in environments where the user running the
+  migrations isn't granted schema creation privileges. If you set this to
+  `false`, you must be sure to migrate the `graphile_migrate` database schema
+  any time you update the `graphile-migrate` module.
 
 What follows is an example configuration file that depends on the following
 environmental variables being set:
