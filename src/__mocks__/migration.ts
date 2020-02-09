@@ -34,5 +34,6 @@ export const runStringMigration = jest.fn(
 );
 
 export const runCommittedMigration = jest.fn(
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   (_client, _settings, _context, _committedMigration, _logSuffix) => {}
 );

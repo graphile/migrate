@@ -89,6 +89,7 @@ export function makeActionSpies(shadow = false): ActionSpies {
 }
 
 function makePgClientMock() {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   return { query: jest.fn(async () => {}) };
 }
 
