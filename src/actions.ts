@@ -65,9 +65,10 @@ export async function executeActions(
         connectionString,
         parsedSettings,
         async (pgClient, context) => {
-          const query = generatePlaceholderReplacement(parsedSettings, context)(
-            body
-          );
+          const query = generatePlaceholderReplacement(
+            parsedSettings,
+            context
+          )(body);
           await pgClient.query({
             text: query,
           });
