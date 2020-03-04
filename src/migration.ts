@@ -1,10 +1,10 @@
-import { promises as fsp } from "fs";
 import { calculateHash } from "./hash";
-import { isNoTransactionDefined } from "./header";
-import { runQueryWithErrorInstrumentation } from "./instrumentation";
-import memoize from "./memoize";
 import { Client, Context, withClient } from "./pg";
+import { promises as fsp } from "fs";
 import { ParsedSettings } from "./settings";
+import memoize from "./memoize";
+import { runQueryWithErrorInstrumentation } from "./instrumentation";
+import { isNoTransactionDefined } from "./header";
 
 // NEVER CHANGE THESE!
 const PREVIOUS = "--! Previous: ";

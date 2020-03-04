@@ -1,10 +1,10 @@
 import * as chokidar from "chokidar";
-import { executeActions } from "../actions";
-import { logDbError } from "../instrumentation";
-import { reverseMigration, runStringMigration } from "../migration";
 import { withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { runStringMigration, reverseMigration } from "../migration";
+import { executeActions } from "../actions";
 import { _migrate } from "./migrate";
+import { logDbError } from "../instrumentation";
 import pgMinify = require("pg-minify");
 import {
   getCurrentMigrationLocation,

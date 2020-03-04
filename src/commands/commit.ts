@@ -1,11 +1,11 @@
+import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { getAllMigrations } from "../migration";
+import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
 import { calculateHash } from "../hash";
-import { logDbError } from "../instrumentation";
-import { getAllMigrations } from "../migration";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { _migrate } from "./migrate";
 import { _reset } from "./reset";
-import pgMinify = require("pg-minify");
+import { _migrate } from "./migrate";
+import { logDbError } from "../instrumentation";
 import {
   getCurrentMigrationLocation,
   readCurrentMigration,

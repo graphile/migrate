@@ -1,9 +1,9 @@
-import { promises as fsp } from "fs";
-import { getAllMigrations, undoMigration } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { _migrate } from "./migrate";
-import { _reset } from "./reset";
+import { getAllMigrations, undoMigration } from "../migration";
 import pgMinify = require("pg-minify");
+import { promises as fsp } from "fs";
+import { _reset } from "./reset";
+import { _migrate } from "./migrate";
 import {
   getCurrentMigrationLocation,
   readCurrentMigration,

@@ -1,8 +1,8 @@
-import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
-import { getLastMigration, getMigrationsAfter } from "../migration";
-import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { withClient } from "../pg";
+import { getLastMigration, getMigrationsAfter } from "../migration";
 import pgMinify = require("pg-minify");
+import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 
 interface Status {
   remainingMigrations: Array<string>;
