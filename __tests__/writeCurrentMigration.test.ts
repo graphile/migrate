@@ -1,4 +1,4 @@
-import "mock-fs";
+import "mock-fs"; // MUST BE BEFORE EVERYTHING
 
 import { promises as fsp } from "fs";
 import * as mockFs from "mock-fs";
