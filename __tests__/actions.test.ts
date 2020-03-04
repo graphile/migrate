@@ -2,6 +2,7 @@ jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
 
+import "mock-fs"; // MUST BE BEFORE EVERYTHING
 import * as mockFs from "mock-fs";
 import { parseSettings } from "../src/settings";
 import { _migrate } from "../src/commands/migrate";

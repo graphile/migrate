@@ -1,6 +1,7 @@
 jest.unmock("pg");
 
-import * as mockFs from "mock-fs"; // MUST BE BEFORE EVERYTHING
+import "mock-fs"; // MUST BE BEFORE EVERYTHING
+import * as mockFs from "mock-fs";
 import { Settings, ParsedSettings } from "../src/settings";
 import { exec } from "child_process";
 import { parse } from "pg-connection-string";
