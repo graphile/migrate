@@ -162,7 +162,7 @@ export async function readCurrentMigration(
 }
 
 export async function writeCurrentMigration(
-  _parsedSettings: ParsedSettings,
+  parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
   body: string
 ): Promise<void> {
@@ -202,7 +202,7 @@ export async function writeCurrentMigration(
     let highestIndex = 0;
 
     /**
-     * Writes `linesToWrite` to `nextFileToWrite` (or '1.sql' if unknown), then
+     * Writes `linesToWrite` to `nextFileToWrite` (or '001.sql' if unknown), then
      * resets these variables ready for the next batch.
      */
     const flushToFile = (): void => {
@@ -210,8 +210,8 @@ export async function writeCurrentMigration(
         // Optimisation to avoid writing the initial empty migration file before the first `--! split`
         return;
       }
-      const body = linesToWrite.join("\n");
-      const fileName = nextFileToWrite || "1.sql";
+      const sql = linesToWrite.join("\n");
+      const fileName = nextFileToWrite || "001.sql";
       const id = idFromFilename(fileName);
       if (id <= highestIndex) {
         throw new Error(
@@ -220,7 +220,7 @@ export async function writeCurrentMigration(
       }
       highestIndex = id;
 
-      writePromises.push(fsp.writeFile(`${location.path}/${fileName}`, body));
+      writePromises.push(fsp.writeFile(`${location.path}/${fileName}`, sql));
       filenamesWritten.push(fileName);
 
       linesToWrite = [];
@@ -230,7 +230,9 @@ export async function writeCurrentMigration(
     for (const line of lines) {
       // Do not await in this loop, it decreases parallelism
 
-      const matches = /^--! split: ([0-9]+(?:-[-_a-z0-9]+)?\.sql)$/.exec(line);
+      const matches = /^--! split: ([0-9]+(?:-[-_a-zA-Z0-9]+)?\.sql)$/.exec(
+        line
+      );
       if (matches) {
         // Write out previous linesToWrite, if appropriate
         flushToFile();
@@ -251,13 +253,22 @@ export async function writeCurrentMigration(
       assert.equal(body.length, 0);
 
       // Lets write out just the one empty file.
-      writePromises.push(fsp.writeFile(`${location.path}/1.sql`, ""));
+      const filename = `001.sql`;
+      const sql = parsedSettings.blankMigrationContent;
+
+      writePromises.push(fsp.writeFile(`${location.path}/${filename}`, sql));
+      filenamesWritten.push(filename);
     }
 
     // Clear out old files that were not overwritten
     const files = await fsp.readdir(location.path);
     for (const file of files) {
-      if (VALID_FILE_REGEX.test(file) && !filenamesWritten.includes(file)) {
+      if (
+        VALID_FILE_REGEX.test(file) &&
+        !file.startsWith(".") &&
+        file.endsWith(".sql") &&
+        !filenamesWritten.includes(file)
+      ) {
         writePromises.push(fsp.unlink(`${location.path}/${file}`));
       }
     }
