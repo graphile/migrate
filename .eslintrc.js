@@ -2,13 +2,15 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   extends: [
     "eslint:recommended",
-    "plugin:prettier/recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:import/errors",
+    "plugin:import/typescript",
+    "prettier",
     "prettier/@typescript-eslint",
   ],
-  plugins: ["jest", "@typescript-eslint", "prettier"],
+  plugins: ["jest", "@typescript-eslint", "simple-import-sort", "import"],
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module",
@@ -57,16 +59,28 @@ module.exports = {
 
     "arrow-body-style": 0,
     "no-nested-ternary": 0,
+
+    /*
+     * simple-import-sort seems to be the most stable import sorting currently,
+     * disable others
+     */
+    "simple-import-sort/sort": "error",
+    "sort-imports": "off",
+    "import/order": "off",
+
+    "import/no-deprecated": "warn",
+    "import/no-duplicates": "error",
   },
   overrides: [
     {
-      files: ["__tests__/**/*.ts"],
+      files: ["__tests__/**/*.ts", "src/__mocks__/**/*.ts"],
       rules: {
         "no-console": "warn",
         "@typescript-eslint/ban-ts-ignore": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/explicit-function-return-type": "off",
+        "import/no-duplicates": "off",
       },
     },
   ],

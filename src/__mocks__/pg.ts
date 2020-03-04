@@ -1,4 +1,7 @@
+import "../../__tests__/helpers"; // Has side-effects, must come first
+
 import { parse } from "pg-connection-string";
+
 import { mockPgClient } from "../../__tests__/helpers";
 
 export const withClient = jest.fn(
@@ -8,11 +11,11 @@ export const withClient = jest.fn(
       database,
     };
     return callback(mockPgClient, mockContext);
-  }
+  },
 );
 
 const { withTransaction: originalWithTransaction } = jest.requireActual(
-  "../migration"
+  "../migration",
 );
 
 export const withTransaction = jest.fn(originalWithTransaction);

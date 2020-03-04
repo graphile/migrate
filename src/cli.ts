@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /* eslint-disable @typescript-eslint/explicit-function-return-type,no-console */
 import * as fs from "fs";
-import { migrate, watch, reset, commit, status } from "./index";
+
 import { uncommit } from "./commands/uncommit";
+import { commit, migrate, reset, status, watch } from "./index";
 
 function getSettings() {
   let data;
@@ -10,7 +11,7 @@ function getSettings() {
     data = fs.readFileSync(`${process.cwd()}/.gmrc`, "utf8");
   } catch (e) {
     throw new Error(
-      "No .gmrc file found; please run `graphile-migrate init` first."
+      "No .gmrc file found; please run `graphile-migrate init` first.",
     );
   }
   try {
@@ -45,8 +46,8 @@ async function main() {
     if (remainingCount) {
       console.log(
         `There are ${remainingCount} committed migrations pending:\n\n  ${details.remainingMigrations.join(
-          "\n  "
-        )}`
+          "\n  ",
+        )}`,
       );
       exitCode += 1;
     }
@@ -55,7 +56,7 @@ async function main() {
         console.log();
       }
       console.log(
-        "The current.sql migration is not empty and has not been committed."
+        "The current.sql migration is not empty and has not been committed.",
       );
       exitCode += 2;
     }

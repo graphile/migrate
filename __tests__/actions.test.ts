@@ -2,13 +2,15 @@ jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
 
-import "mock-fs"; // MUST BE BEFORE EVERYTHING
-import * as mockFs from "mock-fs";
-import { parseSettings } from "../src/settings";
-import { _migrate } from "../src/commands/migrate";
-import { executeActions } from "../src/actions";
-import { mockPgClient, TEST_DATABASE_URL } from "./helpers";
+import "./helpers"; // Has side-effects; must come first
+
 import { exec } from "child_process";
+import * as mockFs from "mock-fs";
+
+import { executeActions } from "../src/actions";
+import { _migrate } from "../src/commands/migrate";
+import { parseSettings } from "../src/settings";
+import { mockPgClient, TEST_DATABASE_URL } from "./helpers";
 
 beforeAll(() => {
   // eslint-disable-next-line no-console
@@ -35,7 +37,7 @@ it("runs SQL actions", async () => {
   await executeActions(
     parsedSettings,
     false,
-    parsedSettings.afterAllMigrations
+    parsedSettings.afterAllMigrations,
   );
   expect(mockedExec).toHaveBeenCalledTimes(0);
   expect(mockPgClient.query).toHaveBeenCalledTimes(2);
@@ -55,14 +57,14 @@ it("runs command actions", async () => {
   const mockedExec: jest.Mock<typeof exec> = exec as any;
   mockedExec.mockClear();
   mockedExec.mockImplementationOnce((_cmd, _options, callback) =>
-    callback(null, { stdout: "", stderr: "" })
+    callback(null, { stdout: "", stderr: "" }),
   );
 
   mockPgClient.query.mockClear();
   await executeActions(
     parsedSettings,
     false,
-    parsedSettings.afterAllMigrations
+    parsedSettings.afterAllMigrations,
   );
   expect(mockPgClient.query).toHaveBeenCalledTimes(0);
   expect(mockedExec).toHaveBeenCalledTimes(1);
@@ -92,7 +94,7 @@ it("run normal and non-shadow actions in non-shadow mode", async () => {
   await executeActions(
     parsedSettings,
     false,
-    parsedSettings.afterAllMigrations
+    parsedSettings.afterAllMigrations,
   );
   expect(mockedExec).toHaveBeenCalledTimes(0);
   expect(mockPgClient.query).toHaveBeenCalledTimes(2);
@@ -115,7 +117,7 @@ it("run normal and shadow actions in shadow mode", async () => {
         { _: "sql", file: "everywhere.sql" },
       ],
     },
-    true
+    true,
   );
   const mockedExec: jest.Mock<typeof exec> = exec as any;
   mockedExec.mockClear();

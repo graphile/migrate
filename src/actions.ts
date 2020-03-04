@@ -1,15 +1,16 @@
+import { exec as rawExec } from "child_process";
+import { promises as fsp } from "fs";
+import { parse } from "pg-connection-string";
+import { promisify } from "util";
+
+import { generatePlaceholderReplacement } from "./migration";
 import { withClient } from "./pg";
 import {
-  ParsedSettings,
+  isActionSpec,
   isCommandActionSpec,
   isSqlActionSpec,
-  isActionSpec,
+  ParsedSettings,
 } from "./settings";
-import { generatePlaceholderReplacement } from "./migration";
-import { promises as fsp } from "fs";
-import { exec as rawExec } from "child_process";
-import { promisify } from "util";
-import { parse } from "pg-connection-string";
 
 interface ActionSpecBase {
   _: string;
@@ -33,7 +34,7 @@ const exec = promisify(rawExec);
 export async function executeActions(
   parsedSettings: ParsedSettings,
   shadow = false,
-  actions: ActionSpec[]
+  actions: ActionSpec[],
 ): Promise<void> {
   if (!actions) {
     return;
@@ -43,11 +44,11 @@ export async function executeActions(
     : parsedSettings.connectionString;
   if (!connectionString) {
     throw new Error(
-      "Could not determine connection string for running commands"
+      "Could not determine connection string for running commands",
     );
   }
   const { database: databaseName, user: databaseUser } = parse(
-    connectionString
+    connectionString,
   );
   if (!databaseName) {
     throw new Error("Could not extract database name from connection string");
@@ -59,7 +60,7 @@ export async function executeActions(
     if (actionSpec._ === "sql") {
       const body = await fsp.readFile(
         `${parsedSettings.migrationsFolder}/${actionSpec.file}`,
-        "utf8"
+        "utf8",
       );
       await withClient(
         connectionString,
@@ -67,12 +68,12 @@ export async function executeActions(
         async (pgClient, context) => {
           const query = generatePlaceholderReplacement(
             parsedSettings,
-            context
+            context,
           )(body);
           await pgClient.query({
             text: query,
           });
-        }
+        },
       );
     } else if (actionSpec._ === "command") {
       // Run the command
@@ -123,7 +124,7 @@ export function makeValidateActionCallback() {
         if (isV003OrBelowCommand) {
           // eslint-disable-next-line no-console
           console.warn(
-            "DEPRECATED: graphile-migrate now requires command action specs to have an `_: 'command'` property; we'll back-fill this for now, but please update your configuration"
+            "DEPRECATED: graphile-migrate now requires command action specs to have an `_: 'command'` property; we'll back-fill this for now, but please update your configuration",
           );
         }
         const rawSpec = isV003OrBelowCommand
@@ -141,12 +142,12 @@ export function makeValidateActionCallback() {
             specs.push(rawSpec);
           } else {
             throw new Error(
-              `Action spec of type '${rawSpec["_"]}' not supported; perhaps you need to upgrade?`
+              `Action spec of type '${rawSpec["_"]}' not supported; perhaps you need to upgrade?`,
             );
           }
         } else {
           throw new Error(
-            `Expected action spec to contain an array of strings or action specs; received '${typeof rawSpec}'`
+            `Expected action spec to contain an array of strings or action specs; received '${typeof rawSpec}'`,
           );
         }
       }

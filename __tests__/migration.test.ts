@@ -2,14 +2,16 @@ jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
 
-import { parseSettings } from "../src/settings";
-import { Context } from "../src/pg";
+import "./helpers"; // Has side-effects; must come first
+
+import { _migrate } from "../src/commands/migrate";
 import {
+  FileMigration,
   generatePlaceholderReplacement,
   getMigrationsAfter,
-  FileMigration,
 } from "../src/migration";
-import { _migrate } from "../src/commands/migrate";
+import { Context } from "../src/pg";
+import { parseSettings } from "../src/settings";
 import {
   makeActionSpies,
   TEST_DATABASE_NAME,
@@ -34,14 +36,14 @@ it("doesn't mind about placeholder order", async () => {
   });
   const placeholderReplacement = generatePlaceholderReplacement(
     parsedSettings,
-    context
+    context,
   );
   const body = placeholderReplacement(
-    `CREATE ROLE :DATABASE_AUTHENTICATOR WITH LOGIN PASSWORD ':DATABASE_AUTHENTICATOR_PASSWORD';`
+    `CREATE ROLE :DATABASE_AUTHENTICATOR WITH LOGIN PASSWORD ':DATABASE_AUTHENTICATOR_PASSWORD';`,
   );
 
   expect(body).toEqual(
-    `CREATE ROLE [DATABASE_AUTHENTICATOR] WITH LOGIN PASSWORD '[DATABASE_AUTHENTICATOR_PASSWORD]';`
+    `CREATE ROLE [DATABASE_AUTHENTICATOR] WITH LOGIN PASSWORD '[DATABASE_AUTHENTICATOR_PASSWORD]';`,
   );
 });
 
@@ -78,7 +80,7 @@ it("calls afterAllMigrations action (only) if we did some migrations", async () 
           previous: null,
         },
       ];
-    }
+    },
   );
   const { settings, getActionCalls } = makeActionSpies();
   const parsedSettings = await parseSettings({

@@ -1,16 +1,16 @@
-import { parseSettings, Settings, ParsedSettings } from "../settings";
-import { withClient } from "../pg";
+import { executeActions } from "../actions";
 import {
   getLastMigration,
   getMigrationsAfter,
   runCommittedMigration,
 } from "../migration";
-import { executeActions } from "../actions";
+import { withClient } from "../pg";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 
 export async function _migrate(
   parsedSettings: ParsedSettings,
   shadow = false,
-  force = false
+  force = false,
 ): Promise<void> {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
@@ -26,7 +26,7 @@ export async function _migrate(
       const lastMigration = await getLastMigration(pgClient, parsedSettings);
       const remainingMigrations = await getMigrationsAfter(
         parsedSettings,
-        lastMigration
+        lastMigration,
       );
       // Run migrations in series
       for (const migration of remainingMigrations) {
@@ -35,14 +35,14 @@ export async function _migrate(
           parsedSettings,
           context,
           migration,
-          logSuffix
+          logSuffix,
         );
       }
       if (remainingMigrations.length > 0 || force) {
         await executeActions(
           parsedSettings,
           shadow,
-          parsedSettings.afterAllMigrations
+          parsedSettings.afterAllMigrations,
         );
       }
       // eslint-disable-next-line no-console
@@ -53,16 +53,16 @@ export async function _migrate(
             : lastMigration
             ? "Already up to date"
             : `Up to date — no committed migrations to run`
-        }`
+        }`,
       );
-    }
+    },
   );
 }
 
 export async function migrate(
   settings: Settings,
   shadow = false,
-  force = false
+  force = false,
 ): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
   return _migrate(parsedSettings, shadow, force);

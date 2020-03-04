@@ -1,11 +1,13 @@
-import "mock-fs";
-import * as mockFs from "mock-fs";
+import "./helpers"; // Has side-effects; must come first
+
 import { promises as fsp } from "fs";
+import * as mockFs from "mock-fs";
+
 import {
-  writeCurrentMigration,
   getCurrentMigrationLocation,
+  writeCurrentMigration,
 } from "../src/current";
-import { parseSettings, ParsedSettings } from "../src/settings";
+import { ParsedSettings, parseSettings } from "../src/settings";
 import { TEST_ROOT_DATABASE_URL } from "./helpers";
 
 let parsedSettings: ParsedSettings;
@@ -76,7 +78,7 @@ it("writes to current/*.sql with splits", async () => {
   await writeCurrentMigration(
     parsedSettings,
     currentLocation,
-    contentWithSplits
+    contentWithSplits,
   );
   const contents = await fsp.readdir("migrations/current");
   expect(contents.sort()).toEqual([
@@ -86,7 +88,7 @@ it("writes to current/*.sql with splits", async () => {
     "400-fourth.sql",
   ]);
   expect(
-    await fsp.readFile("migrations/current/100-first.sql", "utf8")
+    await fsp.readFile("migrations/current/100-first.sql", "utf8"),
   ).toEqual("First content\n");
   expect(await fsp.readFile("migrations/current/200-second.sql", "utf8"))
     .toEqual(`\
@@ -95,10 +97,10 @@ With multiple lines
 -- and comments
 `);
   expect(
-    await fsp.readFile("migrations/current/300-third.sql", "utf8")
+    await fsp.readFile("migrations/current/300-third.sql", "utf8"),
   ).toEqual("");
   expect(
-    await fsp.readFile("migrations/current/400-fourth.sql", "utf8")
+    await fsp.readFile("migrations/current/400-fourth.sql", "utf8"),
   ).toEqual("Note: 300 was empty");
 });
 
@@ -116,7 +118,7 @@ it("writes to current/*.sql and deletes previous content", async () => {
   await writeCurrentMigration(
     parsedSettings,
     currentLocation,
-    contentWithSplits
+    contentWithSplits,
   );
   const contents = await fsp.readdir("migrations/current");
   expect(contents.sort()).toEqual([
@@ -126,7 +128,7 @@ it("writes to current/*.sql and deletes previous content", async () => {
     "400-fourth.sql",
   ]);
   expect(
-    await fsp.readFile("migrations/current/100-first.sql", "utf8")
+    await fsp.readFile("migrations/current/100-first.sql", "utf8"),
   ).toEqual("First content\n");
   expect(await fsp.readFile("migrations/current/200-second.sql", "utf8"))
     .toEqual(`\
@@ -135,10 +137,10 @@ With multiple lines
 -- and comments
 `);
   expect(
-    await fsp.readFile("migrations/current/300-third.sql", "utf8")
+    await fsp.readFile("migrations/current/300-third.sql", "utf8"),
   ).toEqual("");
   expect(
-    await fsp.readFile("migrations/current/400-fourth.sql", "utf8")
+    await fsp.readFile("migrations/current/400-fourth.sql", "utf8"),
   ).toEqual("Note: 300 was empty");
 });
 
@@ -156,7 +158,7 @@ it("writes to current/001.sql if there's no initial split", async () => {
   await writeCurrentMigration(
     parsedSettings,
     currentLocation,
-    "-- HELLO WORLD\n" + contentWithSplits
+    "-- HELLO WORLD\n" + contentWithSplits,
   );
   const contents = await fsp.readdir("migrations/current");
   expect(contents.sort()).toEqual([
@@ -167,10 +169,10 @@ it("writes to current/001.sql if there's no initial split", async () => {
     "400-fourth.sql",
   ]);
   expect(await fsp.readFile("migrations/current/001.sql", "utf8")).toEqual(
-    "-- HELLO WORLD"
+    "-- HELLO WORLD",
   );
   expect(
-    await fsp.readFile("migrations/current/100-first.sql", "utf8")
+    await fsp.readFile("migrations/current/100-first.sql", "utf8"),
   ).toEqual("First content\n");
   expect(await fsp.readFile("migrations/current/200-second.sql", "utf8"))
     .toEqual(`\
@@ -179,10 +181,10 @@ With multiple lines
 -- and comments
 `);
   expect(
-    await fsp.readFile("migrations/current/300-third.sql", "utf8")
+    await fsp.readFile("migrations/current/300-third.sql", "utf8"),
   ).toEqual("");
   expect(
-    await fsp.readFile("migrations/current/400-fourth.sql", "utf8")
+    await fsp.readFile("migrations/current/400-fourth.sql", "utf8"),
   ).toEqual("Note: 300 was empty");
 });
 
@@ -200,11 +202,11 @@ it("writes to current/001.sql only if there's no splits", async () => {
   await writeCurrentMigration(
     parsedSettings,
     currentLocation,
-    "-- HELLO WORLD"
+    "-- HELLO WORLD",
   );
   const contents = await fsp.readdir("migrations/current");
   expect(contents.sort()).toEqual(["001.sql"]);
   expect(await fsp.readFile("migrations/current/001.sql", "utf8")).toEqual(
-    "-- HELLO WORLD"
+    "-- HELLO WORLD",
   );
 });

@@ -1,6 +1,7 @@
-import { PoolClient, Pool } from "pg";
-import { ParsedSettings } from "./settings";
+import { Pool, PoolClient } from "pg";
 import { parse } from "pg-connection-string";
+
+import { ParsedSettings } from "./settings";
 
 export interface Context {
   database: string;
@@ -10,7 +11,7 @@ export type Client = PoolClient;
 export async function withClient<T = void>(
   connectionString: string,
   parsedSettings: ParsedSettings,
-  callback: (pgClient: PoolClient, context: Context) => Promise<T>
+  callback: (pgClient: PoolClient, context: Context) => Promise<T>,
 ): Promise<T> {
   const { database } = parse(connectionString);
   if (!database) {
@@ -33,7 +34,7 @@ export async function withClient<T = void>(
           sqlFragments.push(
             `pg_catalog.set_config($${sqlValues.length - 1}::text, $${
               sqlValues.length
-            }::text, false)`
+            }::text, false)`,
           );
         }
         if (sqlFragments.length) {
@@ -57,7 +58,7 @@ export async function withClient<T = void>(
 
 export async function withTransaction<T>(
   pgClient: PoolClient,
-  callback: () => Promise<T>
+  callback: () => Promise<T>,
 ): Promise<T> {
   await pgClient.query("begin");
   try {

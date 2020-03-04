@@ -1,10 +1,11 @@
 import * as chokidar from "chokidar";
+
+import { executeActions } from "../actions";
+import { logDbError } from "../instrumentation";
+import { reverseMigration, runStringMigration } from "../migration";
 import { withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { runStringMigration, reverseMigration } from "../migration";
-import { executeActions } from "../actions";
 import { _migrate } from "./migrate";
-import { logDbError } from "../instrumentation";
 import pgMinify = require("pg-minify");
 import {
   getCurrentMigrationLocation,
@@ -15,7 +16,7 @@ import {
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
   _once = false,
-  shadow = false
+  shadow = false,
 ): () => Promise<void> {
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -31,7 +32,7 @@ export function _makeCurrentMigrationRunner(
         : parsedSettings.connectionString;
       if (!connectionString) {
         throw new Error(
-          "Could not determine connection string for running commands"
+          "Could not determine connection string for running commands",
         );
       }
       await withClient(
@@ -41,7 +42,7 @@ export function _makeCurrentMigrationRunner(
           withTransaction(lockingPgClient, async () => {
             // 1: lock graphile_migrate.current so no concurrent migrations can occur
             await lockingPgClient.query(
-              "lock graphile_migrate.current in EXCLUSIVE mode"
+              "lock graphile_migrate.current in EXCLUSIVE mode",
             );
 
             // 2: Get last current.sql from graphile_migrate.current
@@ -52,7 +53,7 @@ export function _makeCurrentMigrationRunner(
               select *
               from graphile_migrate.current
               where filename = 'current.sql'
-            `
+            `,
             );
 
             // 3: minify and compare last ran current.sql with this _COMPILED_ current.sql.
@@ -65,7 +66,7 @@ export function _makeCurrentMigrationRunner(
               body,
               "current.sql",
               undefined,
-              true
+              true,
             );
             const previousBodyMinified = previousBody
               ? pgMinify(previousBody)
@@ -86,7 +87,7 @@ export function _makeCurrentMigrationRunner(
               await lockingPgClient.query("begin");
               // Re-establish a lock ASAP to continue with migration
               await lockingPgClient.query(
-                "lock graphile_migrate.current in EXCLUSIVE mode"
+                "lock graphile_migrate.current in EXCLUSIVE mode",
               );
 
               // 4b: run this current (in its own independent transaction) if not empty
@@ -101,14 +102,14 @@ export function _makeCurrentMigrationRunner(
                       context,
                       body,
                       "current.sql",
-                      undefined
-                    )
+                      undefined,
+                    ),
                 );
               }
             } else {
               // eslint-disable-next-line no-console
               console.log(
-                `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`
+                `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`,
               );
             }
 
@@ -126,7 +127,7 @@ export function _makeCurrentMigrationRunner(
             `,
               values: [currentBodyFromDryRun],
             });
-          })
+          }),
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
@@ -134,7 +135,7 @@ export function _makeCurrentMigrationRunner(
         await executeActions(
           parsedSettings,
           shadow,
-          parsedSettings.afterCurrent
+          parsedSettings.afterCurrent,
         );
       }
       const interval2 = process.hrtime(start);
@@ -145,7 +146,7 @@ export function _makeCurrentMigrationRunner(
           duration2 - duration >= 5
             ? `; excluding actions: ${duration.toFixed(0)}ms`
             : ""
-        })`
+        })`,
       );
     } catch (e) {
       logDbError(e);
@@ -157,7 +158,7 @@ export function _makeCurrentMigrationRunner(
 export async function _watch(
   parsedSettings: ParsedSettings,
   once = false,
-  shadow = false
+  shadow = false,
 ): Promise<void> {
   await _migrate(parsedSettings, shadow);
 
@@ -166,7 +167,7 @@ export async function _watch(
     await writeCurrentMigration(
       parsedSettings,
       currentLocation,
-      parsedSettings.blankMigrationContent
+      parsedSettings.blankMigrationContent,
     );
   }
 
@@ -216,7 +217,7 @@ export async function _watch(
 export async function watch(
   settings: Settings,
   once = false,
-  shadow = false
+  shadow = false,
 ): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
   return _watch(parsedSettings, once, shadow);

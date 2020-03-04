@@ -1,9 +1,10 @@
 import { parse } from "pg-connection-string";
+
 import {
-  makeValidateActionCallback,
   ActionSpec,
-  SqlActionSpec,
   CommandActionSpec,
+  makeValidateActionCallback,
+  SqlActionSpec,
 } from "./actions";
 
 export type Actions = string | Array<string | ActionSpec>;
@@ -20,7 +21,7 @@ export function isActionSpec(o: unknown): o is ActionSpec {
     throw new Error(
       `'${o["_"]}' action has 'shadow' property of type '${typeof o[
         "shadow"
-      ]}'; expected 'boolean' (or not set)`
+      ]}'; expected 'boolean' (or not set)`,
     );
   }
 
@@ -47,7 +48,7 @@ export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
     throw new Error(
       `Command action has 'command' property of type '${typeof o[
         "command"
-      ]}'; expected 'string'`
+      ]}'; expected 'string'`,
     );
   }
 
@@ -86,7 +87,7 @@ export interface ParsedSettings extends Settings {
 
 export async function parseSettings(
   settings: Settings,
-  requireShadow = false
+  requireShadow = false,
 ): Promise<ParsedSettings> {
   const migrationsFolder = `${process.cwd()}/migrations`;
   if (!settings) {
@@ -100,7 +101,7 @@ export async function parseSettings(
   const checkedKeys: Array<string> = [];
   async function check<T = void>(
     key: string,
-    callback: (key: unknown) => T | Promise<T>
+    callback: (key: unknown) => T | Promise<T>,
   ): Promise<T | undefined> {
     checkedKeys.push(key);
     const value = settings[key];
@@ -118,25 +119,25 @@ export async function parseSettings(
     (rawConnectionString = process.env.DATABASE_URL): string => {
       if (typeof rawConnectionString !== "string") {
         throw new Error(
-          "Expected a string, or for DATABASE_URL envvar to be set"
+          "Expected a string, or for DATABASE_URL envvar to be set",
         );
       }
       return rawConnectionString;
-    }
+    },
   );
 
   const rootConnectionString = await check(
     "rootConnectionString",
     (
-      rawRootConnectionString = process.env.ROOT_DATABASE_URL || "template1"
+      rawRootConnectionString = process.env.ROOT_DATABASE_URL || "template1",
     ): string => {
       if (typeof rawRootConnectionString !== "string") {
         throw new Error(
-          "Expected a string, or for ROOT_DATABASE_URL envvar to be set"
+          "Expected a string, or for ROOT_DATABASE_URL envvar to be set",
         );
       }
       return rawRootConnectionString;
-    }
+    },
   );
 
   await check("databaseOwner", rawDatabaseOwner => {
@@ -154,13 +155,13 @@ export async function parseSettings(
       if (requireShadow) {
         if (typeof rawShadowConnectionString !== "string") {
           throw new Error(
-            "Expected `shadowConnectionString` to be a string, or for SHADOW_DATABASE_URL to be set"
+            "Expected `shadowConnectionString` to be a string, or for SHADOW_DATABASE_URL to be set",
           );
         }
         return rawShadowConnectionString;
       }
       return null;
-    }
+    },
   );
   const { database: shadowDatabaseName } = parse(shadowConnectionString || "");
 
@@ -176,8 +177,8 @@ export async function parseSettings(
       if (badKeys.length) {
         throw new Error(
           `Invalid pgSettings for keys '${badKeys.join(
-            ", "
-          )}' - expected string` /* Number is acceptable, but prefer string. Boolean not acceptable. */
+            ", ",
+          )}' - expected string` /* Number is acceptable, but prefer string. Boolean not acceptable. */,
         );
       }
     }
@@ -191,13 +192,13 @@ export async function parseSettings(
         throw new Error("Expected settings.placeholders to be an object");
       }
       const badKeys = Object.keys(rawPlaceholders).filter(
-        key => !/^:[A-Z][0-9A-Z_]+$/.exec(key)
+        key => !/^:[A-Z][0-9A-Z_]+$/.exec(key),
       );
       if (badKeys.length) {
         throw new Error(
           `Invalid placeholders keys '${badKeys.join(
-            ", "
-          )}' - expected to follow format ':ABCD_EFG_HIJ'`
+            ", ",
+          )}' - expected to follow format ':ABCD_EFG_HIJ'`,
         );
       }
       const badValueKeys = Object.keys(rawPlaceholders).filter(key => {
@@ -207,28 +208,28 @@ export async function parseSettings(
       if (badValueKeys.length) {
         throw new Error(
           `Invalid placeholders values for keys '${badValueKeys.join(
-            ", "
-          )}' - expected string`
+            ", ",
+          )}' - expected string`,
         );
       }
       return Object.entries(rawPlaceholders).reduce(
         (
           memo: { [key: string]: string },
-          [key, value]
+          [key, value],
         ): { [key: string]: string } => {
           if (value === "!ENV") {
             const envvarKey = key.substr(1);
             const envvar = process.env[envvarKey];
             if (!envvar) {
               throw new Error(
-                `Could not find environmental variable '${envvarKey}'`
+                `Could not find environmental variable '${envvarKey}'`,
               );
             }
             memo[key] = envvar;
           }
           return memo;
         },
-        { ...rawPlaceholders }
+        { ...rawPlaceholders },
       );
     }
     return undefined;
@@ -248,11 +249,11 @@ export async function parseSettings(
         throw new Error(
           `Expected boolean, received '${
             type === "object" && !mgms ? "null" : type
-          }'`
+          }'`,
         );
       }
       return mgms !== false;
-    }
+    },
   );
 
   /******/
@@ -261,34 +262,34 @@ export async function parseSettings(
   if (uncheckedKeys.length) {
     errors.push(
       `The following config settings were not understood: '${uncheckedKeys.join(
-        "', '"
-      )}'`
+        "', '",
+      )}'`,
     );
   }
 
   if (connectionString) {
     if (!databaseOwner) {
       errors.push(
-        "Could not determine the database owner, please add the 'databaseOwner' setting."
+        "Could not determine the database owner, please add the 'databaseOwner' setting.",
       );
     }
 
     if (!databaseName) {
       errors.push(
-        "Could not determine the database name, please ensure connectionString includes the database name."
+        "Could not determine the database name, please ensure connectionString includes the database name.",
       );
     }
   }
 
   if (requireShadow && !shadowDatabaseName) {
     errors.push(
-      "Could not determine the shadow database name, please ensure shadowConnectionString includes the database name."
+      "Could not determine the shadow database name, please ensure shadowConnectionString includes the database name.",
     );
   }
 
   if (errors.length) {
     throw new Error(
-      `Errors occurred during settings validation:\n- ${errors.join("\n- ")}`
+      `Errors occurred during settings validation:\n- ${errors.join("\n- ")}`,
     );
   }
   /* eslint-disable @typescript-eslint/no-non-null-assertion */

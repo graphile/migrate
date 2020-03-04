@@ -1,10 +1,12 @@
-import "mock-fs";
+import "./helpers"; // Has side-effects; must come first
+
 import * as mockFs from "mock-fs";
+
 import {
   getCurrentMigrationLocation,
   readCurrentMigration,
 } from "../src/current";
-import { parseSettings, ParsedSettings } from "../src/settings";
+import { ParsedSettings, parseSettings } from "../src/settings";
 import { TEST_ROOT_DATABASE_URL } from "./helpers";
 
 let parsedSettings: ParsedSettings;

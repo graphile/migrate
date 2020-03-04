@@ -1,13 +1,15 @@
 jest.unmock("pg");
 
 import "mock-fs"; // MUST BE BEFORE EVERYTHING
-import * as mockFs from "mock-fs";
-import { Settings, ParsedSettings } from "../src/settings";
+
 import { exec } from "child_process";
-import { parse } from "pg-connection-string";
+import * as mockFs from "mock-fs";
 import { Pool } from "pg";
+import { parse } from "pg-connection-string";
+
 import { _migrateMigrationSchema } from "../src/migration";
 import { escapeIdentifier } from "../src/pg";
+import { ParsedSettings, Settings } from "../src/settings";
 
 export const TEST_DATABASE_URL: string =
   process.env.TEST_DATABASE_URL || "graphile_migrate_test";
@@ -46,10 +48,10 @@ export async function resetDb() {
     });
   }
   await rootPgPool.query(
-    `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`
+    `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`,
   );
   await rootPgPool.query(
-    `CREATE DATABASE ${escapeIdentifier(TEST_DATABASE_NAME)};`
+    `CREATE DATABASE ${escapeIdentifier(TEST_DATABASE_NAME)};`,
   );
 }
 
@@ -105,7 +107,7 @@ export const mockPgClient = makePgClientMock();
 
 export function mockCurrentSqlContentOnce(
   parsedSettings: ParsedSettings,
-  content: string
+  content: string,
 ) {
   mockFs({
     [parsedSettings.migrationsFolder + "/current.sql"]: content,

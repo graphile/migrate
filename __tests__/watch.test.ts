@@ -1,14 +1,16 @@
 jest.mock("child_process");
 
+import "./helpers"; // Has side-effects; must come first
+
+import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
+import { parseSettings } from "../src/settings";
 import {
   makeActionSpies,
-  TEST_DATABASE_URL,
   mockCurrentSqlContentOnce,
   resetDb,
   setup,
+  TEST_DATABASE_URL,
 } from "./helpers";
-import { parseSettings } from "../src/settings";
-import { _watch, _makeCurrentMigrationRunner } from "../src/commands/watch";
 
 beforeEach(resetDb);
 
@@ -22,7 +24,7 @@ it("doesn't run current.sql if it's already up to date", async () => {
   const migrationRunner = _makeCurrentMigrationRunner(
     parsedSettings,
     false,
-    false
+    false,
   );
 
   expect(getActionCalls()).toEqual([]);
@@ -31,7 +33,7 @@ it("doesn't run current.sql if it's already up to date", async () => {
     `\
 -- First migration
 SELECT ':DATABASE_NAME';
-`
+`,
   );
   await migrationRunner();
   expect(getActionCalls()).toEqual(["afterCurrent"]);
@@ -42,7 +44,7 @@ SELECT ':DATABASE_NAME';
     `\
 -- Second migration; identical except for this comment
 SELECT ':DATABASE_NAME';
-`
+`,
   );
   await migrationRunner();
   expect(getActionCalls()).toEqual(["afterCurrent"]);
@@ -52,7 +54,7 @@ SELECT ':DATABASE_NAME';
     `\
 -- Third migration; DIFFERENT!
 SELECT ':DATABASE_NAME', 2 * 2;
-`
+`,
   );
   await migrationRunner();
   expect(getActionCalls()).toEqual(["afterCurrent", "afterCurrent"]);

@@ -1,7 +1,8 @@
+import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
+
 import { isNoTransactionDefined } from "./header";
 import { ParsedSettings } from "./settings";
-import * as assert from "assert";
 
 const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
 
@@ -42,7 +43,7 @@ export interface CurrentMigrationLocation {
 }
 
 export async function getCurrentMigrationLocation(
-  parsedSettings: ParsedSettings
+  parsedSettings: ParsedSettings,
 ): Promise<CurrentMigrationLocation> {
   const filePath = `${parsedSettings.migrationsFolder}/current.sql`;
   const dirPath = `${parsedSettings.migrationsFolder}/current`;
@@ -59,7 +60,7 @@ export async function getCurrentMigrationLocation(
 
   if (fileStats && dirStats) {
     throw new Error(
-      `Invalid current migration: both the '${filePath}' file and the '${dirPath}' directory exist; only one of these may exist at a time.`
+      `Invalid current migration: both the '${filePath}' file and the '${dirPath}' directory exist; only one of these may exist at a time.`,
     );
   }
 
@@ -79,7 +80,7 @@ function idFromFilename(file: string): number {
   const matches = VALID_FILE_REGEX.exec(file);
   if (!matches) {
     throw new Error(
-      `Invalid current migration filename: '${file}'. File must follow the naming 001.sql or 001-message.sql, where 001 is a unique number (with optional zero padding) and message is an optional alphanumeric string.`
+      `Invalid current migration filename: '${file}'. File must follow the naming 001.sql or 001-message.sql, where 001 is a unique number (with optional zero padding) and message is an optional alphanumeric string.`,
     );
   }
   const [, rawId, _message] = matches;
@@ -87,7 +88,7 @@ function idFromFilename(file: string): number {
 
   if (!id || !isFinite(id) || id < 1) {
     throw new Error(
-      `Invalid current migration filename: '${file}'. File must start with a (positive) number, could not coerce '${rawId}' to int.`
+      `Invalid current migration filename: '${file}'. File must start with a (positive) number, could not coerce '${rawId}' to int.`,
     );
   }
   return id;
@@ -95,7 +96,7 @@ function idFromFilename(file: string): number {
 
 export async function readCurrentMigration(
   _parsedSettings: ParsedSettings,
-  location: CurrentMigrationLocation
+  location: CurrentMigrationLocation,
 ): Promise<string> {
   if (location.isFile) {
     const content = await readFileOrNull(location.path);
@@ -127,7 +128,7 @@ export async function readCurrentMigration(
       const duplicate = parts.get(id);
       if (duplicate) {
         throw new Error(
-          `Current migration filename clash: files must have a unique numeric prefix, but at least 2 files ('${file}' and '${duplicate.file}') have the prefix '${id}'.`
+          `Current migration filename clash: files must have a unique numeric prefix, but at least 2 files ('${file}' and '${duplicate.file}') have the prefix '${id}'.`,
         );
       }
 
@@ -148,7 +149,7 @@ export async function readCurrentMigration(
       const body = await bodyPromise;
       if (isNoTransactionDefined(body) && ids.length > 1) {
         throw new Error(
-          `Error in '${location.path}/${file}': cannot use '--! no-transaction' with multiple current migration files.`
+          `Error in '${location.path}/${file}': cannot use '--! no-transaction' with multiple current migration files.`,
         );
       }
       if (wholeBody.length > 0) {
@@ -164,7 +165,7 @@ export async function readCurrentMigration(
 export async function writeCurrentMigration(
   parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
-  body: string
+  body: string,
 ): Promise<void> {
   if (location.isFile) {
     await fsp.writeFile(location.path, body);
@@ -215,7 +216,7 @@ export async function writeCurrentMigration(
       const id = idFromFilename(fileName);
       if (id <= highestIndex) {
         throw new Error(
-          `Bad migration, split ids must be monotonically increasing, but '${id}' (from '${fileName}') <= '${highestIndex}'.`
+          `Bad migration, split ids must be monotonically increasing, but '${id}' (from '${fileName}') <= '${highestIndex}'.`,
         );
       }
       highestIndex = id;
@@ -231,7 +232,7 @@ export async function writeCurrentMigration(
       // Do not await in this loop, it decreases parallelism
 
       const matches = /^--! split: ([0-9]+(?:-[-_a-zA-Z0-9]+)?\.sql)$/.exec(
-        line
+        line,
       );
       if (matches) {
         // Write out previous linesToWrite, if appropriate
