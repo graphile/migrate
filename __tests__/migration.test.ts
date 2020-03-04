@@ -2,6 +2,8 @@ jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
 
+import "./helpers"; // Has side-effects; must come first
+
 import { _migrate } from "../src/commands/migrate";
 import {
   FileMigration,

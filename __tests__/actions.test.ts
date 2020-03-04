@@ -2,7 +2,7 @@ jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
 
-import "mock-fs"; // MUST BE BEFORE EVERYTHING
+import "./helpers"; // Has side-effects; must come first
 
 import { exec } from "child_process";
 import * as mockFs from "mock-fs";

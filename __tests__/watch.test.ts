@@ -1,5 +1,7 @@
 jest.mock("child_process");
 
+import "./helpers"; // Has side-effects; must come first
+
 import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
 import { parseSettings } from "../src/settings";
 import {

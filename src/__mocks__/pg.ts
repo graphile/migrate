@@ -1,3 +1,5 @@
+import "../../__tests__/helpers"; // Has side-effects, must come first
+
 import { parse } from "pg-connection-string";
 
 import { mockPgClient } from "../../__tests__/helpers";

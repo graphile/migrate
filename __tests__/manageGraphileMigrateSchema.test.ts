@@ -1,6 +1,8 @@
 jest.mock("child_process");
 jest.mock("../src/migration");
 
+import "./helpers"; // Has side-effects; must come first
+
 import { Pool, PoolClient } from "pg";
 
 import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";

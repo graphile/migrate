@@ -73,13 +73,14 @@ module.exports = {
   },
   overrides: [
     {
-      files: ["__tests__/**/*.ts"],
+      files: ["__tests__/**/*.ts", "src/__mocks__/**/*.ts"],
       rules: {
         "no-console": "warn",
         "@typescript-eslint/ban-ts-ignore": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/explicit-function-return-type": "off",
+        "import/no-duplicates": "off",
       },
     },
   ],

@@ -1,4 +1,4 @@
-import "mock-fs"; // MUST BE BEFORE EVERYTHING
+import "./helpers"; // Has side-effects; must come first
 
 import * as mockFs from "mock-fs";
 
