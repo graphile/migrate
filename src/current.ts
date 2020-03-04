@@ -1,7 +1,6 @@
-import { promises as fsp } from "fs";
+import { promises as fsp, Stats } from "fs";
 import { isNoTransactionDefined } from "./header";
 import { ParsedSettings } from "./settings";
-import { Stats } from "fs";
 import * as assert from "assert";
 
 const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
