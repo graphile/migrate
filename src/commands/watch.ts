@@ -1,29 +1,28 @@
 import * as chokidar from "chokidar";
 import { withClient, withTransaction } from "../pg";
-import {
-  Settings,
-  ParsedSettings,
-  parseSettings,
-  getCurrentMigrationPath,
-  BLANK_MIGRATION_CONTENT,
-} from "../settings";
-import * as fsp from "../fsp";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { runStringMigration, reverseMigration } from "../migration";
 import { executeActions } from "../actions";
 import { _migrate } from "./migrate";
 import { logDbError } from "../instrumentation";
 import pgMinify = require("pg-minify");
+import {
+  getCurrentMigrationLocation,
+  readCurrentMigration,
+  writeCurrentMigration,
+} from "../current";
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
   _once = false,
   shadow = false
 ): () => Promise<void> {
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
   async function run(): Promise<void> {
+    const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+    const body = await readCurrentMigration(parsedSettings, currentLocation);
     let migrationsAreEquivalent = false;
+
     try {
-      const body = await fsp.readFile(currentMigrationPath, "utf8");
       // eslint-disable-next-line no-console
       console.log(`[${new Date().toISOString()}]: Running current.sql`);
       const start = process.hrtime();
@@ -161,17 +160,16 @@ export async function _watch(
   shadow = false
 ): Promise<void> {
   await _migrate(parsedSettings, shadow);
-  // Watch the file
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-  try {
-    await fsp.stat(currentMigrationPath);
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      await fsp.writeFile(currentMigrationPath, BLANK_MIGRATION_CONTENT);
-    } else {
-      throw e;
-    }
+
+  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+  if (!currentLocation.exists) {
+    await writeCurrentMigration(
+      parsedSettings,
+      currentLocation,
+      parsedSettings.blankMigrationContent
+    );
   }
+
   const run = _makeCurrentMigrationRunner(parsedSettings, once, shadow);
   if (once) {
     return run();
@@ -192,7 +190,7 @@ export async function _watch(
         }
       });
     };
-    const watcher = chokidar.watch(currentMigrationPath, {
+    const watcher = chokidar.watch(currentLocation.path, {
       /*
        * Without `usePolling`, on Linux, you can prevent the watching from
        * working by issuing `git stash && sleep 2 && git stash pop`. This is

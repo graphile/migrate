@@ -1,14 +1,14 @@
-import {
-  parseSettings,
-  Settings,
-  ParsedSettings,
-  getCurrentMigrationPath,
-} from "../settings";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { getAllMigrations, undoMigration } from "../migration";
 import pgMinify = require("pg-minify");
-import * as fsp from "../fsp";
+import { promises as fsp } from "fs";
 import { _reset } from "./reset";
 import { _migrate } from "./migrate";
+import {
+  getCurrentMigrationLocation,
+  readCurrentMigration,
+  writeCurrentMigration,
+} from "../current";
 
 export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const { migrationsFolder } = parsedSettings;
@@ -22,8 +22,11 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   }
 
   // Check current.sql is blank
-  const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-  const currentBody = await fsp.readFile(currentMigrationPath, "utf8");
+  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+  const currentBody = await readCurrentMigration(
+    parsedSettings,
+    currentLocation
+  );
   const minifiedCurrentBody = pgMinify(currentBody);
   if (minifiedCurrentBody !== "") {
     throw new Error("Cannot uncommit - current migration is not blank.");
@@ -39,7 +42,11 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
     );
   }
   const bodyWithoutMetadata = body.substr(nn + 2);
-  await fsp.writeFile(currentMigrationPath, bodyWithoutMetadata);
+  await writeCurrentMigration(
+    parsedSettings,
+    currentLocation,
+    bodyWithoutMetadata
+  );
 
   // Delete the migration from committed and from the DB
   await fsp.unlink(lastMigrationFilepath);

@@ -1,9 +1,10 @@
 import { calculateHash } from "./hash";
 import { Client, Context, withClient } from "./pg";
-import * as fsp from "./fsp";
+import { promises as fsp } from "fs";
 import { ParsedSettings } from "./settings";
 import memoize from "./memoize";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";
+import { isNoTransactionDefined } from "./header";
 
 // NEVER CHANGE THESE!
 const PREVIOUS = "--! Previous: ";
@@ -248,9 +249,7 @@ export async function runStringMigration(
     context
   );
   const sql = placeholderReplacement(rawBody);
-  const i = sql.indexOf("\n");
-  const firstLine = sql.substring(0, i);
-  const transaction = !/^--!\s*no-transaction\b/.exec(firstLine);
+  const transaction = isNoTransactionDefined(sql) === false;
   if (dryRun) {
     return { sql, transaction };
   }

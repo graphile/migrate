@@ -1,13 +1,8 @@
-import {
-  Settings,
-  parseSettings,
-  ParsedSettings,
-  getCurrentMigrationPath,
-} from "../settings";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { withClient } from "../pg";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import pgMinify = require("pg-minify");
-import * as fsp from "../fsp";
+import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 
 interface Status {
   remainingMigrations: Array<string>;
@@ -25,8 +20,8 @@ async function _status(parsedSettings: ParsedSettings): Promise<Status> {
       parsedSettings,
       lastMigration
     );
-    const currentMigrationPath = getCurrentMigrationPath(parsedSettings);
-    const body = await fsp.readFile(currentMigrationPath, "utf8");
+    const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+    const body = await readCurrentMigration(parsedSettings, currentLocation);
     const minifiedBody = pgMinify(body);
     const hasCurrentMigration = minifiedBody !== "";
     return {

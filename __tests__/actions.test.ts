@@ -1,15 +1,30 @@
 jest.mock("child_process");
 jest.mock("../src/pg");
 jest.mock("../src/migration");
-jest.mock("../src/fsp");
 
+import "mock-fs"; // MUST BE BEFORE EVERYTHING
+import * as mockFs from "mock-fs";
 import { parseSettings } from "../src/settings";
 import { _migrate } from "../src/commands/migrate";
 import { executeActions } from "../src/actions";
 import { mockPgClient, TEST_DATABASE_URL } from "./helpers";
 import { exec } from "child_process";
 
+beforeAll(() => {
+  // eslint-disable-next-line no-console
+  console.log("[mock-fs callsites hack]"); // Without this, jest fails due to 'callsites'
+  mockFs({});
+});
+
+afterAll(() => {
+  mockFs.restore();
+});
+
 it("runs SQL actions", async () => {
+  mockFs({
+    "migrations/sqlfile1.sql": `[CONTENT:migrations/sqlfile1.sql]`,
+    "migrations/sqlfile2.sql": `[CONTENT:migrations/sqlfile2.sql]`,
+  });
   const parsedSettings = await parseSettings({
     connectionString: TEST_DATABASE_URL,
     afterAllMigrations: ["sqlfile1.sql", { _: "sql", file: "sqlfile2.sql" }],
@@ -58,6 +73,11 @@ it("runs command actions", async () => {
 });
 
 it("run normal and non-shadow actions in non-shadow mode", async () => {
+  mockFs({
+    "migrations/non-shadow-only.sql": `[CONTENT:migrations/non-shadow-only.sql]`,
+    "migrations/shadow-only.sql": `[CONTENT:migrations/shadow-only.sql]`,
+    "migrations/everywhere.sql": `[CONTENT:migrations/everywhere.sql]`,
+  });
   const parsedSettings = await parseSettings({
     connectionString: TEST_DATABASE_URL,
     afterAllMigrations: [

@@ -1,9 +1,9 @@
 jest.unmock("pg");
-jest.mock("../src/fsp");
 
+import "mock-fs"; // MUST BE BEFORE EVERYTHING
+import * as mockFs from "mock-fs";
 import { Settings, ParsedSettings } from "../src/settings";
 import { exec } from "child_process";
-import * as fsp from "../src/fsp";
 import { parse } from "pg-connection-string";
 import { Pool } from "pg";
 import { _migrateMigrationSchema } from "../src/migration";
@@ -21,6 +21,15 @@ if (!/^[a-zA-Z0-9_-]+$/.test(TEST_DATABASE_NAME)) {
 
 export const TEST_ROOT_DATABASE_URL: string =
   process.env.TEST_ROOT_DATABASE_URL || "template1";
+
+beforeAll(() => {
+  // eslint-disable-next-line no-console
+  console.log("[mock-fs callsites hack]"); // Without this, jest fails due to 'callsites'
+  mockFs({});
+});
+afterAll(() => {
+  mockFs.restore();
+});
 
 let rootPgPool: Pool | null = null;
 afterAll(() => {
@@ -98,16 +107,8 @@ export function mockCurrentSqlContentOnce(
   parsedSettings: ParsedSettings,
   content: string
 ) {
-  // @ts-ignore
-  fsp.stat.mockImplementationOnce(async (filename, _options) => {
-    expect(filename).toEqual(parsedSettings.migrationsFolder + "/current.sql");
-    return {};
-  });
-  // @ts-ignore
-  fsp.readFile.mockImplementationOnce(async (filename, encoding) => {
-    expect(encoding).toEqual("utf8");
-    expect(filename).toEqual(parsedSettings.migrationsFolder + "/current.sql");
-    return content;
+  mockFs({
+    [parsedSettings.migrationsFolder + "/current.sql"]: content,
   });
 }
 

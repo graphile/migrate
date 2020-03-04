@@ -6,7 +6,7 @@ import {
   isActionSpec,
 } from "./settings";
 import { generatePlaceholderReplacement } from "./migration";
-import * as fsp from "./fsp";
+import { promises as fsp } from "fs";
 import { exec as rawExec } from "child_process";
 import { promisify } from "util";
 import { parse } from "pg-connection-string";
