@@ -1,17 +1,18 @@
 jest.mock("child_process");
 jest.mock("../src/migration");
 
-import { TEST_DATABASE_URL, resetDb } from "./helpers";
-import { parseSettings, ParsedSettings } from "../src/settings";
-import { _watch, _makeCurrentMigrationRunner } from "../src/commands/watch";
-import { _migrateMigrationSchema } from "../src/migration";
 import { Pool, PoolClient } from "pg";
+
+import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
+import { _migrateMigrationSchema } from "../src/migration";
+import { ParsedSettings, parseSettings } from "../src/settings";
+import { resetDb, TEST_DATABASE_URL } from "./helpers";
 
 beforeEach(resetDb);
 
 async function withClient<T>(
   parsedSettings: ParsedSettings,
-  cb: (client: PoolClient) => Promise<T>
+  cb: (client: PoolClient) => Promise<T>,
 ): Promise<T> {
   const pool = new Pool({
     connectionString: parsedSettings.connectionString,
@@ -71,7 +72,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     const error = await getError();
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue.]`,
     );
   });
 
@@ -81,7 +82,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     `);
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.migrations' table couldn't be found - we cannot continue.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.migrations' table couldn't be found - we cannot continue.]`,
     );
   });
 
@@ -98,7 +99,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     `);
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.current' table couldn't be found - we cannot continue.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.current' table couldn't be found - we cannot continue.]`,
     );
   });
 
@@ -121,7 +122,7 @@ describe("manageGraphlileMigrateSchema = false", () => {
     `);
     expect(error).toBeTruthy();
     expect(error).toMatchInlineSnapshot(
-      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.migrations' table has the wrong number of columns (3 != 4) - we cannot continue.]`
+      `[Error: You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.migrations' table has the wrong number of columns (3 != 4) - we cannot continue.]`,
     );
   });
 

@@ -1,5 +1,6 @@
-import { parseSettings, ParsedSettings } from "../src/settings";
 import * as path from "path";
+
+import { ParsedSettings, parseSettings } from "../src/settings";
 
 function sanitise(parsedSettings: ParsedSettings) {
   parsedSettings.migrationsFolder =
@@ -26,8 +27,8 @@ it("throws if shadow attempted but no shadow DB", async () => {
       {
         connectionString: exampleConnectionString,
       },
-      true
-    )
+      true,
+    ),
   ).rejects.toMatchInlineSnapshot(`
           [Error: Errors occurred during settings validation:
           - Setting 'shadowConnectionString': Expected \`shadowConnectionString\` to be a string, or for SHADOW_DATABASE_URL to be set
@@ -138,7 +139,7 @@ describe("actions", () => {
           { _: "unknown_value", command: "pg_dump --schema-only" } as any,
           { _: "command", command: "graphile-worker --once" },
         ],
-      })
+      }),
     ).rejects.toMatchInlineSnapshot(`
             [Error: Errors occurred during settings validation:
             - Setting 'afterAllMigrations': Action spec of type 'unknown_value' not supported; perhaps you need to upgrade?]

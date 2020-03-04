@@ -1,6 +1,6 @@
-import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { withClient } from "../pg";
 import { getLastMigration, getMigrationsAfter } from "../migration";
+import { withClient } from "../pg";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import pgMinify = require("pg-minify");
 import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 
@@ -18,7 +18,7 @@ async function _status(parsedSettings: ParsedSettings): Promise<Status> {
     const lastMigration = await getLastMigration(pgClient, parsedSettings);
     const remainingMigrations = await getMigrationsAfter(
       parsedSettings,
-      lastMigration
+      lastMigration,
     );
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);

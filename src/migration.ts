@@ -1,10 +1,11 @@
-import { calculateHash } from "./hash";
-import { Client, Context, withClient } from "./pg";
 import { promises as fsp } from "fs";
-import { ParsedSettings } from "./settings";
-import memoize from "./memoize";
-import { runQueryWithErrorInstrumentation } from "./instrumentation";
+
+import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
+import { runQueryWithErrorInstrumentation } from "./instrumentation";
+import memoize from "./memoize";
+import { Client, Context, withClient } from "./pg";
+import { ParsedSettings } from "./settings";
 
 // NEVER CHANGE THESE!
 const PREVIOUS = "--! Previous: ";
@@ -33,7 +34,7 @@ export interface FileMigration extends Migration {
 
 export const slowGeneratePlaceholderReplacement = (
   parsedSettings: ParsedSettings,
-  { database }: Context
+  { database }: Context,
 ): ((str: string) => string) => {
   const placeholders = {
     ...parsedSettings.placeholders,
@@ -47,14 +48,14 @@ export const slowGeneratePlaceholderReplacement = (
         .map(escapeRegexp)
         .join("|") +
       ")\\b",
-    "g"
+    "g",
   );
   return (str: string): string =>
     str.replace(regexp, (keyword): string => placeholders[keyword] || "");
 };
 
 export const generatePlaceholderReplacement = memoize(
-  slowGeneratePlaceholderReplacement
+  slowGeneratePlaceholderReplacement,
 );
 
 const TABLE_CHECKS = {
@@ -71,11 +72,11 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
   const {
     rows: [graphileMigrateSchema],
   } = await pgClient.query(
-    `select oid from pg_namespace where nspname = 'graphile_migrate';`
+    `select oid from pg_namespace where nspname = 'graphile_migrate';`,
   );
   if (!graphileMigrateSchema) {
     throw new Error(
-      "You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue."
+      "You've set manageGraphileMigrateSchema to false, but have not installed our database schema - we cannot continue.",
     );
   }
 
@@ -84,21 +85,21 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     const {
       rows: [table],
     } = await pgClient.query(
-      `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`
+      `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`,
     );
     if (!table) {
       throw new Error(
-        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table couldn't be found - we cannot continue.`
+        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table couldn't be found - we cannot continue.`,
       );
     }
 
     // Check that it has the right number of columns
     const { rows: columns } = await pgClient.query(
-      `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`
+      `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`,
     );
     if (columns.length !== expected.columnCount) {
       throw new Error(
-        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table has the wrong number of columns (${columns.length} != ${expected.columnCount}) - we cannot continue.`
+        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table has the wrong number of columns (${columns.length} != ${expected.columnCount}) - we cannot continue.`,
       );
     }
   }
@@ -108,7 +109,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
 
 export async function _migrateMigrationSchema(
   pgClient: Client,
-  parsedSettings: ParsedSettings
+  parsedSettings: ParsedSettings,
 ): Promise<void> {
   if (!parsedSettings.manageGraphileMigrateSchema) {
     // Verify schema
@@ -136,20 +137,20 @@ export async function _migrateMigrationSchema(
 
 export async function getLastMigration(
   pgClient: Client,
-  parsedSettings: ParsedSettings
+  parsedSettings: ParsedSettings,
 ): Promise<DbMigration | null> {
   await _migrateMigrationSchema(pgClient, parsedSettings);
 
   const {
     rows: [row],
   } = await pgClient.query(
-    `select filename, previous_hash as "previousHash", hash, date from graphile_migrate.migrations order by filename desc limit 1`
+    `select filename, previous_hash as "previousHash", hash, date from graphile_migrate.migrations order by filename desc limit 1`,
   );
   return (row as DbMigration) || null;
 }
 
 export async function getAllMigrations(
-  parsedSettings: ParsedSettings
+  parsedSettings: ParsedSettings,
 ): Promise<Array<FileMigration>> {
   const { migrationsFolder } = parsedSettings;
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
@@ -175,7 +176,7 @@ export async function getAllMigrations(
         const firstLine = contents.substring(0, i);
         if (!firstLine.startsWith(PREVIOUS)) {
           throw new Error(
-            "Invalid committed migration - no 'previous' comment"
+            "Invalid committed migration - no 'previous' comment",
           );
         }
         const previousHashRaw = firstLine.substring(PREVIOUS.length) || null;
@@ -199,8 +200,8 @@ export async function getAllMigrations(
           body,
           previous: null,
         };
-      }
-    )
+      },
+    ),
   );
   migrations.sort((a, b) => a.filename.localeCompare(b.filename));
   // Validate and link
@@ -209,13 +210,13 @@ export async function getAllMigrations(
     if (!previous) {
       if (migration.previousHash !== null) {
         throw new Error(
-          `Migration '${migration.filename}' expected a previous migration, but no correctly ordered previous migration was found`
+          `Migration '${migration.filename}' expected a previous migration, but no correctly ordered previous migration was found`,
         );
       }
     } else {
       if (migration.previousHash !== previous.hash) {
         throw new Error(
-          `Previous migration with hash '${previous.hash}' doesn't match '${migration.filename}''s expected previous hash '${migration.previousHash}'`
+          `Previous migration with hash '${previous.hash}' doesn't match '${migration.filename}''s expected previous hash '${migration.previousHash}'`,
         );
       }
     }
@@ -227,11 +228,11 @@ export async function getAllMigrations(
 
 export async function getMigrationsAfter(
   parsedSettings: ParsedSettings,
-  previousMigration: Migration | null
+  previousMigration: Migration | null,
 ): Promise<Array<FileMigration>> {
   const allMigrations = await getAllMigrations(parsedSettings);
   return allMigrations.filter(
-    m => !previousMigration || m.filename > previousMigration.filename
+    m => !previousMigration || m.filename > previousMigration.filename,
   );
 }
 
@@ -242,11 +243,11 @@ export async function runStringMigration(
   rawBody: string,
   filename: string,
   committedMigration?: FileMigration,
-  dryRun?: boolean
+  dryRun?: boolean,
 ): Promise<{ sql: string; transaction: boolean }> {
   const placeholderReplacement = generatePlaceholderReplacement(
     parsedSettings,
-    context
+    context,
   );
   const sql = placeholderReplacement(rawBody);
   const transaction = isNoTransactionDefined(sql) === false;
@@ -281,7 +282,7 @@ export async function runStringMigration(
 
 export async function undoMigration(
   parsedSettings: ParsedSettings,
-  committedMigration: FileMigration
+  committedMigration: FileMigration,
 ): Promise<void> {
   const { hash } = committedMigration;
   await withClient(
@@ -293,7 +294,7 @@ export async function undoMigration(
         text: "delete from graphile_migrate.migrations where hash = $1",
         values: [hash],
       });
-    }
+    },
   );
 }
 
@@ -302,14 +303,14 @@ export async function runCommittedMigration(
   parsedSettings: ParsedSettings,
   context: Context,
   committedMigration: FileMigration,
-  logSuffix: string
+  logSuffix: string,
 ): Promise<void> {
   const { hash, filename, body, previousHash } = committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
   if (newHash !== hash) {
     throw new Error(
-      `Hash for ${filename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`
+      `Hash for ${filename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`,
     );
   }
   // eslint-disable-next-line no-console
@@ -320,18 +321,18 @@ export async function runCommittedMigration(
     context,
     body,
     filename,
-    committedMigration
+    committedMigration,
   );
 }
 
 export async function reverseMigration(
   pgClient: Client,
-  _body: string
+  _body: string,
 ): Promise<void> {
   // TODO: reverse the migration
 
   // Clean up graphile_migrate.current
   await pgClient.query(
-    `delete from graphile_migrate.current where filename = 'current.sql'`
+    `delete from graphile_migrate.current where filename = 'current.sql'`,
   );
 }

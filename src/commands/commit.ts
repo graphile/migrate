@@ -1,16 +1,17 @@
-import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { getAllMigrations } from "../migration";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
-import { calculateHash } from "../hash";
-import { _reset } from "./reset";
-import { _migrate } from "./migrate";
-import { logDbError } from "../instrumentation";
+
 import {
   getCurrentMigrationLocation,
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { calculateHash } from "../hash";
+import { logDbError } from "../instrumentation";
+import { _migrate } from "./migrate";
+import { _reset } from "./reset";
 
 export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   const { migrationsFolder } = parsedSettings;
@@ -43,7 +44,7 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   await fsp.writeFile(newMigrationFilepath, finalBody);
   // eslint-disable-next-line no-console
   console.log(
-    `graphile-migrate: New migration '${newMigrationFilename}' created`
+    `graphile-migrate: New migration '${newMigrationFilename}' created`,
   );
   try {
     await _migrate(parsedSettings, true);
@@ -51,7 +52,7 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     await writeCurrentMigration(
       parsedSettings,
       currentLocation,
-      parsedSettings.blankMigrationContent
+      parsedSettings.blankMigrationContent,
     );
   } catch (e) {
     logDbError(e);

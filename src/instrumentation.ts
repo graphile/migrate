@@ -1,11 +1,12 @@
 import * as chalk from "chalk";
+
 import indent from "./indent";
 import { Client } from "./pg";
 
 export async function runQueryWithErrorInstrumentation(
   pgClient: Client,
   body: string,
-  filename: string
+  filename: string,
 ): Promise<void> {
   try {
     await pgClient.query({
@@ -43,7 +44,7 @@ export async function runQueryWithErrorInstrumentation(
       const codeIndent = 2;
       const lines = [
         chalk.bold.red(
-          `🛑 Error occurred at line ${line}, column ${column} of "${filename}":`
+          `🛑 Error occurred at line ${line}, column ${column} of "${filename}":`,
         ),
         chalk.reset(indent(indent(snippet, codeIndent), indentString)),
         indentString +
@@ -65,7 +66,7 @@ export const logDbError = (e: Error): void => {
   } else {
     // eslint-disable-next-line no-console
     console.error(
-      chalk.red.bold(`🛑 Error occurred whilst processing migration`)
+      chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
     // eslint-disable-next-line no-console
     console.error(indent(e.stack ? e.stack : e.message, 4));

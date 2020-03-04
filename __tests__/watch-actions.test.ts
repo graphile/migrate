@@ -1,16 +1,16 @@
 jest.mock("child_process");
 jest.mock("../src/migration");
 
+import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
+import { _migrateMigrationSchema } from "../src/migration";
+import { parseSettings } from "../src/settings";
 import {
   makeActionSpies,
   mockCurrentSqlContentOnce,
-  TEST_DATABASE_URL,
   resetDb,
   setup,
+  TEST_DATABASE_URL,
 } from "./helpers";
-import { parseSettings } from "../src/settings";
-import { _watch, _makeCurrentMigrationRunner } from "../src/commands/watch";
-import { _migrateMigrationSchema } from "../src/migration";
 
 beforeEach(resetDb);
 

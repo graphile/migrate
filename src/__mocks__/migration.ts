@@ -5,19 +5,19 @@ const {
 } = jest.requireActual("../migration");
 
 export const generatePlaceholderReplacement = jest.fn(
-  originalGeneratePlaceholderReplacement
+  originalGeneratePlaceholderReplacement,
 );
 
 export const _migrateMigrationSchema = jest.fn(realMigrateMigrationSchema);
 
 export const getLastMigration = jest.fn((_client, _settings) =>
-  Promise.resolve(null)
+  Promise.resolve(null),
 );
 
 export const getAllMigrations = jest.fn(_settings => Promise.resolve([]));
 
 export const getMigrationsAfter = jest.fn((_settings, _previousMigration) =>
-  Promise.resolve([])
+  Promise.resolve([]),
 );
 
 export const runStringMigration = jest.fn(
@@ -29,10 +29,10 @@ export const runStringMigration = jest.fn(
       _body,
       _filename,
       _committedMigration,
-      true
-    )
+      true,
+    ),
 );
 
 export const runCommittedMigration = jest.fn(
-  (_client, _settings, _context, _committedMigration, _logSuffix) => {}
+  (_client, _settings, _context, _committedMigration, _logSuffix) => {},
 );

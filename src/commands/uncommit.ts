@@ -1,14 +1,15 @@
-import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { getAllMigrations, undoMigration } from "../migration";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
-import { _reset } from "./reset";
-import { _migrate } from "./migrate";
+
 import {
   getCurrentMigrationLocation,
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { _migrate } from "./migrate";
+import { _reset } from "./reset";
 
 export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const { migrationsFolder } = parsedSettings;
@@ -25,7 +26,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const currentBody = await readCurrentMigration(
     parsedSettings,
-    currentLocation
+    currentLocation,
   );
   const minifiedCurrentBody = pgMinify(currentBody);
   if (minifiedCurrentBody !== "") {
@@ -38,14 +39,14 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const nn = body.indexOf("\n\n");
   if (nn < 10) {
     throw new Error(
-      `Migration '${lastMigrationFilepath}' seems invalid - could not read metadata`
+      `Migration '${lastMigrationFilepath}' seems invalid - could not read metadata`,
     );
   }
   const bodyWithoutMetadata = body.substr(nn + 2);
   await writeCurrentMigration(
     parsedSettings,
     currentLocation,
-    bodyWithoutMetadata
+    bodyWithoutMetadata,
   );
 
   // Delete the migration from committed and from the DB
