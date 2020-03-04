@@ -21,11 +21,8 @@ async function _status(parsedSettings: ParsedSettings): Promise<Status> {
       lastMigration
     );
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-    const currentBody = await readCurrentMigration(
-      parsedSettings,
-      currentLocation
-    );
-    const minifiedBody = pgMinify(currentBody);
+    const body = await readCurrentMigration(parsedSettings, currentLocation);
+    const minifiedBody = pgMinify(body);
     const hasCurrentMigration = minifiedBody !== "";
     return {
       remainingMigrations: remainingMigrations.map(m => m.filename),

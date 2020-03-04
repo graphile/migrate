@@ -27,20 +27,17 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     String(newMigrationNumber).padStart(6, "0") + ".sql";
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-  const currentBody = await readCurrentMigration(
-    parsedSettings,
-    currentLocation
-  );
+  const body = await readCurrentMigration(parsedSettings, currentLocation);
 
-  const minifiedBody = pgMinify(currentBody);
+  const minifiedBody = pgMinify(body);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
 
-  const hash = calculateHash(currentBody, lastMigration && lastMigration.hash);
+  const hash = calculateHash(body, lastMigration && lastMigration.hash);
   const finalBody = `--! Previous: ${
     lastMigration ? lastMigration.hash : "-"
-  }\n--! Hash: ${hash}\n\n${currentBody.trim()}\n`;
+  }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
@@ -60,7 +57,7 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     logDbError(e);
     // eslint-disable-next-line no-console
     console.error("ABORTING...");
-    await writeCurrentMigration(parsedSettings, currentLocation, currentBody);
+    await writeCurrentMigration(parsedSettings, currentLocation, body);
     await fsp.unlink(newMigrationFilepath);
     // eslint-disable-next-line no-console
     console.error("ABORTED AND ROLLED BACK");

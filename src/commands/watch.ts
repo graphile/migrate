@@ -19,10 +19,7 @@ export function _makeCurrentMigrationRunner(
 ): () => Promise<void> {
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-    const currentBody = await readCurrentMigration(
-      parsedSettings,
-      currentLocation
-    );
+    const body = await readCurrentMigration(parsedSettings, currentLocation);
     let migrationsAreEquivalent = false;
 
     try {
@@ -65,7 +62,7 @@ export function _makeCurrentMigrationRunner(
               lockingPgClient,
               parsedSettings,
               context,
-              currentBody,
+              body,
               "current.sql",
               undefined,
               true
@@ -102,7 +99,7 @@ export function _makeCurrentMigrationRunner(
                       independentPgClient,
                       parsedSettings,
                       context,
-                      currentBody,
+                      body,
                       "current.sql",
                       undefined
                     )
