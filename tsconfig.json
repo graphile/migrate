@@ -19,7 +19,7 @@
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "preserveWatchOutput": true,
-    "lib": ["es2018", "esnext.asynciterable", "es2020.string"]
+    "lib": ["es2018", "esnext.asynciterable"]
   },
   "include": ["src/**/*"],
   "exclude": ["**/__mocks__/*"]
