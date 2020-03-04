@@ -5,11 +5,15 @@ import {
   writeCurrentMigration,
   getCurrentMigrationLocation,
 } from "../src/current";
-import { parseSettings } from "../src/settings";
+import { parseSettings, ParsedSettings } from "../src/settings";
 import { TEST_ROOT_DATABASE_URL } from "./helpers";
 
-beforeEach(() => {
+let parsedSettings: ParsedSettings;
+beforeEach(async () => {
   mockFs({ migrations: mockFs.directory() });
+  parsedSettings = await parseSettings({
+    connectionString: TEST_ROOT_DATABASE_URL,
+  });
 });
 afterEach(() => {
   mockFs.restore();
@@ -20,9 +24,6 @@ it("writes to current.sql if current.sql exists", async () => {
     "migrations/current.sql": "-- TEST",
   });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(parsedSettings, currentLocation, "TEST!");
@@ -35,9 +36,6 @@ it("writes to current.sql if no current.sql exists", async () => {
     code: "ENOENT",
   });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(parsedSettings, currentLocation, "TEST!");
@@ -48,9 +46,6 @@ it("writes to current.sql if no current.sql exists", async () => {
 it("writes to current/001.sql if current directory exists", async () => {
   mockFs({ "migrations/current": mockFs.directory() });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(parsedSettings, currentLocation, "TEST!");
@@ -75,9 +70,6 @@ Note: 300 was empty\
 it("writes to current/*.sql with splits", async () => {
   mockFs({ "migrations/current": mockFs.directory() });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(
@@ -118,9 +110,6 @@ it("writes to current/*.sql and deletes previous content", async () => {
     },
   });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(
@@ -161,9 +150,6 @@ it("writes to current/001.sql if there's no initial split", async () => {
     },
   });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(
@@ -208,9 +194,6 @@ it("writes to current/001.sql only if there's no splits", async () => {
     },
   });
 
-  const parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
-  });
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   await writeCurrentMigration(
