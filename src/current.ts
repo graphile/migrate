@@ -79,7 +79,7 @@ function idFromFilename(file: string): number {
   const matches = VALID_FILE_REGEX.exec(file);
   if (!matches) {
     throw new Error(
-      `Invalid current migration filename: '${file}'. File must follow the naming 1.sql or 1-message.sql, where 1 is a unique number and message is an optional alphanumeric string.`
+      `Invalid current migration filename: '${file}'. File must follow the naming 001.sql or 001-message.sql, where 001 is a unique number (with optional zero padding) and message is an optional alphanumeric string.`
     );
   }
   const [, rawId, _message] = matches;
@@ -87,7 +87,7 @@ function idFromFilename(file: string): number {
 
   if (!id || !isFinite(id) || id < 1) {
     throw new Error(
-      `Invalid current migration filename: '${file}'. File must start with a number.`
+      `Invalid current migration filename: '${file}'. File must start with a (positive) number, could not coerce '${rawId}' to int.`
     );
   }
   return id;
@@ -115,15 +115,19 @@ export async function readCurrentMigration(
     for (const file of files) {
       // Do not await during this loop, it will limit parallelism
 
+      if (file.startsWith(".")) {
+        // Ignore dotfiles
+        continue;
+      }
       if (!file.endsWith(".sql")) {
         // Skip non-SQL files
         continue;
       }
       const id = idFromFilename(file);
-      const other = parts.get(id);
-      if (other) {
+      const duplicate = parts.get(id);
+      if (duplicate) {
         throw new Error(
-          `Current migration filename clash: files must have a unique numeric prefix, but at least 2 files ('${file}' and '${other.file}') have the prefix '${id}'.`
+          `Current migration filename clash: files must have a unique numeric prefix, but at least 2 files ('${file}' and '${duplicate.file}') have the prefix '${id}'.`
         );
       }
 
