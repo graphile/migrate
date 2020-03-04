@@ -1,4 +1,4 @@
-import * as fsp from "./fsp";
+import { promises as fsp } from "fs";
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";

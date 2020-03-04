@@ -1,4 +1,4 @@
-import * as fsp from "./fsp";
+import { promises as fsp } from "fs";
 import { isNoTransactionDefined } from "./header";
 import { ParsedSettings } from "./settings";
 import { Stats } from "fs";

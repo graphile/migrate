@@ -1,4 +1,4 @@
-import * as fsp from "../fsp";
+import { promises as fsp } from "fs";
 import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
 import { getAllMigrations } from "../migration";

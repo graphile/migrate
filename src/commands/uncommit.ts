@@ -1,4 +1,4 @@
-import * as fsp from "../fsp";
+import { promises as fsp } from "fs";
 import { getAllMigrations, undoMigration } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
