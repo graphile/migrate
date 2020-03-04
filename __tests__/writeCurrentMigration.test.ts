@@ -63,6 +63,7 @@ With multiple lines
 -- and comments
 
 --! split: 300-third.sql
+
 --! split: 400-fourth.sql
 Note: 300 was empty\
 `;
