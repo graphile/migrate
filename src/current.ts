@@ -140,6 +140,7 @@ export async function readCurrentMigration(
     const ids = [...parts.keys()].sort((a, b) => a - b);
     let wholeBody = "";
     for (const id of ids) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { file, bodyPromise } = parts.get(id)!;
       const body = await bodyPromise;
       if (isNoTransactionDefined(body) && ids.length > 1) {

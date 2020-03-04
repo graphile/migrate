@@ -1,4 +1,4 @@
-import { getCurrent } from "../current";
+import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
@@ -20,8 +20,12 @@ async function _status(parsedSettings: ParsedSettings): Promise<Status> {
       parsedSettings,
       lastMigration
     );
-    const current = await getCurrent(parsedSettings, { readBody: true });
-    const minifiedBody = pgMinify(current.body);
+    const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+    const currentBody = await readCurrentMigration(
+      parsedSettings,
+      currentLocation
+    );
+    const minifiedBody = pgMinify(currentBody);
     const hasCurrentMigration = minifiedBody !== "";
     return {
       remainingMigrations: remainingMigrations.map(m => m.filename),

@@ -1,12 +1,16 @@
 import * as chokidar from "chokidar";
 import { executeActions } from "../actions";
-import { getCurrent, writeBlankCurrent } from "../current";
 import { logDbError } from "../instrumentation";
 import { reverseMigration, runStringMigration } from "../migration";
 import { withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import pgMinify = require("pg-minify");
+import {
+  getCurrentMigrationLocation,
+  readCurrentMigration,
+  writeCurrentMigration,
+} from "../current";
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
@@ -14,7 +18,11 @@ export function _makeCurrentMigrationRunner(
   shadow = false
 ): () => Promise<void> {
   async function run(): Promise<void> {
-    const current = await getCurrent(parsedSettings, { readBody: true });
+    const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+    const currentBody = await readCurrentMigration(
+      parsedSettings,
+      currentLocation
+    );
     let migrationsAreEquivalent = false;
 
     try {
@@ -57,7 +65,7 @@ export function _makeCurrentMigrationRunner(
               lockingPgClient,
               parsedSettings,
               context,
-              current.body,
+              currentBody,
               "current.sql",
               undefined,
               true
@@ -94,7 +102,7 @@ export function _makeCurrentMigrationRunner(
                       independentPgClient,
                       parsedSettings,
                       context,
-                      current.body,
+                      currentBody,
                       "current.sql",
                       undefined
                     )
@@ -156,9 +164,13 @@ export async function _watch(
 ): Promise<void> {
   await _migrate(parsedSettings, shadow);
 
-  const current = await getCurrent(parsedSettings, { readBody: false });
-  if (!current.exists) {
-    await writeBlankCurrent(current);
+  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+  if (!currentLocation.exists) {
+    await writeCurrentMigration(
+      parsedSettings,
+      currentLocation,
+      parsedSettings.blankMigrationContent
+    );
   }
 
   const run = _makeCurrentMigrationRunner(parsedSettings, once, shadow);
@@ -181,7 +193,7 @@ export async function _watch(
         }
       });
     };
-    const watcher = chokidar.watch(current.path, {
+    const watcher = chokidar.watch(currentLocation.path, {
       /*
        * Without `usePolling`, on Linux, you can prevent the watching from
        * working by issuing `git stash && sleep 2 && git stash pop`. This is

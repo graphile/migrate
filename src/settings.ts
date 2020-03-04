@@ -81,6 +81,7 @@ export interface ParsedSettings extends Settings {
   afterReset: ActionSpec[];
   afterAllMigrations: ActionSpec[];
   afterCurrent: ActionSpec[];
+  blankMigrationContent: string;
 }
 
 export async function parseSettings(
@@ -110,6 +111,8 @@ export async function parseSettings(
       return void 0;
     }
   }
+
+  const blankMigrationContent = "-- Enter migration here\n";
   const connectionString = await check(
     "connectionString",
     (rawConnectionString = process.env.DATABASE_URL): string => {
@@ -305,6 +308,7 @@ export async function parseSettings(
       : void 0,
     shadowDatabaseName: shadowDatabaseName ? shadowDatabaseName : void 0,
     placeholders,
+    blankMigrationContent,
   };
   /* eslint-enable */
 }
