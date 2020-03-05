@@ -13,15 +13,18 @@ import { ParsedSettings, Settings } from "../src/settings";
 
 export const TEST_DATABASE_URL: string =
   process.env.TEST_DATABASE_URL || "graphile_migrate_test";
+export const TEST_SHADOW_DATABASE_URL = TEST_DATABASE_URL + "_shadow";
 
 export const TEST_DATABASE_NAME =
   parse(TEST_DATABASE_URL).database || "graphile_migrate_test";
+export const TEST_SHADOW_DATABASE_NAME =
+  parse(TEST_SHADOW_DATABASE_URL).database || "graphile_migrate_test_shadow";
 
 if (!/^[a-zA-Z0-9_-]+$/.test(TEST_DATABASE_NAME)) {
   throw new Error("Invalid database name " + TEST_DATABASE_NAME);
 }
 
-export const TEST_ROOT_DATABASE_URL: string =
+const TEST_ROOT_DATABASE_URL: string =
   process.env.TEST_ROOT_DATABASE_URL || "template1";
 
 beforeAll(() => {
@@ -51,7 +54,13 @@ export async function resetDb() {
     `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`,
   );
   await rootPgPool.query(
+    `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
+  );
+  await rootPgPool.query(
     `CREATE DATABASE ${escapeIdentifier(TEST_DATABASE_NAME)};`,
+  );
+  await rootPgPool.query(
+    `CREATE DATABASE ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
   );
 }
 

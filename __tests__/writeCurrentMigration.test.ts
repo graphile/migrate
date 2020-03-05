@@ -8,13 +8,13 @@ import {
   writeCurrentMigration,
 } from "../src/current";
 import { ParsedSettings, parseSettings } from "../src/settings";
-import { TEST_ROOT_DATABASE_URL } from "./helpers";
+import { TEST_DATABASE_URL } from "./helpers";
 
 let parsedSettings: ParsedSettings;
 beforeEach(async () => {
   mockFs({ migrations: mockFs.directory() });
   parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
+    connectionString: TEST_DATABASE_URL,
   });
 });
 afterEach(() => {
