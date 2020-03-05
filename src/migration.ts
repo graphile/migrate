@@ -7,10 +7,6 @@ import memoize from "./memoize";
 import { Client, Context, withClient } from "./pg";
 import { ParsedSettings } from "./settings";
 
-// NEVER CHANGE THESE!
-const PREVIOUS = "--! Previous: ";
-const HASH = "--! Hash: ";
-
 // From https://stackoverflow.com/a/3561711/141284
 function escapeRegexp(str: string): string {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
@@ -175,40 +171,49 @@ export async function _migrateMigrationSchema(
 export function parseMigrationText(
   fullPath: string,
   contents: string,
+
+  /**
+   * Should be set true for committed migrations - requires that there is a \n\n divide after the header
+   */
+  strict = true,
 ): {
   headers: {
     [key: string]: string | null;
   };
   body: string;
 } {
-  const endOfHeaderIndex = contents.indexOf("\n\n");
-  if (endOfHeaderIndex === -1) {
-    throw new Error(`Invalid committed migration '${fullPath}': no header`);
-  }
-
-  const header = contents.substr(0, endOfHeaderIndex);
-  const body = contents.substring(endOfHeaderIndex + 2);
-
-  const headerLines = header.split("\n");
+  const lines = contents.split("\n");
 
   const headers: {
     [key: string]: string | null;
   } = {};
-  for (const headerLine of headerLines) {
-    const matches = /^--! ([a-zA-Z0-9_]+)(?::(.*))?$/.exec(headerLine);
+  let headerLines = 0;
+  for (const line of lines) {
+    const matches = /^--! ([a-zA-Z0-9_]+)(?::(.*))?$/.exec(line);
     if (!matches) {
-      throw new Error(
-        `Invalid committed migration '${fullPath}': header line '${headerLine}' is invalid`,
-      );
+      // Not headers any more
+      break;
     }
+    headerLines++;
     const [, key, value = null] = matches;
     if (key in headers) {
       throw new Error(
-        `Invalid committed migration '${fullPath}': header '${key}' is specified more than once`,
+        `Invalid migration '${fullPath}': header '${key}' is specified more than once`,
       );
     }
     headers[key] = value;
   }
+
+  if (strict && headers[headerLines] !== "") {
+    throw new Error(
+      `Invalid migration '${fullPath}': there should be two newlines after the headers section`,
+    );
+  }
+
+  const body = lines
+    .slice(headerLines)
+    .join("\n")
+    .trim();
   return { headers, body };
 }
 

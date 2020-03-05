@@ -46,7 +46,11 @@ export async function _commit(
     throw new Error("Could not determine next migration number");
   }
 
-  const { headers, body } = parseMigrationText(currentLocation.path, contents);
+  const { headers, body } = parseMigrationText(
+    currentLocation.path,
+    contents,
+    false,
+  );
   const messageFromComment = headers.Message;
 
   const message =
