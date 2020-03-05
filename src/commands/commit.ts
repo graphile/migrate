@@ -10,10 +10,14 @@ import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
 import { getAllMigrations, isMigrationFilename } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { sluggify } from "../sluggify";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
-export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
+export async function _commit(
+  parsedSettings: ParsedSettings,
+  messageOverride: string | null | undefined = undefined,
+): Promise<void> {
   const { migrationsFolder } = parsedSettings;
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -29,36 +33,26 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     throw new Error("Could not determine next migration number");
   }
 
-  // See if we have a message arg
-  const messageFlagIndex = process.argv.findIndex(
-    arg => arg === "--message" || arg === "-m"
-  );
-  const messageIndex = messageFlagIndex === -1 ? null : messageFlagIndex + 1;
+  // TODO: ensure this comes from a header section and cannot be found in a
+  // PostgreSQL string or similar. (Merged without this check because you'd
+  // almost certainly be deliberately trying to break things if this affected
+  // you :-P )
+  const messageMatches = /^--! Message:(.*)$/m.exec(body);
+  const messageFromComment = messageMatches ? messageMatches[1].trim() : null;
 
-  // If we do, fetch, and replace any whitespace with '_'
-  const messageFromCommandArgs = messageIndex && process.argv[messageIndex];
-  const messageFileContentsMatch = /--! Title:(.*)/.exec(body);
-  const messageFromFileComment =
-    messageFileContentsMatch && messageFileContentsMatch[1];
+  const message =
+    messageOverride !== undefined ? messageOverride : messageFromComment;
 
-  const message = messageFromCommandArgs || messageFromFileComment;
+  const sluggifiedMessage = message ? sluggify(message) : null;
 
-  const sluggifiedMessage = message && message.trim().replace(/\s+/g, "_");
-
-  const newMigrationFilename = message
-    ? String(newMigrationNumber).padStart(6, "0") +
-      "-" +
-      sluggifiedMessage +
-      ".sql"
-    : String(newMigrationNumber).padStart(6, "0") + ".sql";
+  const newMigrationFilename =
+    String(newMigrationNumber).padStart(6, "0") +
+    (sluggifiedMessage ? `-${sluggifiedMessage}` : "") +
+    ".sql";
   if (!isMigrationFilename(newMigrationFilename)) {
     throw Error("Could not construct migration filename");
   }
-  if (!isMigrationFilename(newMigrationFilename)) {
-    throw Error("Could not construct migration filename");
-  }
-  const bodyWithoutTitle = body.replace(/--! Title:.*\n/, "");
-  const minifiedBody = pgMinify(bodyWithoutTitle);
+  const minifiedBody = pgMinify(body);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
@@ -94,7 +88,10 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   }
 }
 
-export async function commit(settings: Settings): Promise<void> {
+export async function commit(
+  settings: Settings,
+  message?: string | null,
+): Promise<void> {
   const parsedSettings = await parseSettings(settings, true);
-  return _commit(parsedSettings);
+  return _commit(parsedSettings, message);
 }
