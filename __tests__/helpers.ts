@@ -12,11 +12,13 @@ import { escapeIdentifier } from "../src/pg";
 import { ParsedSettings, Settings } from "../src/settings";
 
 export const TEST_DATABASE_URL: string =
-  process.env.TEST_DATABASE_URL || "graphile_migrate_test";
+  process.env.TEST_DATABASE_URL ||
+  "postgres://gmtestuser:gmtestpass@localhost/graphile_migrate_test";
 export const TEST_SHADOW_DATABASE_URL = TEST_DATABASE_URL + "_shadow";
 
+const parsedTestDatabaseUrl = parse(TEST_DATABASE_URL);
 export const TEST_DATABASE_NAME =
-  parse(TEST_DATABASE_URL).database || "graphile_migrate_test";
+  parsedTestDatabaseUrl.database || "graphile_migrate_test";
 export const TEST_SHADOW_DATABASE_NAME =
   parse(TEST_SHADOW_DATABASE_URL).database || "graphile_migrate_test_shadow";
 
@@ -50,17 +52,33 @@ export async function resetDb() {
       connectionString: TEST_ROOT_DATABASE_URL,
     });
   }
+  const { user, password } = parsedTestDatabaseUrl;
+  if (!user || !password) {
+    throw new Error(
+      "TEST_DATABASE_URL does not contain a username and password",
+    );
+  }
   await rootPgPool.query(
     `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`,
   );
   await rootPgPool.query(
     `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
   );
+  await rootPgPool.query(`DROP ROLE IF EXISTS ${escapeIdentifier(user)};`);
   await rootPgPool.query(
-    `CREATE DATABASE ${escapeIdentifier(TEST_DATABASE_NAME)};`,
+    `CREATE ROLE ${escapeIdentifier(
+      user,
+    )} WITH LOGIN PASSWORD '${password.replace(/'/g, "''")}';`,
   );
   await rootPgPool.query(
-    `CREATE DATABASE ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
+    `CREATE DATABASE ${escapeIdentifier(
+      TEST_DATABASE_NAME,
+    )} OWNER ${escapeIdentifier(user)};`,
+  );
+  await rootPgPool.query(
+    `CREATE DATABASE ${escapeIdentifier(
+      TEST_SHADOW_DATABASE_NAME,
+    )} OWNER ${escapeIdentifier(user)};`,
   );
 }
 
