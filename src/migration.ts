@@ -1,5 +1,6 @@
 import { promises as fsp } from "fs";
 
+import { VALID_FILE_REGEX } from "./current";
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";
@@ -201,7 +202,7 @@ export function parseMigrationText(
         `Invalid migration '${fullPath}': header '${key}' is specified more than once`,
       );
     }
-    headers[key] = value;
+    headers[key] = value ? value.trim() : value;
   }
 
   if (strict && lines[headerLines] !== "") {
@@ -234,8 +235,7 @@ export function serializeMigration(
 
 export const isMigrationFilename = (
   filename: string,
-): RegExpMatchArray | null =>
-  /^[0-9]{6,}(-[-_0-9A-Za-z]*)?\.sql$/.exec(filename);
+): RegExpMatchArray | null => VALID_FILE_REGEX.exec(filename);
 
 export async function getLastMigration(
   pgClient: Client,
@@ -323,9 +323,9 @@ export async function getAllMigrations(
   let previous = null;
   for (const migration of migrations) {
     if (!previous) {
-      if (migration.previousHash !== null) {
+      if (migration.previousHash != null) {
         throw new Error(
-          `Migration '${migration.filename}' expected a previous migration, but no correctly ordered previous migration was found`,
+          `Migration '${migration.filename}' expected a previous migration ('${migration.previousHash}'), but no correctly ordered previous migration was found`,
         );
       }
     } else {

@@ -4,7 +4,7 @@ import { promises as fsp, Stats } from "fs";
 import { isNoTransactionDefined } from "./header";
 import { ParsedSettings } from "./settings";
 
-const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
+export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
 
 async function statOrNull(path: string): Promise<Stats | null> {
   try {
