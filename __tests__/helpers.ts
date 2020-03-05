@@ -3,6 +3,7 @@ jest.unmock("pg");
 import "mock-fs"; // MUST BE BEFORE EVERYTHING
 
 import { exec } from "child_process";
+import { createHash } from "crypto";
 import * as mockFs from "mock-fs";
 import { Pool } from "pg";
 import { parse } from "pg-connection-string";
@@ -27,7 +28,7 @@ if (!/^[a-zA-Z0-9_-]+$/.test(TEST_DATABASE_NAME)) {
 }
 
 const TEST_ROOT_DATABASE_URL: string =
-  process.env.TEST_ROOT_DATABASE_URL || "template1";
+  process.env.TEST_ROOT_DATABASE_URL || "postgres";
 
 beforeAll(() => {
   // eslint-disable-next-line no-console
@@ -50,6 +51,8 @@ export async function resetDb() {
   if (!rootPgPool) {
     rootPgPool = new Pool({
       connectionString: TEST_ROOT_DATABASE_URL,
+      max: 1,
+      idleTimeoutMillis: 1,
     });
   }
   const { user, password } = parsedTestDatabaseUrl;
@@ -58,28 +61,33 @@ export async function resetDb() {
       "TEST_DATABASE_URL does not contain a username and password",
     );
   }
-  await rootPgPool.query(
-    `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`,
-  );
-  await rootPgPool.query(
-    `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
-  );
-  await rootPgPool.query(`DROP ROLE IF EXISTS ${escapeIdentifier(user)};`);
-  await rootPgPool.query(
-    `CREATE ROLE ${escapeIdentifier(
-      user,
-    )} WITH LOGIN PASSWORD '${password.replace(/'/g, "''")}';`,
-  );
-  await rootPgPool.query(
-    `CREATE DATABASE ${escapeIdentifier(
-      TEST_DATABASE_NAME,
-    )} OWNER ${escapeIdentifier(user)};`,
-  );
-  await rootPgPool.query(
-    `CREATE DATABASE ${escapeIdentifier(
-      TEST_SHADOW_DATABASE_NAME,
-    )} OWNER ${escapeIdentifier(user)};`,
-  );
+  const client = await rootPgPool.connect();
+  try {
+    await client.query(
+      `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`,
+    );
+    await client.query(
+      `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
+    );
+    await client.query(`DROP ROLE IF EXISTS ${escapeIdentifier(user)};`);
+    await client.query(
+      `CREATE ROLE ${escapeIdentifier(
+        user,
+      )} WITH LOGIN PASSWORD '${password.replace(/'/g, "''")}';`,
+    );
+    await client.query(
+      `CREATE DATABASE ${escapeIdentifier(
+        TEST_DATABASE_NAME,
+      )} OWNER ${escapeIdentifier(user)};`,
+    );
+    await client.query(
+      `CREATE DATABASE ${escapeIdentifier(
+        TEST_SHADOW_DATABASE_NAME,
+      )} OWNER ${escapeIdentifier(user)};`,
+    );
+  } finally {
+    await client.release();
+  }
 }
 
 interface ActionSpies {
@@ -157,3 +165,55 @@ export async function setup(parsedSettings: ParsedSettings) {
     pool.end();
   }
 }
+
+export const makeMigrations = (commitMessage?: string) => {
+  const MIGRATION_1_TEXT = "create table foo (id serial primary key);";
+  const MIGRATION_1_HASH = "bfe32129112f19d4cadd717c1c15ed7ccbca4408";
+  const MIGRATION_1_COMMITTED = `--! Previous: -\n--! Hash: sha1:${MIGRATION_1_HASH}${
+    commitMessage ? `\n--! Message: ${commitMessage}` : ``
+  }\n\n${MIGRATION_1_TEXT.trim()}\n`;
+
+  const MIGRATION_2_TEXT =
+    "\n\n\ncreate table bar (id serial primary key);\n\n\n";
+  const MIGRATION_2_HASH = createHash("sha1")
+    .update(`sha1:${MIGRATION_1_HASH}\n${MIGRATION_2_TEXT.trim()}` + "\n")
+    .digest("hex");
+  const MIGRATION_2_COMMITTED = `--! Previous: sha1:${MIGRATION_1_HASH}\n--! Hash: sha1:${MIGRATION_2_HASH}${
+    commitMessage ? `\n--! Message: ${commitMessage}` : ``
+  }\n\n${MIGRATION_2_TEXT.trim()}\n`;
+
+  const MIGRATION_MULTIFILE_FILES = {
+    "001.sql": "select 1;",
+    "002-two.sql": "select 2;",
+    "003.sql": "select 3;",
+  };
+
+  const MIGRATION_MULTIFILE_TEXT = `\
+--! split: 001.sql
+select 1;
+--! split: 002-two.sql
+select 2;
+--! split: 003.sql
+select 3;
+`;
+  const MIGRATION_MULTIFILE_HASH = createHash("sha1")
+    .update(
+      `sha1:${MIGRATION_1_HASH}\n${MIGRATION_MULTIFILE_TEXT.trim()}` + "\n",
+    )
+    .digest("hex");
+  const MIGRATION_MULTIFILE_COMMITTED = `--! Previous: sha1:${MIGRATION_1_HASH}\n--! Hash: sha1:${MIGRATION_MULTIFILE_HASH}${
+    commitMessage ? `\n--! Message: ${commitMessage}` : ``
+  }\n\n${MIGRATION_MULTIFILE_TEXT.trim()}\n`;
+  return {
+    MIGRATION_1_TEXT,
+    MIGRATION_1_HASH,
+    MIGRATION_1_COMMITTED,
+    MIGRATION_2_TEXT,
+    MIGRATION_2_HASH,
+    MIGRATION_2_COMMITTED,
+    MIGRATION_MULTIFILE_TEXT,
+    MIGRATION_MULTIFILE_HASH,
+    MIGRATION_MULTIFILE_COMMITTED,
+    MIGRATION_MULTIFILE_FILES,
+  };
+};

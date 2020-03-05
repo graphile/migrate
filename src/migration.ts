@@ -231,7 +231,12 @@ export function serializeMigration(
     }
     headerLines.push(`--! ${key}` + (value ? `: ${value}` : ""));
   }
-  return `${headerLines.join("\n")}\n\n${body.trim()}\n`;
+  const finalBody = `${body.trim()}\n`;
+  if (headerLines.length) {
+    return `${headerLines.join("\n")}\n\n${finalBody}`;
+  } else {
+    return finalBody;
+  }
 }
 
 export const isMigrationFilename = (

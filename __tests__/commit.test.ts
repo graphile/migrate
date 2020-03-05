@@ -1,13 +1,18 @@
 import "./helpers"; // Has side-effects; must come first
 
-import { createHash } from "crypto";
 import { promises as fsp } from "fs";
 import * as mockFs from "mock-fs";
 
 import { commit } from "../src";
 import { sluggify } from "../src/sluggify";
-import { TEST_DATABASE_URL, TEST_SHADOW_DATABASE_URL } from "./helpers";
+import {
+  makeMigrations,
+  resetDb,
+  TEST_DATABASE_URL,
+  TEST_SHADOW_DATABASE_URL,
+} from "./helpers";
 
+beforeEach(resetDb);
 beforeEach(async () => {
   mockFs({ migrations: mockFs.directory() });
 });
@@ -38,43 +43,14 @@ describe.each([[undefined], ["My Commit Message"]])(
     const commitMessageSlug = commitMessage
       ? `-${sluggify(commitMessage)}`
       : ``;
-    const MIGRATION_1_TEXT = "create table foo (id serial primary key);";
-    const MIGRATION_1_HASH = "bfe32129112f19d4cadd717c1c15ed7ccbca4408";
-    const MIGRATION_1_COMMITTED = `--! Previous: -\n--! Hash: sha1:${MIGRATION_1_HASH}${
-      commitMessage ? `\n--! Message: ${commitMessage}` : ``
-    }\n\n${MIGRATION_1_TEXT.trim()}\n`;
-
-    const MIGRATION_2_TEXT =
-      "\n\n\ncreate table bar (id serial primary key);\n\n\n";
-    const MIGRATION_2_HASH = createHash("sha1")
-      .update(`sha1:${MIGRATION_1_HASH}\n${MIGRATION_2_TEXT.trim()}` + "\n")
-      .digest("hex");
-    const MIGRATION_2_COMMITTED = `--! Previous: sha1:${MIGRATION_1_HASH}\n--! Hash: sha1:${MIGRATION_2_HASH}${
-      commitMessage ? `\n--! Message: ${commitMessage}` : ``
-    }\n\n${MIGRATION_2_TEXT.trim()}\n`;
-
-    const MIGRATION_MULTIFILE_FILES = {
-      "001.sql": "select 1;",
-      "002-two.sql": "select 2;",
-      "003.sql": "select 3;",
-    };
-
-    const MIGRATION_MULTIFILE_TEXT = `\
---! split: 001.sql
-select 1;
---! split: 002-two.sql
-select 2;
---! split: 003.sql
-select 3;
-`;
-    const MIGRATION_MULTIFILE_HASH = createHash("sha1")
-      .update(
-        `sha1:${MIGRATION_1_HASH}\n${MIGRATION_MULTIFILE_TEXT.trim()}` + "\n",
-      )
-      .digest("hex");
-    const MIGRATION_MULTIFILE_COMMITTED = `--! Previous: sha1:${MIGRATION_1_HASH}\n--! Hash: sha1:${MIGRATION_MULTIFILE_HASH}${
-      commitMessage ? `\n--! Message: ${commitMessage}` : ``
-    }\n\n${MIGRATION_MULTIFILE_TEXT.trim()}\n`;
+    const {
+      MIGRATION_1_TEXT,
+      MIGRATION_1_COMMITTED,
+      MIGRATION_2_TEXT,
+      MIGRATION_2_COMMITTED,
+      MIGRATION_MULTIFILE_COMMITTED,
+      MIGRATION_MULTIFILE_FILES,
+    } = makeMigrations(commitMessage);
 
     it("can commit the first migration", async () => {
       mockFs({
