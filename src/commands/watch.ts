@@ -150,6 +150,7 @@ export function _makeCurrentMigrationRunner(
       );
     } catch (e) {
       logDbError(e);
+      throw e;
     }
   }
   return run;

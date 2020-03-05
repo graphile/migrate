@@ -100,7 +100,7 @@ export async function _commit(
     await fsp.unlink(newMigrationFilepath);
     // eslint-disable-next-line no-console
     console.error("ABORTED AND ROLLED BACK");
-    process.exitCode = 1;
+    throw e;
   }
 }
 
