@@ -86,7 +86,7 @@ export async function resetDb() {
       )} OWNER ${escapeIdentifier(user)};`,
     );
   } finally {
-    await client.release();
+    client.release();
   }
 }
 
@@ -167,14 +167,15 @@ export async function setup(parsedSettings: ParsedSettings) {
 }
 
 export const makeMigrations = (commitMessage?: string) => {
-  const MIGRATION_1_TEXT = "create table foo (id serial primary key);";
-  const MIGRATION_1_HASH = "bfe32129112f19d4cadd717c1c15ed7ccbca4408";
+  const MIGRATION_1_TEXT =
+    "create table if not exists foo (id serial primary key);";
+  const MIGRATION_1_HASH = "e00ec93314a423ee5cc68d1182ad52f16442d7df";
   const MIGRATION_1_COMMITTED = `--! Previous: -\n--! Hash: sha1:${MIGRATION_1_HASH}${
     commitMessage ? `\n--! Message: ${commitMessage}` : ``
   }\n\n${MIGRATION_1_TEXT.trim()}\n`;
 
   const MIGRATION_2_TEXT =
-    "\n\n\ncreate table bar (id serial primary key);\n\n\n";
+    "\n\n\ncreate table if not exists bar (id serial primary key);\n\n\n";
   const MIGRATION_2_HASH = createHash("sha1")
     .update(`sha1:${MIGRATION_1_HASH}\n${MIGRATION_2_TEXT.trim()}` + "\n")
     .digest("hex");
