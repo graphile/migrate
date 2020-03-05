@@ -72,12 +72,15 @@ it("calls afterAllMigrations action (only) if we did some migrations", async () 
     async (): Promise<FileMigration[]> => {
       return [
         {
-          filename: "TEST_FILENAME",
+          filename: "000001.sql",
+          realFilename: "000001-test-message.sql",
           hash: "TEST_HASH",
           previousHash: null,
           body: "TEST_BODY",
           fullPath: "TEST_PATH",
           previous: null,
+          message: "TEST MESSAGE",
+          messageSlug: "test-message",
         },
       ];
     },
