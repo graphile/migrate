@@ -155,6 +155,7 @@ export async function readCurrentMigration(
       if (wholeBody.length > 0) {
         wholeBody += "\n";
       }
+      // 'split' is not a "header", so it must NOT start with a capital.
       wholeBody += `--! split: ${file}\n`;
       wholeBody += body;
     }

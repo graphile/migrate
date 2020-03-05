@@ -190,7 +190,8 @@ export function parseMigrationText(
   } = {};
   let headerLines = 0;
   for (const line of lines) {
-    const matches = /^--! ([a-zA-Z0-9_]+)(?::(.*))?$/.exec(line);
+    // Headers always start with a capital letter
+    const matches = /^--! ([A-Z][a-zA-Z0-9_]*)(?::(.*))?$/.exec(line);
     if (!matches) {
       // Not headers any more
       break;
