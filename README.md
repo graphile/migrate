@@ -131,11 +131,11 @@ will exit.
 - apply the current migration to the shadow database, and replace the dump
 - move the current migration to committed migrations (adding a hash to prevent
   tampering)
-- the message will be made "filesystem safe" and appended to the end of the
-  filename after a hyphen (`-`)
+- the message will be made "filesystem safe" and added to the filename after a
+  hyphen (`-`)
 - Do **NOT** change the filename or contents once you have committed. If you
   need to make changes, either add a new migration or, if the migration hasn't
-  been used anywhere else yet, see `uncommit` below.
+  been used anywhere else yet, see `graphile-migrate uncommit`.
 
 ### `graphile-migrate uncommit`
 
