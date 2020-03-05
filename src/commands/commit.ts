@@ -8,11 +8,24 @@ import {
 } from "../current";
 import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
-import { getAllMigrations, isMigrationFilename } from "../migration";
+import {
+  getAllMigrations,
+  isMigrationFilename,
+  parseMigrationText,
+  serializeMigration,
+} from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
+
+function omit<T>(obj: T, keys: string[]): any {
+  const newObject = { ...obj };
+  for (const key of keys) {
+    delete newObject[key];
+  }
+  return newObject;
+}
 
 export async function _commit(
   parsedSettings: ParsedSettings,
@@ -21,7 +34,7 @@ export async function _commit(
   const { migrationsFolder } = parsedSettings;
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-  const body = await readCurrentMigration(parsedSettings, currentLocation);
+  const contents = await readCurrentMigration(parsedSettings, currentLocation);
 
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   const allMigrations = await getAllMigrations(parsedSettings);
@@ -33,8 +46,8 @@ export async function _commit(
     throw new Error("Could not determine next migration number");
   }
 
-  const messageMatches = /^--! Message:(.*)(\r?\n|$)/.exec(body);
-  const messageFromComment = messageMatches ? messageMatches[1].trim() : null;
+  const { headers, body } = parseMigrationText(currentLocation.path, contents);
+  const messageFromComment = headers.Message;
 
   const message =
     messageOverride !== undefined ? messageOverride : messageFromComment;
@@ -48,22 +61,18 @@ export async function _commit(
   if (!isMigrationFilename(newMigrationFilename)) {
     throw Error("Could not construct migration filename");
   }
-  const bodyWithoutMessage = messageMatches
-    ? body.substr(messageMatches[0].length)
-    : body;
-  const minifiedBody = pgMinify(bodyWithoutMessage);
+  const minifiedBody = pgMinify(body);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
 
-  const hash = calculateHash(
-    bodyWithoutMessage,
-    lastMigration && lastMigration.hash,
-  );
-  const messageLine = message ? `--! Message: ${message}\n` : "";
-  const finalBody = `--! Previous: ${
-    lastMigration ? lastMigration.hash : "-"
-  }\n--! Hash: ${hash}\n${messageLine}\n${bodyWithoutMessage.trim()}\n`;
+  const hash = calculateHash(body, lastMigration && lastMigration.hash);
+  const finalBody = serializeMigration(body, {
+    Previous: lastMigration ? lastMigration.hash : "-",
+    Hash: hash,
+    Message: message ? message : undefined,
+    ...omit(headers, ["Previous", "Hash", "Message"]),
+  });
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);

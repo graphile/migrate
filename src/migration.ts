@@ -17,8 +17,19 @@ function escapeRegexp(str: string): string {
 }
 
 export interface Migration {
+  /**
+   * The filename without the message slug in it, used for storing to the database.
+   */
   filename: string;
+
+  /**
+   * A hash of the content of the migration.
+   */
   hash: string;
+
+  /**
+   * The hash of the previous migration, or null if there was no previous migration
+   */
   previousHash: string | null;
 }
 
@@ -27,9 +38,34 @@ export interface DbMigration extends Migration {
 }
 
 export interface FileMigration extends Migration {
+  /**
+   * The actual filename on disk
+   */
+  realFilename: string;
+
+  /**
+   * The content of the migration
+   */
   body: string;
-  title?: string;
+
+  /**
+   * The message the migration was committed with
+   */
+  message: string | null;
+
+  /**
+   * The slugified message, stored as part of the file name
+   */
+  messageSlug: string | null;
+
+  /**
+   * The full path to this migration on disk
+   */
   fullPath: string;
+
+  /**
+   * If there was a previous migration, that
+   */
   previous: FileMigration | null;
 }
 
@@ -136,8 +172,63 @@ export async function _migrateMigrationSchema(
   `);
 }
 
+export function parseMigrationText(
+  fullPath: string,
+  contents: string,
+): {
+  headers: {
+    [key: string]: string | null;
+  };
+  body: string;
+} {
+  const endOfHeaderIndex = contents.indexOf("\n\n");
+  if (endOfHeaderIndex === -1) {
+    throw new Error(`Invalid committed migration '${fullPath}': no header`);
+  }
+
+  const header = contents.substr(0, endOfHeaderIndex);
+  const body = contents.substring(endOfHeaderIndex + 2);
+
+  const headerLines = header.split("\n");
+
+  const headers: {
+    [key: string]: string | null;
+  } = {};
+  for (const headerLine of headerLines) {
+    const matches = /^--! ([a-zA-Z0-9_]+)(?::(.*))?$/.exec(headerLine);
+    if (!matches) {
+      throw new Error(
+        `Invalid committed migration '${fullPath}': header line '${headerLine}' is invalid`,
+      );
+    }
+    const [, key, value = null] = matches;
+    if (key in headers) {
+      throw new Error(
+        `Invalid committed migration '${fullPath}': header '${key}' is specified more than once`,
+      );
+    }
+    headers[key] = value;
+  }
+  return { headers, body };
+}
+
+export function serializeMigration(
+  body: string,
+  headers: { [key: string]: string | null | undefined },
+): string {
+  const headerLines = [];
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (value === undefined) {
+      continue;
+    }
+    headerLines.push(`--! ${key}` + (value ? `: ${value}` : ""));
+  }
+  return `${headerLines.join("\n")}\n\n${body.trim()}\n`;
+}
+
 export const isMigrationFilename = (
-  filename: string
+  filename: string,
 ): RegExpMatchArray | null =>
   /^[0-9]{6,}(-[-_0-9A-Za-z]*)?\.sql$/.exec(filename);
 
@@ -172,44 +263,57 @@ export async function getAllMigrations(
   }
   const files = await fsp.readdir(committedMigrationsFolder);
   const migrations: Array<FileMigration> = await Promise.all(
-    files.filter(isMigrationFilename).map(
-      async (rawFilename): Promise<FileMigration> => {
-        const fullPath = `${committedMigrationsFolder}/${rawFilename}`;
-        const contents = await fsp.readFile(fullPath, "utf8");
-        const i = contents.indexOf("\n");
-        const firstLine = contents.substring(0, i);
-        if (!firstLine.startsWith(PREVIOUS)) {
-          throw new Error(
-            "Invalid committed migration - no 'previous' comment",
-          );
-        }
-        const previousHashRaw = firstLine.substring(PREVIOUS.length) || null;
-        const previousHash =
-          previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
-        const j = contents.indexOf("\n", i + 1);
-        const secondLine = contents.substring(i + 1, j);
-        if (!secondLine.startsWith(HASH)) {
-          throw new Error("Invalid committed migration - no 'hash' comment");
-        }
-        const hash = secondLine.substring(HASH.length);
-        if (contents[j + 1] !== "\n") {
-          throw new Error(`Invalid migration header in '${fullPath}'`);
-        }
-        const body = contents.substring(j + 2);
-        const [filename, title] = rawFilename.replace(".sql", "").split("-");
-        return {
-          filename: filename + ".sql",
-          title,
-          fullPath,
-          hash,
-          previousHash,
-          body,
-          previous: null,
-        };
-      },
-    ),
+    files
+      .map(isMigrationFilename)
+      .filter((matches): matches is RegExpMatchArray => !!matches)
+      .map(
+        async (matches): Promise<FileMigration> => {
+          const [
+            realFilename,
+            migrationNumberString,
+            messageSlug = null,
+          ] = matches;
+          const fullPath = `${committedMigrationsFolder}/${realFilename}`;
+          const contents = await fsp.readFile(fullPath, "utf8");
+
+          const { headers, body } = parseMigrationText(fullPath, contents);
+
+          // --! Previous:
+          const previousHashRaw = headers["Previous"];
+          if (!previousHashRaw) {
+            throw new Error(
+              `Invalid committed migration '${fullPath}': no 'Previous' comment`,
+            );
+          }
+          const previousHash =
+            previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
+
+          // --! Hash:
+          const hash = headers["Hash"];
+          if (!hash) {
+            throw new Error(
+              `Invalid committed migration '${fullPath}': no 'Hash' comment`,
+            );
+          }
+
+          // --! Message:
+          const message = headers["Message"];
+
+          return {
+            realFilename,
+            filename: migrationNumberString + ".sql",
+            message,
+            messageSlug,
+            fullPath,
+            hash,
+            previousHash,
+            body,
+            previous: null,
+          };
+        },
+      ),
   );
-  migrations.sort((a, b) => a.filename.localeCompare(b.filename));
+  migrations.sort((a, b) => a.filename.localeCompare(b.filename, "en"));
   // Validate and link
   let previous = null;
   for (const migration of migrations) {

@@ -6,15 +6,17 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
-import { getAllMigrations, undoMigration } from "../migration";
+import {
+  getAllMigrations,
+  parseMigrationText,
+  serializeMigration,
+  undoMigration,
+} from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
 export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
-  const { migrationsFolder } = parsedSettings;
-  const committedMigrationsFolder = `${migrationsFolder}/committed`;
-
   // Determine the last migration
   const allMigrations = await getAllMigrations(parsedSettings);
   const lastMigration = allMigrations[allMigrations.length - 1];
@@ -34,28 +36,13 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   }
 
   // Restore current.sql from migration
-  const lastMigrationFilename = lastMigration.title
-    ? lastMigration.filename.replace(".sql", `-${lastMigration.title}.sql`)
-    : lastMigration.filename;
-  const lastMigrationFilepath = `${committedMigrationsFolder}/${lastMigrationFilename}`;
-  const body = await fsp.readFile(lastMigrationFilepath, "utf8");
-  const nn = body.indexOf("\n\n");
-  if (nn < 10) {
-    throw new Error(
-      `Migration '${lastMigrationFilepath}' seems invalid - could not read metadata`,
-    );
-  }
-  const bodyWithoutMetadata = body.substr(nn + 2);
+  const lastMigrationFilepath = lastMigration.fullPath;
+  const contents = await fsp.readFile(lastMigrationFilepath, "utf8");
+  const { headers, body } = parseMigrationText(lastMigrationFilepath, contents);
 
-  // Slip in a title comment to allow for the migration to be uncommitted and recommitted without destroying the title
-  const titleMarker = "--! Title:";
-  const titleLine = lastMigration.title
-    ? `--! Title: ${lastMigration.title}\n`
-    : "";
-  const completeBody = bodyWithoutMetadata.includes(titleMarker)
-    ? bodyWithoutMetadata.replace(/--! Title: .*\n/, titleLine)
-    : `${titleLine}${bodyWithoutMetadata}`;
-
+  // Drop Hash and Previous from headers; then write out
+  const { Hash, Previous, ...otherHeaders } = headers;
+  const completeBody = serializeMigration(body, otherHeaders);
   await writeCurrentMigration(parsedSettings, currentLocation, completeBody);
 
   // Delete the migration from committed and from the DB
