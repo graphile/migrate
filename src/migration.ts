@@ -204,7 +204,7 @@ export function parseMigrationText(
     headers[key] = value;
   }
 
-  if (strict && headers[headerLines] !== "") {
+  if (strict && lines[headerLines] !== "") {
     throw new Error(
       `Invalid migration '${fullPath}': there should be two newlines after the headers section`,
     );
