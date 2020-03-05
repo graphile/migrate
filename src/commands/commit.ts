@@ -33,11 +33,7 @@ export async function _commit(
     throw new Error("Could not determine next migration number");
   }
 
-  // TODO: ensure this comes from a header section and cannot be found in a
-  // PostgreSQL string or similar. (Merged without this check because you'd
-  // almost certainly be deliberately trying to break things if this affected
-  // you :-P )
-  const messageMatches = /^--! Message:(.*)$/m.exec(body);
+  const messageMatches = /^--! Message:(.*)(\r?\n|$)/.exec(body);
   const messageFromComment = messageMatches ? messageMatches[1].trim() : null;
 
   const message =
@@ -52,15 +48,22 @@ export async function _commit(
   if (!isMigrationFilename(newMigrationFilename)) {
     throw Error("Could not construct migration filename");
   }
-  const minifiedBody = pgMinify(body);
+  const bodyWithoutMessage = messageMatches
+    ? body.substr(messageMatches[0].length)
+    : body;
+  const minifiedBody = pgMinify(bodyWithoutMessage);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
 
-  const hash = calculateHash(body, lastMigration && lastMigration.hash);
+  const hash = calculateHash(
+    bodyWithoutMessage,
+    lastMigration && lastMigration.hash,
+  );
+  const messageLine = message ? `--! Message: ${message}\n` : "";
   const finalBody = `--! Previous: ${
     lastMigration ? lastMigration.hash : "-"
-  }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
+  }\n--! Hash: ${hash}\n${messageLine}\n${bodyWithoutMessage.trim()}\n`;
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
