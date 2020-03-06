@@ -168,7 +168,7 @@ export async function _watch(
     await writeCurrentMigration(
       parsedSettings,
       currentLocation,
-      parsedSettings.blankMigrationContent,
+      parsedSettings.blankMigrationContent.trim() + "\n",
     );
   }
 

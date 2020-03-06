@@ -59,8 +59,9 @@ With multiple lines
 
 --! split: 300-third.sql
 
+
 --! split: 400-fourth.sql
-Note: 300 was empty\
+Note: 300 was empty
 `;
 
 it("reads multiple files", async () => {

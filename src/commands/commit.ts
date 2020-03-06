@@ -90,7 +90,7 @@ export async function _commit(
     await writeCurrentMigration(
       parsedSettings,
       currentLocation,
-      parsedSettings.blankMigrationContent,
+      parsedSettings.blankMigrationContent.trim() + "\n",
     );
   } catch (e) {
     logDbError(e);

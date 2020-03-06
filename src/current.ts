@@ -187,6 +187,11 @@ export async function writeCurrentMigration(
   location: CurrentMigrationLocation,
   body: string,
 ): Promise<void> {
+  if (body.trim() + "\n" !== body) {
+    throw new Error(
+      "graphile-migrate error - 'body' should be sanitized before being passed to 'writeCurrentMigration'",
+    );
+  }
   if (location.isFile) {
     await fsp.writeFile(location.path, body);
   } else {
@@ -234,7 +239,7 @@ export async function writeCurrentMigration(
       }
       const sql = linesToWrite.join("\n").trim() + "\n";
       const fileName =
-        nextFileToWrite || (force ? `${highestIndex + 1}-unsplit.sql` : null);
+        nextFileToWrite || (force ? `${highestIndex + 1}-current.sql` : null);
       if (!fileName) {
         // Merge into first file
         return;

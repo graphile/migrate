@@ -212,10 +212,11 @@ export function parseMigrationText(
     );
   }
 
-  const body = lines
-    .slice(headerLines)
-    .join("\n")
-    .trim();
+  const body =
+    lines
+      .slice(headerLines)
+      .join("\n")
+      .trim() + "\n";
   return { headers, body };
 }
 
