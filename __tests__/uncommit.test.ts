@@ -5,17 +5,7 @@ import * as mockFs from "mock-fs";
 
 import { commit, migrate, uncommit } from "../src";
 import { sluggify } from "../src/sluggify";
-import {
-  makeMigrations,
-  resetDb,
-  TEST_DATABASE_URL,
-  TEST_SHADOW_DATABASE_URL,
-} from "./helpers";
-
-const options = {
-  connectionString: TEST_DATABASE_URL,
-  shadowConnectionString: TEST_SHADOW_DATABASE_URL,
-};
+import { makeMigrations, resetDb, settings } from "./helpers";
 
 beforeEach(resetDb);
 beforeEach(async () => {
@@ -30,10 +20,7 @@ it("aborts if there is no previous migration", async () => {
     "migrations/current.sql": "-- JUST A COMMENT\n",
   });
 
-  const promise = uncommit({
-    connectionString: TEST_DATABASE_URL,
-    shadowConnectionString: TEST_SHADOW_DATABASE_URL,
-  });
+  const promise = uncommit(settings);
   await promise.catch(() => {});
 
   mockFs.restore();
@@ -48,9 +35,9 @@ it("aborts if current migration is not empty", async () => {
     "migrations/current.sql": "SELECT 1;",
   });
 
-  await migrate(options);
+  await migrate(settings);
 
-  const promise = uncommit(options);
+  const promise = uncommit(settings);
   await promise.catch(() => {});
 
   mockFs.restore();
@@ -60,7 +47,7 @@ it("aborts if current migration is not empty", async () => {
 });
 
 describe.each([[undefined], ["My Commit Message"]])(
-  "uncommit message %s",
+  "uncommit message '%s'",
   commitMessage => {
     const commitMessageSlug = commitMessage
       ? `-${sluggify(commitMessage)}`
@@ -74,8 +61,8 @@ describe.each([[undefined], ["My Commit Message"]])(
         [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
         "migrations/current.sql": "-- JUST A COMMENT\n",
       });
-      await migrate(options);
-      await uncommit(options);
+      await migrate(settings);
+      await uncommit(settings);
 
       await expect(
         fsp.stat("migrations/committed/000001.sql"),
@@ -88,7 +75,7 @@ describe.each([[undefined], ["My Commit Message"]])(
           "\n",
       );
 
-      await commit(options);
+      await commit(settings);
       expect(
         await fsp.readFile(
           `migrations/committed/000001${commitMessageSlug}.sql`,

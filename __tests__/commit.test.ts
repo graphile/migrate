@@ -5,12 +5,7 @@ import * as mockFs from "mock-fs";
 
 import { commit } from "../src";
 import { sluggify } from "../src/sluggify";
-import {
-  makeMigrations,
-  resetDb,
-  TEST_DATABASE_URL,
-  TEST_SHADOW_DATABASE_URL,
-} from "./helpers";
+import { makeMigrations, resetDb, settings } from "./helpers";
 
 beforeEach(resetDb);
 beforeEach(async () => {
@@ -25,10 +20,7 @@ it("aborts if current.sql is empty", async () => {
     "migrations/current.sql": "-- JUST A COMMENT\n",
   });
 
-  const promise = commit({
-    connectionString: TEST_DATABASE_URL,
-    shadowConnectionString: TEST_SHADOW_DATABASE_URL,
-  });
+  const promise = commit(settings);
   await promise.catch(() => {});
 
   mockFs.restore();
@@ -38,7 +30,7 @@ it("aborts if current.sql is empty", async () => {
 });
 
 describe.each([[undefined], ["My Commit Message"]])(
-  "commit message",
+  "commit message '%s'",
   commitMessage => {
     const commitMessageSlug = commitMessage
       ? `-${sluggify(commitMessage)}`
@@ -57,13 +49,7 @@ describe.each([[undefined], ["My Commit Message"]])(
         "migrations/current.sql": MIGRATION_1_TEXT,
       });
 
-      await commit(
-        {
-          connectionString: TEST_DATABASE_URL,
-          shadowConnectionString: TEST_SHADOW_DATABASE_URL,
-        },
-        commitMessage,
-      );
+      await commit(settings, commitMessage);
       expect(
         await fsp.readFile(
           `migrations/committed/000001${commitMessageSlug}.sql`,
@@ -78,13 +64,7 @@ describe.each([[undefined], ["My Commit Message"]])(
         "migrations/current.sql": MIGRATION_2_TEXT,
       });
 
-      await commit(
-        {
-          connectionString: TEST_DATABASE_URL,
-          shadowConnectionString: TEST_SHADOW_DATABASE_URL,
-        },
-        commitMessage,
-      );
+      await commit(settings, commitMessage);
       expect(
         await fsp.readFile(
           `migrations/committed/000001${commitMessageSlug}.sql`,
@@ -105,13 +85,7 @@ describe.each([[undefined], ["My Commit Message"]])(
         "migrations/current": MIGRATION_MULTIFILE_FILES,
       });
 
-      await commit(
-        {
-          connectionString: TEST_DATABASE_URL,
-          shadowConnectionString: TEST_SHADOW_DATABASE_URL,
-        },
-        commitMessage,
-      );
+      await commit(settings, commitMessage);
       expect(
         await fsp.readFile(
           `migrations/committed/000001${commitMessageSlug}.sql`,

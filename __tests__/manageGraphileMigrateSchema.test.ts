@@ -51,7 +51,7 @@ async function getError(initialSchema = ""): Promise<Error | null> {
   });
 }
 
-describe("manageGraphlileMigrateSchema = false", () => {
+describe("manageGraphileMigrateSchema = false", () => {
   it("throws error if we set the option to something strange", async () => {
     let error;
     try {

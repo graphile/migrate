@@ -30,6 +30,12 @@ if (!/^[a-zA-Z0-9_-]+$/.test(TEST_DATABASE_NAME)) {
 const TEST_ROOT_DATABASE_URL: string =
   process.env.TEST_ROOT_DATABASE_URL || "postgres";
 
+export const settings: Settings = {
+  connectionString: TEST_DATABASE_URL,
+  shadowConnectionString: TEST_SHADOW_DATABASE_URL,
+  rootConnectionString: TEST_ROOT_DATABASE_URL,
+};
+
 beforeAll(() => {
   // eslint-disable-next-line no-console
   console.log("[mock-fs callsites hack]"); // Without this, jest fails due to 'callsites'
