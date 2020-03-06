@@ -52,9 +52,12 @@ describe.each([[undefined], ["My Commit Message"]])(
     const commitMessageSlug = commitMessage
       ? `-${sluggify(commitMessage)}`
       : ``;
-    const { MIGRATION_1_TEXT, MIGRATION_1_COMMITTED } = makeMigrations(
-      commitMessage,
-    );
+    const {
+      MIGRATION_1_TEXT,
+      MIGRATION_1_COMMITTED,
+      MIGRATION_MULTIFILE_COMMITTED,
+      MIGRATION_MULTIFILE_FILES,
+    } = makeMigrations(commitMessage);
 
     it("rolls back migration", async () => {
       mockFs({
@@ -82,6 +85,53 @@ describe.each([[undefined], ["My Commit Message"]])(
           "utf8",
         ),
       ).toEqual(MIGRATION_1_COMMITTED);
+    });
+
+    it("rolls back multifile migration", async () => {
+      mockFs({
+        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000002${commitMessageSlug}.sql`]: MIGRATION_MULTIFILE_COMMITTED,
+        "migrations/current/1.sql": "-- COMMENT",
+      });
+      await migrate(settings);
+      await uncommit(settings);
+
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000001${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_1_COMMITTED);
+      await expect(
+        fsp.stat("migrations/committed/000002.sql"),
+      ).rejects.toMatchObject({
+        code: "ENOENT",
+      });
+      expect(await fsp.readFile("migrations/current/001.sql", "utf8")).toEqual(
+        (commitMessage ? `--! Message: ${commitMessage}\n\n` : "") +
+          MIGRATION_MULTIFILE_FILES["001.sql"].trim() +
+          "\n",
+      );
+      expect(
+        await fsp.readFile("migrations/current/002-two.sql", "utf8"),
+      ).toEqual(MIGRATION_MULTIFILE_FILES["002-two.sql"].trim() + "\n");
+      expect(await fsp.readFile("migrations/current/003.sql", "utf8")).toEqual(
+        MIGRATION_MULTIFILE_FILES["003.sql"].trim() + "\n",
+      );
+
+      await commit(settings);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000001${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_1_COMMITTED);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000002${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_MULTIFILE_COMMITTED);
     });
   },
 );

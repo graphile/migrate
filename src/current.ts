@@ -202,25 +202,32 @@ export async function writeCurrentMigration(
      * have any ambiguities or conflicts.
      */
     let highestIndex = 0;
+    let highestIndexFilename: string | null = null;
 
     /**
      * Writes `linesToWrite` to `nextFileToWrite` (or '001.sql' if unknown), then
      * resets these variables ready for the next batch.
      */
-    const flushToFile = (): void => {
+    const flushToFile = (force = false): void => {
       if (!linesToWrite.length && !nextFileToWrite) {
         // Optimisation to avoid writing the initial empty migration file before the first `--! split`
         return;
       }
-      const sql = linesToWrite.join("\n");
-      const fileName = nextFileToWrite || "001.sql";
+      const sql = linesToWrite.join("\n").trim() + "\n";
+      const fileName =
+        nextFileToWrite || (force ? `${highestIndex + 1}-unsplit.sql` : null);
+      if (!fileName) {
+        // Merge into first file
+        return;
+      }
       const id = idFromFilename(fileName);
       if (id <= highestIndex) {
         throw new Error(
-          `Bad migration, split ids must be monotonically increasing, but '${id}' (from '${fileName}') <= '${highestIndex}'.`,
+          `Bad migration, split ids must be monotonically increasing, but '${id}' (from '${fileName}') <= '${highestIndex}' (from '${highestIndexFilename}').`,
         );
       }
       highestIndex = id;
+      highestIndexFilename = fileName;
 
       writePromises.push(fsp.writeFile(`${location.path}/${fileName}`, sql));
       filenamesWritten.push(fileName);
@@ -248,7 +255,7 @@ export async function writeCurrentMigration(
     }
 
     // Handle any trailing lines
-    flushToFile();
+    flushToFile(true);
 
     if (writePromises.length === 0) {
       // Body must have been empty, so no files were written.

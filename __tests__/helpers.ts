@@ -226,8 +226,10 @@ export const makeMigrations = (commitMessage?: string) => {
   const MIGRATION_MULTIFILE_TEXT = `\
 --! split: 001.sql
 select 1;
+
 --! split: 002-two.sql
 select 2;
+
 --! split: 003.sql
 select 3;
 `;
