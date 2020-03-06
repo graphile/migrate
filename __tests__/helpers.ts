@@ -9,8 +9,8 @@ import { Pool } from "pg";
 import { parse } from "pg-connection-string";
 
 import { _migrateMigrationSchema } from "../src/migration";
-import { escapeIdentifier } from "../src/pg";
-import { ParsedSettings, Settings } from "../src/settings";
+import { clearAllPools, escapeIdentifier, withClient } from "../src/pgReal";
+import { ParsedSettings, parseSettings, Settings } from "../src/settings";
 
 export const TEST_DATABASE_URL: string =
   process.env.TEST_DATABASE_URL ||
@@ -52,48 +52,76 @@ afterAll(() => {
   }
   rootPgPool = null;
 });
+afterAll(() => {
+  clearAllPools();
+});
 
-export async function resetDb() {
-  if (!rootPgPool) {
-    rootPgPool = new Pool({
-      connectionString: TEST_ROOT_DATABASE_URL,
-      max: 1,
-      idleTimeoutMillis: 1,
-    });
-  }
+const parsedSettingsPromise = parseSettings(settings);
+const ROOT_DB = TEST_ROOT_DATABASE_URL + "?max=1&idleTimeoutMillis=1";
+
+async function createDatabases() {
   const { user, password } = parsedTestDatabaseUrl;
   if (!user || !password) {
     throw new Error(
       "TEST_DATABASE_URL does not contain a username and password",
     );
   }
-  const client = await rootPgPool.connect();
-  try {
-    await client.query(
-      `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_DATABASE_NAME)};`,
+  const parsedSettings = await parsedSettingsPromise;
+  await withClient(ROOT_DB, parsedSettings, async client => {
+    const result = await client.query(
+      `select
+        exists(select 1 from pg_database where datname = $1) as "hasMain",
+        exists(select 1 from pg_database where datname = $2) as "hasShadow",
+        exists(select 1 from pg_roles where rolname = $3) as "hasRole"
+      `,
+      [TEST_DATABASE_NAME, TEST_SHADOW_DATABASE_NAME, user],
     );
-    await client.query(
-      `DROP DATABASE IF EXISTS ${escapeIdentifier(TEST_SHADOW_DATABASE_NAME)};`,
+    if (!result) {
+      console.dir(client.query);
+      console.dir(result);
+      throw new Error("No result?!");
+    }
+    const {
+      rows: [{ hasMain, hasShadow, hasRole }],
+    } = result;
+    if (!hasRole) {
+      await client.query(
+        `CREATE ROLE ${escapeIdentifier(
+          user,
+        )} WITH LOGIN PASSWORD '${password.replace(/'/g, "''")}';`,
+      );
+    }
+    if (!hasMain) {
+      await client.query(
+        `CREATE DATABASE ${escapeIdentifier(
+          TEST_DATABASE_NAME,
+        )} OWNER ${escapeIdentifier(user)};`,
+      );
+    }
+    if (!hasShadow) {
+      await client.query(
+        `CREATE DATABASE ${escapeIdentifier(
+          TEST_SHADOW_DATABASE_NAME,
+        )} OWNER ${escapeIdentifier(user)};`,
+      );
+    }
+  });
+}
+beforeAll(createDatabases);
+
+export async function resetDb() {
+  const parsedSettings = await parsedSettingsPromise;
+  await withClient(TEST_DATABASE_URL, parsedSettings, async client => {
+    await client.query("drop schema if exists graphile_migrate cascade;");
+    const { rows } = await client.query(
+      `select relname from pg_class where relkind = 'r' and relnamespace = (select oid from pg_namespace where nspname = 'public')`,
     );
-    await client.query(`DROP ROLE IF EXISTS ${escapeIdentifier(user)};`);
-    await client.query(
-      `CREATE ROLE ${escapeIdentifier(
-        user,
-      )} WITH LOGIN PASSWORD '${password.replace(/'/g, "''")}';`,
-    );
-    await client.query(
-      `CREATE DATABASE ${escapeIdentifier(
-        TEST_DATABASE_NAME,
-      )} OWNER ${escapeIdentifier(user)};`,
-    );
-    await client.query(
-      `CREATE DATABASE ${escapeIdentifier(
-        TEST_SHADOW_DATABASE_NAME,
-      )} OWNER ${escapeIdentifier(user)};`,
-    );
-  } finally {
-    client.release();
-  }
+    for (const row of rows) {
+      await client.query(
+        `drop table if exists ${escapeIdentifier(row.relname)} cascade;`,
+      );
+    }
+  });
 }
 
 interface ActionSpies {

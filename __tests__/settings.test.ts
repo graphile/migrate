@@ -1,4 +1,4 @@
-import "mock-fs"; // Side effects - must come first
+import "./helpers"; // Side effects - must come first
 
 import * as mockFs from "mock-fs";
 import * as path from "path";

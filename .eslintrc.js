@@ -34,6 +34,8 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
+    // We know how to JavaScript
+    "@typescript-eslint/unbound-method": "off",
     curly: "error",
     "no-console": "error",
     "no-else-return": 0,
