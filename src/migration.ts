@@ -219,6 +219,10 @@ export function parseMigrationText(
   return { headers, body };
 }
 
+export function serializeHeader(key: string, value: string | null): string {
+  return `--! ${key}` + (value ? `: ${value}` : "");
+}
+
 export function serializeMigration(
   body: string,
   headers: { [key: string]: string | null | undefined },
@@ -229,7 +233,7 @@ export function serializeMigration(
     if (value === undefined) {
       continue;
     }
-    headerLines.push(`--! ${key}` + (value ? `: ${value}` : ""));
+    headerLines.push(serializeHeader(key, value));
   }
   const finalBody = `${body.trim()}\n`;
   if (headerLines.length) {

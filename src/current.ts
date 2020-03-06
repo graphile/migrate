@@ -2,6 +2,7 @@ import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
+import { parseMigrationText, serializeHeader } from "./migration";
 import { ParsedSettings } from "./settings";
 
 export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
@@ -108,6 +109,7 @@ export async function readCurrentMigration(
     const parts = new Map<
       number,
       {
+        filePath: string;
         file: string;
         bodyPromise: Promise<string>;
       }
@@ -136,6 +138,7 @@ export async function readCurrentMigration(
       const bodyPromise = readFileOrError(filePath);
 
       parts.set(id, {
+        filePath,
         file,
         bodyPromise,
       });
@@ -143,13 +146,19 @@ export async function readCurrentMigration(
 
     const ids = [...parts.keys()].sort((a, b) => a - b);
     let wholeBody = "";
+
+    // Like hobbitses
+    const headerses: Array<{ [key: string]: string | null }> = [];
+
     for (const id of ids) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const { file, bodyPromise } = parts.get(id)!;
-      const body = await bodyPromise;
-      if (isNoTransactionDefined(body) && ids.length > 1) {
+      const { file, filePath, bodyPromise } = parts.get(id)!;
+      const contents = await bodyPromise;
+      const { body, headers } = parseMigrationText(filePath, contents, false);
+      headerses.push(headers);
+      if (isNoTransactionDefined(body)) {
         throw new Error(
-          `Error in '${location.path}/${file}': cannot use '--! no-transaction' with multiple current migration files.`,
+          `Error in '${location.path}/${file}': cannot use '--! no-transaction' with 'current/' directory migrations; use 'current.sql' instead.`,
         );
       }
       if (wholeBody.length > 0) {
@@ -157,7 +166,17 @@ export async function readCurrentMigration(
       }
       // 'split' is not a "header", so it must NOT start with a capital.
       wholeBody += `--! split: ${file}\n`;
-      wholeBody += body;
+      wholeBody += body.trim() + "\n";
+    }
+    const headerLines: string[] = [];
+    for (const headers of headerses) {
+      for (const key of Object.keys(headers)) {
+        const value = headers[key];
+        headerLines.push(serializeHeader(key, value));
+      }
+    }
+    if (headerLines.length) {
+      wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
     return wholeBody;
   }
