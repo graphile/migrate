@@ -19,7 +19,10 @@ import { sluggify } from "../sluggify";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
-function omit<T>(obj: T, keys: string[]): any {
+function omit<T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[],
+): Omit<T, K> {
   const newObject = { ...obj };
   for (const key of keys) {
     delete newObject[key];
