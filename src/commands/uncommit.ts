@@ -1,5 +1,3 @@
-import { getAllMigrations, undoMigration } from "../migration";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
 
@@ -8,13 +6,17 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import {
+  getAllMigrations,
+  parseMigrationText,
+  serializeMigration,
+  undoMigration,
+} from "../migration";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
 export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
-  const { migrationsFolder } = parsedSettings;
-  const committedMigrationsFolder = `${migrationsFolder}/committed`;
-
   // Determine the last migration
   const allMigrations = await getAllMigrations(parsedSettings);
   const lastMigration = allMigrations[allMigrations.length - 1];
@@ -34,20 +36,14 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   }
 
   // Restore current.sql from migration
-  const lastMigrationFilepath = `${committedMigrationsFolder}/${lastMigration.filename}`;
-  const body = await fsp.readFile(lastMigrationFilepath, "utf8");
-  const nn = body.indexOf("\n\n");
-  if (nn < 10) {
-    throw new Error(
-      `Migration '${lastMigrationFilepath}' seems invalid - could not read metadata`,
-    );
-  }
-  const bodyWithoutMetadata = body.substr(nn + 2);
-  await writeCurrentMigration(
-    parsedSettings,
-    currentLocation,
-    bodyWithoutMetadata,
-  );
+  const lastMigrationFilepath = lastMigration.fullPath;
+  const contents = await fsp.readFile(lastMigrationFilepath, "utf8");
+  const { headers, body } = parseMigrationText(lastMigrationFilepath, contents);
+
+  // Drop Hash and Previous from headers; then write out
+  const { Hash, Previous, ...otherHeaders } = headers;
+  const completeBody = serializeMigration(body, otherHeaders);
+  await writeCurrentMigration(parsedSettings, currentLocation, completeBody);
 
   // Delete the migration from committed and from the DB
   await fsp.unlink(lastMigrationFilepath);

@@ -150,6 +150,7 @@ export function _makeCurrentMigrationRunner(
       );
     } catch (e) {
       logDbError(e);
+      throw e;
     }
   }
   return run;
@@ -167,7 +168,7 @@ export async function _watch(
     await writeCurrentMigration(
       parsedSettings,
       currentLocation,
-      parsedSettings.blankMigrationContent,
+      parsedSettings.blankMigrationContent.trim() + "\n",
     );
   }
 

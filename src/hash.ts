@@ -8,5 +8,5 @@ export const calculateHash = (
   ":" +
   crypto
     .createHash(algorithm)
-    .update(((previousHash || "") + "\n" + str).trim() + "\n")
+    .update(((previousHash || "") + "\n" + str.trim()).trim() + "\n")
     .digest("hex");

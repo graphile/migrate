@@ -58,6 +58,7 @@ export async function runQueryWithErrorInstrumentation(
 }
 
 export const logDbError = (e: Error): void => {
+  e["_gmlogged"] = true;
   // eslint-disable-next-line no-console
   console.error("");
   if (e["_gmMessageOverride"]) {

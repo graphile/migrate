@@ -1,5 +1,3 @@
-import { getAllMigrations } from "../migration";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
 
@@ -10,11 +8,37 @@ import {
 } from "../current";
 import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
+import {
+  getAllMigrations,
+  isMigrationFilename,
+  parseMigrationText,
+  serializeMigration,
+} from "../migration";
+import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { sluggify } from "../sluggify";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
-export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
+function omit<T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[],
+): Omit<T, K> {
+  const newObject = { ...obj };
+  for (const key of keys) {
+    delete newObject[key];
+  }
+  return newObject;
+}
+
+export async function _commit(
+  parsedSettings: ParsedSettings,
+  messageOverride: string | null | undefined = undefined,
+): Promise<void> {
   const { migrationsFolder } = parsedSettings;
+
+  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+  const contents = await readCurrentMigration(parsedSettings, currentLocation);
+
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   const allMigrations = await getAllMigrations(parsedSettings);
   const lastMigration = allMigrations[allMigrations.length - 1];
@@ -24,21 +48,47 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
   if (Number.isNaN(newMigrationNumber)) {
     throw new Error("Could not determine next migration number");
   }
+
+  const { headers, body } = parseMigrationText(
+    currentLocation.path,
+    contents,
+    false,
+  );
+  const messageFromComment = headers.Message;
+
+  const message =
+    messageOverride !== undefined ? messageOverride : messageFromComment;
+
+  if (message && /[\r\n\0\b\v\f\cA-\cZ]/u.test(message)) {
+    throw new Error("Invalid commit message: contains disallowed characters");
+  }
+  if (message && message.length > 512) {
+    throw new Error(
+      "Invalid commit message: message is too long (max: 512 chars)",
+    );
+  }
+
+  const sluggifiedMessage = message ? sluggify(message) : null;
+
   const newMigrationFilename =
-    String(newMigrationNumber).padStart(6, "0") + ".sql";
-
-  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-  const body = await readCurrentMigration(parsedSettings, currentLocation);
-
+    String(newMigrationNumber).padStart(6, "0") +
+    (sluggifiedMessage ? `-${sluggifiedMessage}` : "") +
+    ".sql";
+  if (!isMigrationFilename(newMigrationFilename)) {
+    throw Error("Could not construct migration filename");
+  }
   const minifiedBody = pgMinify(body);
   if (minifiedBody === "") {
     throw new Error("Current migration is blank.");
   }
 
   const hash = calculateHash(body, lastMigration && lastMigration.hash);
-  const finalBody = `--! Previous: ${
-    lastMigration ? lastMigration.hash : "-"
-  }\n--! Hash: ${hash}\n\n${body.trim()}\n`;
+  const finalBody = serializeMigration(body, {
+    Previous: lastMigration ? lastMigration.hash : "-",
+    Hash: hash,
+    Message: message ? message : undefined,
+    ...omit(headers, ["Previous", "Hash", "Message"]),
+  });
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
@@ -52,7 +102,7 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     await writeCurrentMigration(
       parsedSettings,
       currentLocation,
-      parsedSettings.blankMigrationContent,
+      parsedSettings.blankMigrationContent.trim() + "\n",
     );
   } catch (e) {
     logDbError(e);
@@ -62,11 +112,14 @@ export async function _commit(parsedSettings: ParsedSettings): Promise<void> {
     await fsp.unlink(newMigrationFilepath);
     // eslint-disable-next-line no-console
     console.error("ABORTED AND ROLLED BACK");
-    process.exitCode = 1;
+    throw e;
   }
 }
 
-export async function commit(settings: Settings): Promise<void> {
+export async function commit(
+  settings: Settings,
+  message?: string | null,
+): Promise<void> {
   const parsedSettings = await parseSettings(settings, true);
-  return _commit(parsedSettings);
+  return _commit(parsedSettings, message);
 }

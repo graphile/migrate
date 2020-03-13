@@ -9,9 +9,13 @@ addons:
       - postgresql-client-10
   postgresql: 10
 env:
-  - PGPORT=5433 TEST_ROOT_DATABASE_URL=postgres://travis:travis@localhost:5433/travis TEST_DATABASE_URL=postgres://travis:travis@localhost:5433/graphile_migrate_test PGVERSION=10
+  - PGPORT=5433
+    TEST_ROOT_DATABASE_URL=postgres://travis:travis@localhost:5433/travis
+    TEST_DATABASE_URL=postgres://someone:something@localhost:5433/graphile_migrate_test
+    PGVERSION=10
 before_script:
   - psql -c "ALTER USER travis WITH PASSWORD 'travis';"
+  - psql -c "CREATE USER someone WITH LOGIN PASSWORD 'something';"
   - yarn clean
   - yarn prepack
 sudo: false

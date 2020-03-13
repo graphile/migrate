@@ -36,7 +36,20 @@ async function main() {
     const shadow = argv.includes("--shadow");
     await reset(getSettings(), shadow);
   } else if (cmd === "commit") {
-    await commit(getSettings());
+    // See if we have a message arg
+    const messageFlagIndex = argv.findIndex(
+      arg => arg === "--message" || arg === "-m",
+    );
+    const message = messageFlagIndex === -1 ? null : argv[messageFlagIndex + 1];
+    if (messageFlagIndex !== -1 && !message) {
+      throw new Error("Missing or empty commit message after --message flag");
+    }
+    if (message && message.startsWith("-")) {
+      // Avoid `--message --other-flag` or similar
+      throw new Error("Commit messages may not start with a hyphen (`-`)");
+    }
+
+    await commit(getSettings(), message);
   } else if (cmd === "uncommit") {
     await uncommit(getSettings());
   } else if (cmd === "status") {
@@ -77,6 +90,8 @@ async function main() {
 
 main().catch(e => {
   // eslint-disable-next-line no-console
-  console.error(e);
+  if (!e["_gmlogged"]) {
+    console.error(e);
+  }
   process.exit(1);
 });

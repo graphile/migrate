@@ -7,13 +7,13 @@ import {
   readCurrentMigration,
 } from "../src/current";
 import { ParsedSettings, parseSettings } from "../src/settings";
-import { TEST_ROOT_DATABASE_URL } from "./helpers";
+import { TEST_DATABASE_URL } from "./helpers";
 
 let parsedSettings: ParsedSettings;
 beforeEach(async () => {
   mockFs({ migrations: mockFs.directory() });
   parsedSettings = await parseSettings({
-    connectionString: TEST_ROOT_DATABASE_URL,
+    connectionString: TEST_DATABASE_URL,
   });
 });
 afterEach(() => {
@@ -59,8 +59,9 @@ With multiple lines
 
 --! split: 300-third.sql
 
+
 --! split: 400-fourth.sql
-Note: 300 was empty\
+Note: 300 was empty
 `;
 
 it("reads multiple files", async () => {

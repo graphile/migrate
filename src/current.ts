@@ -2,9 +2,10 @@ import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
+import { parseMigrationText, serializeHeader } from "./migration";
 import { ParsedSettings } from "./settings";
 
-const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
+export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
 
 async function statOrNull(path: string): Promise<Stats | null> {
   try {
@@ -108,6 +109,7 @@ export async function readCurrentMigration(
     const parts = new Map<
       number,
       {
+        filePath: string;
         file: string;
         bodyPromise: Promise<string>;
       }
@@ -136,6 +138,7 @@ export async function readCurrentMigration(
       const bodyPromise = readFileOrError(filePath);
 
       parts.set(id, {
+        filePath,
         file,
         bodyPromise,
       });
@@ -143,20 +146,37 @@ export async function readCurrentMigration(
 
     const ids = [...parts.keys()].sort((a, b) => a - b);
     let wholeBody = "";
+
+    // Like hobbitses
+    const headerses: Array<{ [key: string]: string | null }> = [];
+
     for (const id of ids) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const { file, bodyPromise } = parts.get(id)!;
-      const body = await bodyPromise;
-      if (isNoTransactionDefined(body) && ids.length > 1) {
+      const { file, filePath, bodyPromise } = parts.get(id)!;
+      const contents = await bodyPromise;
+      const { body, headers } = parseMigrationText(filePath, contents, false);
+      headerses.push(headers);
+      if (isNoTransactionDefined(body)) {
         throw new Error(
-          `Error in '${location.path}/${file}': cannot use '--! no-transaction' with multiple current migration files.`,
+          `Error in '${location.path}/${file}': cannot use '--! no-transaction' with 'current/' directory migrations; use 'current.sql' instead.`,
         );
       }
       if (wholeBody.length > 0) {
         wholeBody += "\n";
       }
+      // 'split' is not a "header", so it must NOT start with a capital.
       wholeBody += `--! split: ${file}\n`;
-      wholeBody += body;
+      wholeBody += body.trim() + "\n";
+    }
+    const headerLines: string[] = [];
+    for (const headers of headerses) {
+      for (const key of Object.keys(headers)) {
+        const value = headers[key];
+        headerLines.push(serializeHeader(key, value));
+      }
+    }
+    if (headerLines.length) {
+      wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
     return wholeBody;
   }
@@ -167,6 +187,11 @@ export async function writeCurrentMigration(
   location: CurrentMigrationLocation,
   body: string,
 ): Promise<void> {
+  if (body.trim() + "\n" !== body) {
+    throw new Error(
+      "graphile-migrate error - 'body' should be sanitized before being passed to 'writeCurrentMigration'",
+    );
+  }
   if (location.isFile) {
     await fsp.writeFile(location.path, body);
   } else {
@@ -201,25 +226,32 @@ export async function writeCurrentMigration(
      * have any ambiguities or conflicts.
      */
     let highestIndex = 0;
+    let highestIndexFilename: string | null = null;
 
     /**
      * Writes `linesToWrite` to `nextFileToWrite` (or '001.sql' if unknown), then
      * resets these variables ready for the next batch.
      */
-    const flushToFile = (): void => {
+    const flushToFile = (force = false): void => {
       if (!linesToWrite.length && !nextFileToWrite) {
         // Optimisation to avoid writing the initial empty migration file before the first `--! split`
         return;
       }
-      const sql = linesToWrite.join("\n");
-      const fileName = nextFileToWrite || "001.sql";
+      const sql = linesToWrite.join("\n").trim() + "\n";
+      const fileName =
+        nextFileToWrite || (force ? `${highestIndex + 1}-current.sql` : null);
+      if (!fileName) {
+        // Merge into first file
+        return;
+      }
       const id = idFromFilename(fileName);
       if (id <= highestIndex) {
         throw new Error(
-          `Bad migration, split ids must be monotonically increasing, but '${id}' (from '${fileName}') <= '${highestIndex}'.`,
+          `Bad migration, split ids must be monotonically increasing, but '${id}' (from '${fileName}') <= '${highestIndex}' (from '${highestIndexFilename}').`,
         );
       }
       highestIndex = id;
+      highestIndexFilename = fileName;
 
       writePromises.push(fsp.writeFile(`${location.path}/${fileName}`, sql));
       filenamesWritten.push(fileName);
@@ -247,7 +279,7 @@ export async function writeCurrentMigration(
     }
 
     // Handle any trailing lines
-    flushToFile();
+    flushToFile(true);
 
     if (writePromises.length === 0) {
       // Body must have been empty, so no files were written.

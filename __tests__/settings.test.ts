@@ -1,3 +1,6 @@
+import "./helpers"; // Side effects - must come first
+
+import * as mockFs from "mock-fs";
 import * as path from "path";
 
 import { ParsedSettings, parseSettings } from "../src/settings";
@@ -49,6 +52,7 @@ describe("actions", () => {
       { _: "sql", file: "baz.sql" },
     ]);
     sanitise(parsedSettings);
+    mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
   });
 
@@ -67,6 +71,7 @@ describe("actions", () => {
       { _: "sql", file: "baz.sql" },
     ]);
     sanitise(parsedSettings);
+    mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
   });
 
@@ -84,6 +89,7 @@ describe("actions", () => {
       { _: "command", command: "graphile-worker --once" },
     ]);
     sanitise(parsedSettings);
+    mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
   });
 
@@ -105,6 +111,7 @@ describe("actions", () => {
       { _: "command", command: "graphile-worker --once" },
     ]);
     sanitise(parsedSettings);
+    mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
   });
 
@@ -126,6 +133,7 @@ describe("actions", () => {
       { _: "command", command: "graphile-worker --once" },
     ]);
     sanitise(parsedSettings);
+    mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
   });
 
