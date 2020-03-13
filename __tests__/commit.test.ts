@@ -40,6 +40,9 @@ describe.each([[undefined], ["My Commit Message"]])(
       MIGRATION_1_COMMITTED,
       MIGRATION_2_TEXT,
       MIGRATION_2_COMMITTED,
+      MIGRATION_ENUM_COMMITTED,
+      MIGRATION_NOTRX_TEXT,
+      MIGRATION_NOTRX_COMMITTED,
       MIGRATION_MULTIFILE_COMMITTED,
       MIGRATION_MULTIFILE_FILES,
     } = makeMigrations(commitMessage);
@@ -79,6 +82,34 @@ describe.each([[undefined], ["My Commit Message"]])(
       ).toEqual(MIGRATION_2_COMMITTED);
     });
 
+    it("can execute a --! no-transaction migration", async () => {
+      mockFs({
+        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000002${commitMessageSlug}.sql`]: MIGRATION_ENUM_COMMITTED,
+        "migrations/current.sql": MIGRATION_NOTRX_TEXT,
+      });
+
+      await commit(settings, commitMessage);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000001${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_1_COMMITTED);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000002${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_ENUM_COMMITTED);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000003${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_NOTRX_COMMITTED);
+    });
+
     it("can commit multi-file migration", async () => {
       mockFs({
         [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
@@ -111,6 +142,20 @@ describe.each([[undefined], ["My Commit Message"]])(
         "This message contains\na newline character",
       );
       await expect(promise).rejects.toThrow("Invalid commit message");
+    });
+
+    it("throws on --!no-transaction in multifile", async () => {
+      mockFs({
+        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        "migrations/current": {
+          "001.sql": "--! no-transaction\nSELECT 1;",
+        },
+      });
+
+      const promise = commit(settings);
+      await expect(promise).rejects.toThrow(
+        "cannot use '--! no-transaction' with 'current/'",
+      );
     });
   },
 );

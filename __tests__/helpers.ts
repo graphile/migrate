@@ -217,6 +217,26 @@ export const makeMigrations = (commitMessage?: string) => {
     commitMessage ? `\n--! Message: ${commitMessage}` : ``
   }\n\n${MIGRATION_2_TEXT.trim()}\n`;
 
+  const MIGRATION_ENUM_TEXT =
+    "drop type if exists user_role;\ncreate type user_role as enum ('User');";
+  const MIGRATION_ENUM_HASH = createHash("sha1")
+    .update(`sha1:${MIGRATION_1_HASH}\n${MIGRATION_ENUM_TEXT.trim()}` + "\n")
+    .digest("hex");
+  const MIGRATION_ENUM_COMMITTED = `--! Previous: sha1:${MIGRATION_1_HASH}\n--! Hash: sha1:${MIGRATION_ENUM_HASH}${
+    commitMessage ? `\n--! Message: ${commitMessage}` : ``
+  }\n\n${MIGRATION_ENUM_TEXT.trim()}\n`;
+
+  const MIGRATION_NOTRX_TEXT =
+    "--! no-transaction\nALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Admin';";
+  const MIGRATION_NOTRX_HASH = createHash("sha1")
+    .update(
+      `sha1:${MIGRATION_ENUM_HASH}\n${MIGRATION_NOTRX_TEXT.trim()}` + "\n",
+    )
+    .digest("hex");
+  const MIGRATION_NOTRX_COMMITTED = `--! Previous: sha1:${MIGRATION_ENUM_HASH}\n--! Hash: sha1:${MIGRATION_NOTRX_HASH}${
+    commitMessage ? `\n--! Message: ${commitMessage}` : ``
+  }\n\n${MIGRATION_NOTRX_TEXT.trim()}\n`;
+
   const MIGRATION_MULTIFILE_FILES = {
     "001.sql": "select 1;",
     "002-two.sql": "select 2;",
@@ -248,6 +268,12 @@ select 3;
     MIGRATION_2_TEXT,
     MIGRATION_2_HASH,
     MIGRATION_2_COMMITTED,
+    MIGRATION_ENUM_TEXT,
+    MIGRATION_ENUM_HASH,
+    MIGRATION_ENUM_COMMITTED,
+    MIGRATION_NOTRX_TEXT,
+    MIGRATION_NOTRX_HASH,
+    MIGRATION_NOTRX_COMMITTED,
     MIGRATION_MULTIFILE_TEXT,
     MIGRATION_MULTIFILE_HASH,
     MIGRATION_MULTIFILE_COMMITTED,
