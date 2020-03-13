@@ -59,6 +59,15 @@ export async function _commit(
   const message =
     messageOverride !== undefined ? messageOverride : messageFromComment;
 
+  if (message && /[\r\n\0\b\v\f\cA-\cZ]/u.test(message)) {
+    throw new Error("Invalid commit message: contains disallowed characters");
+  }
+  if (message && message.length > 512) {
+    throw new Error(
+      "Invalid commit message: message is too long (max: 512 chars)",
+    );
+  }
+
   const sluggifiedMessage = message ? sluggify(message) : null;
 
   const newMigrationFilename =

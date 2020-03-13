@@ -99,5 +99,18 @@ describe.each([[undefined], ["My Commit Message"]])(
         ),
       ).toEqual(MIGRATION_MULTIFILE_COMMITTED);
     });
+
+    it("throws on invalid message", async () => {
+      mockFs({
+        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        "migrations/current": MIGRATION_MULTIFILE_FILES,
+      });
+
+      const promise = commit(
+        settings,
+        "This message contains\na newline character",
+      );
+      await expect(promise).rejects.toThrow("Invalid commit message");
+    });
   },
 );
