@@ -45,3 +45,29 @@ This is treated as a body comment for backwards compatibility reasons. This
 comment is only valid in `migrations/current.sql` and is ignored or will error
 if found in `migrations/current/*.sql`. It has to be the very first line (after
 any headers).
+
+## Multifile
+
+Multi-file dumps use `--! split: name_of_file.sql` comments to split the file
+into multiple parts.
+
+Any lines that come before the first `--! split` are pushed into that split
+(this should only be headers).
+
+Every split is separated from the next split by a newline.
+
+Due to "trim and trail" (above), an empty file is treated as a single newline,
+which means that it would be output as two newlines - one for the file itself,
+and one for the regular split. E.g.
+
+```sql
+--! split: 001.sql
+select 1;
+
+--! split: 002-empty.sql
+
+
+--! split: 003.sql
+select 3;
+
+```
