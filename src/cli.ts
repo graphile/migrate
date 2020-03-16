@@ -5,6 +5,7 @@ import * as yargs from "yargs";
 // @ts-ignore
 import { version } from "../package.json";
 import { migrateCommand } from "./commands/migrate";
+import { watchCommand } from "./commands/watch";
 
 yargs
   .parserConfiguration({
@@ -34,6 +35,7 @@ yargs
 
   // Commands
   .command(migrateCommand)
+  .command(watchCommand)
 
   .epilogue(
     `\

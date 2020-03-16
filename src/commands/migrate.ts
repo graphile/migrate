@@ -86,10 +86,13 @@ export const migrateCommand: CommandModule<
     shadow: {
       type: "boolean",
       default: false,
+      description: "Apply migrations to the shadow DB (for development).",
     },
     force: {
       type: "boolean",
       default: false,
+      description:
+        "Run afterAllMigrations actions even if no migration was necessary.",
     },
   },
   handler: async argv => {
