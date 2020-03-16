@@ -60,7 +60,6 @@ yargs
   .strict(true)
   .version(version)
   .help(true)
-  .completion("completion", "Generate shell completion script.")
   .demandCommand(1, 1, "Please select a command to run.")
   .recommendCommands()
 
@@ -72,12 +71,18 @@ yargs
   .command(wrapHandler(statusCommand))
   .command(wrapHandler(resetCommand))
 
+  .completion("completion", "Generate shell completion script.")
   .epilogue(
     `\
 You are running graphile-migrate v${version}.
 
-Please consider supporting Graphile Migrate development: 
-
-  https://www.graphile.org/sponsor/
+  ╔═══════════════════════════════════╗
+  ║ Graphile Migrate is crowd-funded, ║
+  ║   please consider sponsorship:    ║
+  ║                                   ║
+  ║ https://www.graphile.org/sponsor/ ║
+  ║                                   ║
+  ║     🙏 THANK YOU SPONSORS! 🙏     ║
+  ╚═══════════════════════════════════╝
 `,
   ).argv;
