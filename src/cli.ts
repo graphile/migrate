@@ -11,6 +11,32 @@ import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
 
+function wrapHandler(
+  input: yargs.CommandModule<unknown, unknown>,
+): yargs.CommandModule<unknown, unknown> {
+  const { handler, ...rest } = input;
+
+  const newHandler: yargs.CommandModule<
+    unknown,
+    unknown
+  >["handler"] = async argv => {
+    try {
+      return await Promise.resolve(handler(argv));
+    } catch (e) {
+      if (!e["_gmlogged"]) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+      }
+      process.exit(1);
+    }
+  };
+
+  return {
+    ...rest,
+    handler: newHandler,
+  };
+}
+
 yargs
   .parserConfiguration({
     "boolean-negation": true,
@@ -38,12 +64,12 @@ yargs
   .recommendCommands()
 
   // Commands
-  .command(migrateCommand)
-  .command(watchCommand)
-  .command(commitCommand)
-  .command(uncommitCommand)
-  .command(statusCommand)
-  .command(resetCommand)
+  .command(wrapHandler(migrateCommand))
+  .command(wrapHandler(watchCommand))
+  .command(wrapHandler(commitCommand))
+  .command(wrapHandler(uncommitCommand))
+  .command(wrapHandler(statusCommand))
+  .command(wrapHandler(resetCommand))
 
   .epilogue(
     `\
