@@ -237,17 +237,17 @@ export const watchCommand: CommandModule<
   command: "watch",
   aliases: [],
   describe:
-    "Runs any un-executed committed migrations and then runs and watches `current.sql`, re-running its contents on any change. For development.",
+    "Runs any un-executed committed migrations and then runs and watches the current migration, re-running it on any change. For development.",
   builder: {
     once: {
       type: "boolean",
       default: false,
-      description: "Runs `current.sql` and then exits.",
+      description: "Runs the current migration and then exits.",
     },
     shadow: {
       type: "boolean",
       default: false,
-      description: "Applies migrations to shadow DB.",
+      description: "Applies changes to shadow DB.",
     },
   },
   handler: async argv => {

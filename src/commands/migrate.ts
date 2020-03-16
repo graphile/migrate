@@ -81,7 +81,7 @@ export const migrateCommand: CommandModule<
   command: "migrate",
   aliases: [],
   describe:
-    "Runs any un-executed committed migrations. Does NOT run `current.sql`. For use in production and development.",
+    "Runs any un-executed committed migrations. Does NOT run the current migration. For use in production and development.",
   builder: {
     shadow: {
       type: "boolean",

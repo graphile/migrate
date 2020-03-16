@@ -20,7 +20,6 @@ And please give some love to our featured sponsors 🤩:
 <table><tr>
 <td align="center"><a href="http://chads.website/"><img src="https://www.graphile.org/images/sponsors/chadf.png" width="90" height="90" alt="Chad Furman" /><br />Chad Furman</a></td>
 <td align="center"><a href="https://storyscript.io/?utm_source=postgraphile"><img src="https://www.graphile.org/images/sponsors/storyscript.png" width="90" height="90" alt="Storyscript" /><br />Storyscript</a></td>
-<td align="center"><a href="http://p72.vc/"><img src="https://www.graphile.org/images/sponsors/p72.png" width="90" height="90" alt="Point72 Ventures" /><br />Point72 Ventures</a></td>
 </tr></table>
 
 ## Why?
@@ -38,28 +37,27 @@ And please give some love to our featured sponsors 🤩:
 
 ## Status
 
-**HIGHLY EXPERIMENTAL**
+**EXPERIMENTAL**
 
-If you're a sponsor and you're using this software, let me know so I can justify
-allocating additional time to it.
+Tests are in place for many of the APIs, though the API remains undocumented
+(deliberately) and thus if you use the API directly (as opposed to using the
+CLI) you should expect to have to update your code from time to time. (We advise
+using TypeScript to make spotting breaking changes easier.) There are no
+automated integration tests of the CLI yet (although mostly all it does is hand
+off to the API).
 
-The interface is raw and doesn't ask for confirmation (e.g. the
-`graphile-migrate reset` command will drop and re-create that database without
-asking for confirmation).
+There are people (including the maintainer) using this software to manage
+production databases. It is also used in
+[Graphile Starter](https://github.com/graphile/starter). However, it is not for
+the faint of heart - this software is powerful and requires knowledge of SQL. If
+you don't understand what makes Graphile Migrate awesome, or you're concerned
+about it continuing to evolve, you may want to consider an alternative migration
+framework such as these awesome (and quite diverse) projects:
 
-There are no automated tests yet, and APIs may still change. (Pull requests to
-add tests welcome!)
-
-Using this for prototyping should be fine, but when it comes to shipping you may
-want to
-
-- help us write tests and finalise interfaces
-- send us money to do the same
-- use an alternative migration framework, such as:
-  - [db-migrate](https://db-migrate.readthedocs.io/en/latest/Getting%20Started/commands/)
-  - [sqitch](https://sqitch.org/)
-  - [Flyway](https://flywaydb.org/)
-  - [migra](https://github.com/djrobstep/migra)
+- [db-migrate](https://db-migrate.readthedocs.io/en/latest/Getting%20Started/commands/)
+- [sqitch](https://sqitch.org/)
+- [Flyway](https://flywaydb.org/)
+- [migra](https://github.com/djrobstep/migra)
 
 ## Opinions
 
@@ -91,7 +89,7 @@ want to
 
 ## Setup
 
-`graphile-migrations` requires two databases: the first is your main database
+`graphile-migrate` requires two databases: the first is your main database
 against which you perform development, the second is a "shadow" database which
 is used by the system to apply migrations. You should never interact with the
 "shadow" database directly. Further all members of your team should run the same

@@ -63,7 +63,7 @@ export const statusCommand: CommandModule<never, {}> = {
         console.log();
       }
       console.log(
-        "The current.sql migration is not empty and has not been committed.",
+        "The current migration is not empty and has not been committed.",
       );
       exitCode += 2;
     }
