@@ -1,3 +1,5 @@
+import { CommandBuilder, CommandModule } from "yargs";
+
 import { executeActions } from "../actions";
 import {
   getLastMigration,
@@ -6,6 +8,7 @@ import {
 } from "../migration";
 import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { getSettings } from "./_common";
 
 export async function _migrate(
   parsedSettings: ParsedSettings,
@@ -67,3 +70,29 @@ export async function migrate(
   const parsedSettings = await parseSettings(settings, shadow);
   return _migrate(parsedSettings, shadow, force);
 }
+
+export const migrateCommand: CommandModule<
+  never,
+  {
+    shadow: boolean;
+    force: boolean;
+  }
+> = {
+  command: "migrate",
+  aliases: [],
+  describe:
+    "Runs any un-executed committed migrations. Does NOT run `current.sql`. For use in production and development.",
+  builder: {
+    shadow: {
+      type: "boolean",
+      default: false,
+    },
+    force: {
+      type: "boolean",
+      default: false,
+    },
+  },
+  handler: async argv => {
+    await migrate(await getSettings(), argv.shadow, argv.force);
+  },
+};
