@@ -45,7 +45,7 @@ export const statusCommand: CommandModule<never, {}> = {
   describe:
     "Exits with a bitmap status code indicating statuses (1 = unexecuted committed migrations, 2 = current migration is non-empty)",
   builder: {},
-  handler: async argv => {
+  handler: async () => {
     /* eslint-disable no-console */
     let exitCode = 0;
     const details = await status(await getSettings());

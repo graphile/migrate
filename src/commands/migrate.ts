@@ -1,4 +1,4 @@
-import { CommandBuilder, CommandModule } from "yargs";
+import { CommandModule } from "yargs";
 
 import { executeActions } from "../actions";
 import {
