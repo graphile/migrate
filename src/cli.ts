@@ -7,6 +7,7 @@ import { version } from "../package.json";
 import { commitCommand } from "./commands/commit";
 import { migrateCommand } from "./commands/migrate";
 import { resetCommand } from "./commands/reset";
+import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
 
@@ -41,6 +42,7 @@ yargs
   .command(watchCommand)
   .command(commitCommand)
   .command(uncommitCommand)
+  .command(statusCommand)
   .command(resetCommand)
 
   .epilogue(
