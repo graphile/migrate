@@ -139,6 +139,7 @@ export const commitCommand: CommandModule<
   builder: {
     message: {
       type: "string",
+      alias: ["m"],
       description:
         "Optional commit message to label migration, must not contain newlines.",
       nargs: 1,
