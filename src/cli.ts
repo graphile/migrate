@@ -61,6 +61,7 @@ yargs
   .version(version)
   .help(true)
   .completion("completion", "Generate shell completion script.")
+  .demandCommand(1, 1, "Please select a command to run.")
   .recommendCommands()
 
   // Commands
@@ -79,5 +80,4 @@ Please consider supporting Graphile Migrate development:
 
   https://www.graphile.org/sponsor/
 `,
-  )
-  .demandCommand(1, 1, "Please select a command to run.").argv;
+  ).argv;
