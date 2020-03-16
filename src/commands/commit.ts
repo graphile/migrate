@@ -141,6 +141,7 @@ export const commitCommand: CommandModule<
       type: "string",
       description:
         "Optional commit message to label migration, must not contain newlines.",
+      nargs: 1,
     },
   },
   handler: async argv => {
