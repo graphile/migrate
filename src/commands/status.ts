@@ -42,8 +42,14 @@ export async function status(settings: Settings): Promise<Status> {
 export const statusCommand: CommandModule<never, {}> = {
   command: "status",
   aliases: [],
-  describe:
-    "Exits with a bitmap status code indicating statuses (1 = unexecuted committed migrations, 2 = current migration is non-empty)",
+  describe: `\
+Exits with a bitmap status code indicating statuses:
+
+- 1 if there are committed migrations that have not been executed yet
+- 2 if the current migration is non-empty (ignoring comments)
+
+If both of the above are true then the output status will be 3 (1+2). If neither
+are true, exit status will be 0 (success). Additional messages may also be output.`,
   builder: {},
   handler: async () => {
     /* eslint-disable no-console */

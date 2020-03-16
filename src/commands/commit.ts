@@ -135,7 +135,7 @@ export const commitCommand: CommandModule<
   command: "commit",
   aliases: [],
   describe:
-    "Commits the current migration into the `committed/` folder, resetting the current migration file(s).",
+    "Commits the current migration into the `committed/` folder, resetting the current migration. Resets the shadow database.",
   builder: {
     message: {
       type: "string",

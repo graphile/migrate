@@ -68,7 +68,7 @@ export const uncommitCommand: CommandModule<never, {}> = {
   command: "uncommit",
   aliases: [],
   describe:
-    "Undoes the latest `commit`. Development only, and liable to cause conflicts with other developers. Be careful.",
+    "Moves the latest commit out of the committed migrations folder and back to the current migration (assuming the current migration is empty-ish). Removes the migration tracking entry from ONLY the local database, do not use after other databases have executed this committed migration. Development only, and liable to cause conflicts with other developers. Be careful.",
   builder: {},
   handler: async argv => {
     if (argv.message !== undefined && !argv.message) {

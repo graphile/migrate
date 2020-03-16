@@ -59,6 +59,7 @@ yargs
 
   .strict(true)
   .version(version)
+  .hide("version")
   .help(true)
   .demandCommand(1, 1, "Please select a command to run.")
   .recommendCommands()
@@ -73,7 +74,10 @@ yargs
 
   .completion("completion", "Generate shell completion script.")
   .epilogue(
-    `\
+    process.env.GRAPHILE_SPONSOR
+      ? `\
+You are running graphile-migrate v${version}.`
+      : `\
 You are running graphile-migrate v${version}.
 
   ╔═══════════════════════════════════╗

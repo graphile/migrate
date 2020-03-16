@@ -98,85 +98,166 @@ of achieving this is through Docker, but that isn't required).
 
 ## Usage
 
-### `graphile-migrate migrate [--shadow] [--force]`
+### Committed and current migrations
 
-Runs any un-executed committed migrations. Does **not** run `current.sql`. For
-use in production and development.
+New migrations are composed within **"the current migration"**. You will see
+this term used a lot. By default this is in the `migrations/current.sql` file,
+but if you like you may delete that file and instead create a
+`migrations/current/` folder into which you may place numbered SQL files which
+together comprise "the current migration".
 
-If `--shadow` is specified, migrates the shadow database instead.
-
-If `--force` is specified, it will run any `afterAllMigrations` actions even if
-no migrations are actually ran.
-
-### `graphile-migrate watch [--shadow] [--once]`
-
-Runs any un-executed committed migrations and then runs and watches
-`current.sql`, re-running its contents on any change.
-
-`current.sql` should be idempotent (this is your responsibility, see
+The current migration should be idempotent (this is your responsibility, see
 "Idempotency" below); i.e. it should be able to be ran multiple times and have
-the same result.
+the same result. This is critical for `graphile-migrate watch`, which is one of
+the main selling points of the project.
 
-If `--shadow` is specified, changes will be applied against the shadow database
-instead.
+<!-- prettier-ignore-start -->
+<!-- CLI_USAGE_BEGIN -->
+## graphile-migrate
 
-If `--once` is specified, `current.sql` will be ran once and then the command
-will exit.
+```
+graphile-migrate <command>
 
-### `graphile-migrate commit [-m <message>]`
+Commands:
+  graphile-migrate migrate     Runs any un-executed committed migrations. Does
+                               NOT run the current migration. For use in
+                               production and development.
+  graphile-migrate watch       Runs any un-executed committed migrations and
+                               then runs and watches the current migration,
+                               re-running it on any change. For development.
+  graphile-migrate commit      Commits the current migration into the
+                               `committed/` folder, resetting the current
+                               migration. Resets the shadow database.
+  graphile-migrate uncommit    Moves the latest commit out of the committed
+                               migrations folder and back to the current
+                               migration (assuming the current migration is
+                               empty-ish). Removes the migration tracking entry
+                               from ONLY the local database, do not use after
+                               other databases have executed this committed
+                               migration. Development only, and liable to cause
+                               conflicts with other developers. Be careful.
+  graphile-migrate status      Exits with a bitmap status code indicating
+                               statuses:
 
-- reset the shadow database to the latest dump
-- apply the current migration to the shadow database, and replace the dump
-- move the current migration to committed migrations (adding a hash to prevent
-  tampering)
-- the message will be made "filesystem safe" and added to the filename after a
-  hyphen (`-`)
-- Do **NOT** change the filename or contents once you have committed. If you
-  need to make changes, either add a new migration or, if the migration hasn't
-  been used anywhere else yet, see `graphile-migrate uncommit`.
+                               - 1 if there are committed migrations that have
+                               not been executed yet
+                               - 2 if the current migration is non-empty
+                               (ignoring comments)
 
-### `graphile-migrate uncommit`
+                               If both of the above are true then the output
+                               status will be 3 (1+2). If neither
+                               are true, exit status will be 0 (success).
+                               Additional messages may also be output.
+  graphile-migrate reset       Drops and re-creates the database, re-running all
+                               committed migrations from the start. **HIGHLY
+                               DESTRUCTIVE**.
+  graphile-migrate completion  Generate shell completion script.
 
-Moves the latest committed migration back to `current.sql` and deletes the
-committed migration from the filesystem and from the database migrations table.
-Will only work when `current.sql` is empty(ish).
+Options:
+  --help  Show help                                                    [boolean]
 
-Do **NOT** use it once other systems have ran the commit. This is for use during
-development only, probably before your changes are pushed/merged.
+You are running graphile-migrate v0.0.18.
+```
 
-### `graphile-migrate reset [--shadow] [--erase]`
 
-Drop and re-create the database, and re-run all the committed migrations from
-the start. **HIGHLY DESTRUCTIVE**
+## graphile-migrate migrate
 
-If `--shadow` is specified, the shadow database will be reset rather than the
-main database.
+```
+graphile-migrate migrate
 
-`--erase` is required after v0.1.0 to help avoid accidental invocation.
+Runs any un-executed committed migrations. Does NOT run the current migration.
+For use in production and development.
 
-### `graphile-migrate status`
+Options:
+  --help    Show help                                                  [boolean]
+  --shadow  Apply migrations to the shadow DB (for development).
+                                                      [boolean] [default: false]
+  --force   Run afterAllMigrations actions even if no migration was necessary.
+                                                      [boolean] [default: false]
+```
 
-[EXPERIMENTAL!]
+
+## graphile-migrate watch
+
+```
+graphile-migrate watch
+
+Runs any un-executed committed migrations and then runs and watches the current
+migration, re-running it on any change. For development.
+
+Options:
+  --help    Show help                                                  [boolean]
+  --once    Runs the current migration and then exits.[boolean] [default: false]
+  --shadow  Applies changes to shadow DB.             [boolean] [default: false]
+```
+
+
+## graphile-migrate commit
+
+```
+graphile-migrate commit
+
+Commits the current migration into the `committed/` folder, resetting the
+current migration. Resets the shadow database.
+
+Options:
+  --help         Show help                                             [boolean]
+  --message, -m  Optional commit message to label migration, must not contain
+                 newlines.                                              [string]
+```
+
+
+## graphile-migrate uncommit
+
+```
+graphile-migrate uncommit
+
+Moves the latest commit out of the committed migrations folder and back to the
+current migration (assuming the current migration is empty-ish). Removes the
+migration tracking entry from ONLY the local database, do not use after other
+databases have executed this committed migration. Development only, and liable
+to cause conflicts with other developers. Be careful.
+
+Options:
+  --help  Show help                                                    [boolean]
+```
+
+
+## graphile-migrate reset
+
+```
+graphile-migrate reset
+
+Drops and re-creates the database, re-running all committed migrations from the
+start. **HIGHLY DESTRUCTIVE**.
+
+Options:
+  --help    Show help                                                  [boolean]
+  --shadow  Applies migrations to shadow DB.          [boolean] [default: false]
+  --erase   This is your double opt-in to make it clear this DELETES EVERYTHING.
+                                                      [boolean] [default: false]
+```
+
+
+## graphile-migrate status
+
+```
+graphile-migrate status
 
 Exits with a bitmap status code indicating statuses:
 
 - 1 if there are committed migrations that have not been executed yet
-- 2 if the `current.sql` file is non-empty (ignoring comments)
+- 2 if the current migration is non-empty (ignoring comments)
 
 If both of the above are true then the output status will be 3 (1+2). If neither
-are true, exit status will be 0 (success).
+are true, exit status will be 0 (success). Additional messages may also be
+output.
 
-Also outputs helpful messages:
-
+Options:
+  --help  Show help                                                    [boolean]
 ```
-There are 3 committed migrations pending:
-
-  000001.sql
-  000002.sql
-  000003.sql
-
-The current.sql migration is not empty and has not been committed.
-```
+<!-- CLI_USAGE_END -->
+<!-- prettier-ignore-end -->
 
 ## Library usage
 
