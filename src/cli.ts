@@ -4,8 +4,9 @@ import * as yargs from "yargs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import { version } from "../package.json";
+import { commitCommand } from "./commands/commit";
 import { migrateCommand } from "./commands/migrate";
-import { resetCommand } from "./commands/reset.js";
+import { resetCommand } from "./commands/reset";
 import { watchCommand } from "./commands/watch";
 
 yargs
@@ -37,6 +38,7 @@ yargs
   // Commands
   .command(migrateCommand)
   .command(watchCommand)
+  .command(commitCommand)
   .command(resetCommand)
 
   .epilogue(
