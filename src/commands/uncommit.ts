@@ -1,5 +1,6 @@
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
+import { CommandModule } from "yargs";
 
 import {
   getCurrentMigrationLocation,
@@ -13,6 +14,7 @@ import {
   undoMigration,
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
@@ -61,3 +63,17 @@ export async function uncommit(settings: Settings): Promise<void> {
   const parsedSettings = await parseSettings(settings, true);
   return _uncommit(parsedSettings);
 }
+
+export const uncommitCommand: CommandModule<never, {}> = {
+  command: "uncommit",
+  aliases: [],
+  describe:
+    "Undoes the latest `commit`. Development only, and liable to cause conflicts with other developers. Be careful.",
+  builder: {},
+  handler: async argv => {
+    if (argv.message !== undefined && !argv.message) {
+      throw new Error("Missing or empty commit message after --message flag");
+    }
+    await uncommit(await getSettings());
+  },
+};
