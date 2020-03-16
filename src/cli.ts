@@ -5,6 +5,7 @@ import * as yargs from "yargs";
 // @ts-ignore
 import { version } from "../package.json";
 import { migrateCommand } from "./commands/migrate";
+import { resetCommand } from "./commands/reset.js";
 import { watchCommand } from "./commands/watch";
 
 yargs
@@ -36,6 +37,7 @@ yargs
   // Commands
   .command(migrateCommand)
   .command(watchCommand)
+  .command(resetCommand)
 
   .epilogue(
     `\

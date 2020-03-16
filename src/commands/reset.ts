@@ -1,6 +1,9 @@
+import { CommandModule } from "yargs";
+
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
 export async function _reset(
@@ -54,3 +57,39 @@ export async function reset(settings: Settings, shadow = false): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
   return _reset(parsedSettings, shadow);
 }
+
+export const resetCommand: CommandModule<
+  never,
+  {
+    shadow: boolean;
+    erase: boolean;
+  }
+> = {
+  command: "reset",
+  aliases: [],
+  describe:
+    "Drops and re-creates the database, re-running all committed migrations from the start. **HIGHLY DESTRUCTIVE**.",
+  builder: {
+    shadow: {
+      type: "boolean",
+      default: false,
+      description: "Applies migrations to shadow DB.",
+    },
+    erase: {
+      type: "boolean",
+      default: false,
+      description:
+        "This is your double opt-in to make it clear this DELETES EVERYTHING.",
+    },
+  },
+  handler: async argv => {
+    if (!argv.erase) {
+      // eslint-disable-next-line no-console
+      console.error(
+        "DANGER! Reset is highly destructive. If you're sure you want to do this, please add --erase to your command.",
+      );
+      process.exit(2);
+    }
+    await reset(await getSettings(), argv.shadow);
+  },
+};

@@ -146,13 +146,15 @@ Will only work when `current.sql` is empty(ish).
 Do **NOT** use it once other systems have ran the commit. This is for use during
 development only, probably before your changes are pushed/merged.
 
-### `graphile-migrate reset [--shadow]`
+### `graphile-migrate reset [--shadow] [--erase]`
 
 Drop and re-create the database, and re-run all the committed migrations from
 the start. **HIGHLY DESTRUCTIVE**
 
 If `--shadow` is specified, the shadow database will be reset rather than the
 main database.
+
+`--erase` is required after v0.1.0 to help avoid accidental invocation.
 
 ### `graphile-migrate status`
 
