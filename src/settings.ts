@@ -108,14 +108,14 @@ export async function parseSettings(
   async function check<T = void>(
     key: string,
     callback: (key: unknown) => T | Promise<T>,
-  ): Promise<T | undefined> {
+  ): Promise<T> {
     checkedKeys.push(key);
     const value = settings[key];
     try {
       return await callback(value);
     } catch (e) {
       errors.push(`Setting '${key}': ${e.message}`);
-      return void 0;
+      return void 0 as never;
     }
   }
 
@@ -165,14 +165,16 @@ export async function parseSettings(
     },
   );
 
-  await check("databaseOwner", rawDatabaseOwner => {
-    if (rawDatabaseOwner && typeof rawDatabaseOwner !== "string") {
-      throw new Error("Expected settings.databaseOwner to be a string");
-    }
-  });
-
   const { user, database: databaseName } = parse(connectionString || "");
-  const databaseOwner = settings.databaseOwner || user || databaseName;
+  const databaseOwner = await check(
+    "databaseOwner",
+    (rawDatabaseOwner = user || databaseName) => {
+      if (typeof rawDatabaseOwner !== "string") {
+        throw new Error("Expected settings.databaseOwner to be a string");
+      }
+      return rawDatabaseOwner;
+    },
+  );
 
   const shadowConnectionString = await check(
     "shadowConnectionString",
@@ -317,18 +319,22 @@ export async function parseSettings(
       `Errors occurred during settings validation:\n- ${errors.join("\n- ")}`,
     );
   }
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
+  if (!databaseName) {
+    // This is just to appease TypeScript, this should be caught above.
+    throw new Error("Could not determine databaseName");
+  }
+
   return {
     ...settings,
-    afterReset: afterReset!,
-    afterAllMigrations: afterAllMigrations!,
-    afterCurrent: afterCurrent!,
-    rootConnectionString: rootConnectionString!,
-    connectionString: connectionString!,
-    manageGraphileMigrateSchema: manageGraphileMigrateSchema,
-    databaseOwner: databaseOwner!,
+    afterReset: afterReset,
+    afterAllMigrations: afterAllMigrations,
+    afterCurrent: afterCurrent,
+    rootConnectionString: rootConnectionString,
+    connectionString: connectionString,
+    manageGraphileMigrateSchema,
+    databaseOwner: databaseOwner,
     migrationsFolder,
-    databaseName: databaseName!,
+    databaseName: databaseName,
     shadowConnectionString: shadowConnectionString
       ? shadowConnectionString
       : void 0,
@@ -336,5 +342,4 @@ export async function parseSettings(
     placeholders,
     blankMigrationContent,
   };
-  /* eslint-enable */
 }
