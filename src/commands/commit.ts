@@ -94,6 +94,8 @@ export async function _commit(
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
+  await fsp.chmod(newMigrationFilepath, "440");
+
   // eslint-disable-next-line no-console
   console.log(
     `graphile-migrate: New migration '${newMigrationFilename}' created`,
