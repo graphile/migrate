@@ -7,11 +7,14 @@ import { withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import pgMinify = require("pg-minify");
+import { CommandModule } from "yargs";
+
 import {
   getCurrentMigrationLocation,
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { getSettings } from "./_common";
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
@@ -223,3 +226,31 @@ export async function watch(
   const parsedSettings = await parseSettings(settings, shadow);
   return _watch(parsedSettings, once, shadow);
 }
+
+export const watchCommand: CommandModule<
+  never,
+  {
+    once: boolean;
+    shadow: boolean;
+  }
+> = {
+  command: "watch",
+  aliases: [],
+  describe:
+    "Runs any un-executed committed migrations and then runs and watches the current migration, re-running it on any change. For development.",
+  builder: {
+    once: {
+      type: "boolean",
+      default: false,
+      description: "Runs the current migration and then exits.",
+    },
+    shadow: {
+      type: "boolean",
+      default: false,
+      description: "Applies changes to shadow DB.",
+    },
+  },
+  handler: async argv => {
+    await watch(await getSettings(), argv.once, argv.shadow);
+  },
+};

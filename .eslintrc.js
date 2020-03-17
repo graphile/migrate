@@ -85,5 +85,21 @@ module.exports = {
         "import/no-duplicates": "off",
       },
     },
+    {
+      files: ["scripts/*.js"],
+      parserOptions: {
+        project: null,
+      },
+      rules: {
+        "@typescript-eslint/await-thenable": "off",
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "@typescript-eslint/no-misused-promises": "off",
+        "@typescript-eslint/no-unnecessary-type-assertion": "off",
+        "@typescript-eslint/prefer-includes": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/prefer-regexp-exec": "off",
+        "@typescript-eslint/prefer-string-starts-ends-with": "off",
+      },
+    },
   ],
 };

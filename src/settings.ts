@@ -55,6 +55,10 @@ export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
   return true;
 }
 
+/**
+ * This type is not trusted; to use the values within it, it must be
+ * parsed/validated into ParsedSettings.
+ */
 export interface Settings {
   connectionString?: string;
   shadowConnectionString?: string;

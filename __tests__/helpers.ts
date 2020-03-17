@@ -77,7 +77,9 @@ async function createDatabases() {
       [TEST_DATABASE_NAME, TEST_SHADOW_DATABASE_NAME, user],
     );
     if (!result) {
+      // eslint-disable-next-line no-console
       console.dir(client.query);
+      // eslint-disable-next-line no-console
       console.dir(result);
       throw new Error("No result?!");
     }

@@ -1,97 +1,92 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/explicit-function-return-type,no-console */
-import * as fs from "fs";
+import * as yargs from "yargs";
 
-import { uncommit } from "./commands/uncommit";
-import { commit, migrate, reset, status, watch } from "./index";
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+import { version } from "../package.json";
+import { commitCommand } from "./commands/commit";
+import { migrateCommand } from "./commands/migrate";
+import { resetCommand } from "./commands/reset";
+import { statusCommand } from "./commands/status";
+import { uncommitCommand } from "./commands/uncommit";
+import { watchCommand } from "./commands/watch";
 
-function getSettings() {
-  let data;
-  try {
-    data = fs.readFileSync(`${process.cwd()}/.gmrc`, "utf8");
-  } catch (e) {
-    throw new Error(
-      "No .gmrc file found; please run `graphile-migrate init` first.",
-    );
-  }
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    throw new Error("Failed to parse .gmrc file: " + e.message);
-  }
-}
+function wrapHandler(
+  input: yargs.CommandModule<unknown, unknown>,
+): yargs.CommandModule<unknown, unknown> {
+  const { handler, ...rest } = input;
 
-async function main() {
-  const argv = process.argv.slice(2);
-  const [cmd] = argv;
-  if (argv.length === 0 || cmd === "migrate") {
-    const shadow = argv.includes("--shadow");
-    const force = argv.includes("--force");
-    await migrate(getSettings(), shadow, force);
-  } else if (cmd === "watch") {
-    const once = argv.includes("--once");
-    const shadow = argv.includes("--shadow");
-    await watch(getSettings(), once, shadow);
-  } else if (cmd === "reset") {
-    const shadow = argv.includes("--shadow");
-    await reset(getSettings(), shadow);
-  } else if (cmd === "commit") {
-    // See if we have a message arg
-    const messageFlagIndex = argv.findIndex(
-      arg => arg === "--message" || arg === "-m",
-    );
-    const message = messageFlagIndex === -1 ? null : argv[messageFlagIndex + 1];
-    if (messageFlagIndex !== -1 && !message) {
-      throw new Error("Missing or empty commit message after --message flag");
-    }
-    if (message && message.startsWith("-")) {
-      // Avoid `--message --other-flag` or similar
-      throw new Error("Commit messages may not start with a hyphen (`-`)");
-    }
-
-    await commit(getSettings(), message);
-  } else if (cmd === "uncommit") {
-    await uncommit(getSettings());
-  } else if (cmd === "status") {
-    let exitCode = 0;
-    const details = await status(getSettings());
-    const remainingCount = details.remainingMigrations.length;
-    if (remainingCount) {
-      console.log(
-        `There are ${remainingCount} committed migrations pending:\n\n  ${details.remainingMigrations.join(
-          "\n  ",
-        )}`,
-      );
-      exitCode += 1;
-    }
-    if (details.hasCurrentMigration) {
-      if (exitCode) {
-        console.log();
+  const newHandler: yargs.CommandModule<
+    unknown,
+    unknown
+  >["handler"] = async argv => {
+    try {
+      return await Promise.resolve(handler(argv));
+    } catch (e) {
+      if (!e["_gmlogged"]) {
+        // eslint-disable-next-line no-console
+        console.error(e);
       }
-      console.log(
-        "The current.sql migration is not empty and has not been committed.",
-      );
-      exitCode += 2;
+      process.exit(1);
     }
+  };
 
-    // ESLint false positive.
-    // eslint-disable-next-line require-atomic-updates
-    process.exitCode = exitCode;
-
-    if (exitCode === 0) {
-      console.log("Up to date.");
-    }
-  } else {
-    // eslint-disable-next-line no-console
-    console.error(`Command '${cmd || ""}' not understood`);
-    process.exit(1);
-  }
+  return {
+    ...rest,
+    handler: newHandler,
+  };
 }
 
-main().catch(e => {
-  // eslint-disable-next-line no-console
-  if (!e["_gmlogged"]) {
-    console.error(e);
-  }
-  process.exit(1);
-});
+yargs
+  .parserConfiguration({
+    "boolean-negation": true,
+    "camel-case-expansion": false,
+    "combine-arrays": false,
+    "dot-notation": false,
+    "duplicate-arguments-array": false,
+    "flatten-duplicate-arrays": false,
+    "halt-at-non-option": false,
+    "parse-numbers": true,
+    "populate--": false,
+    "set-placeholder-key": false,
+    "short-option-groups": true,
+    "sort-commands": false,
+    "strip-aliased": true,
+    "strip-dashed": false,
+    "unknown-options-as-args": false,
+  })
+  .scriptName("graphile-migrate")
+
+  .strict(true)
+  .version(version)
+  .hide("version")
+  .help(true)
+  .demandCommand(1, 1, "Please select a command to run.")
+  .recommendCommands()
+
+  // Commands
+  .command(wrapHandler(migrateCommand))
+  .command(wrapHandler(watchCommand))
+  .command(wrapHandler(commitCommand))
+  .command(wrapHandler(uncommitCommand))
+  .command(wrapHandler(statusCommand))
+  .command(wrapHandler(resetCommand))
+
+  .completion("completion", "Generate shell completion script.")
+  .epilogue(
+    process.env.GRAPHILE_SPONSOR
+      ? `\
+You are running graphile-migrate v${version}.`
+      : `\
+You are running graphile-migrate v${version}.
+
+  ╔═══════════════════════════════════╗
+  ║ Graphile Migrate is crowd-funded, ║
+  ║   please consider sponsorship:    ║
+  ║                                   ║
+  ║ https://www.graphile.org/sponsor/ ║
+  ║                                   ║
+  ║     🙏 THANK YOU SPONSORS! 🙏     ║
+  ╚═══════════════════════════════════╝
+`,
+  ).argv;

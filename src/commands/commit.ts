@@ -1,5 +1,6 @@
 import pgMinify = require("pg-minify");
 import { promises as fsp } from "fs";
+import { CommandModule } from "yargs";
 
 import {
   getCurrentMigrationLocation,
@@ -16,6 +17,7 @@ import {
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
+import { getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
@@ -123,3 +125,30 @@ export async function commit(
   const parsedSettings = await parseSettings(settings, true);
   return _commit(parsedSettings, message);
 }
+
+export const commitCommand: CommandModule<
+  never,
+  {
+    message?: string;
+  }
+> = {
+  command: "commit",
+  aliases: [],
+  describe:
+    "Commits the current migration into the `committed/` folder, resetting the current migration. Resets the shadow database.",
+  builder: {
+    message: {
+      type: "string",
+      alias: ["m"],
+      description:
+        "Optional commit message to label migration, must not contain newlines.",
+      nargs: 1,
+    },
+  },
+  handler: async argv => {
+    if (argv.message !== undefined && !argv.message) {
+      throw new Error("Missing or empty commit message after --message flag");
+    }
+    await commit(await getSettings(), argv.message);
+  },
+};

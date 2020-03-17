@@ -1,0 +1,34 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+export GRAPHILE_SPONSOR=1
+
+GRAPHILE_MIGRATE="node ../dist/cli.js"
+
+echo -e '## graphile-migrate\n\n```'
+$GRAPHILE_MIGRATE --help
+echo -e '```\n\n'
+
+echo -e '## graphile-migrate migrate\n\n```'
+$GRAPHILE_MIGRATE migrate --help
+echo -e '```\n\n'
+
+echo -e '## graphile-migrate watch\n\n```'
+$GRAPHILE_MIGRATE watch --help
+echo -e '```\n\n'
+
+echo -e '## graphile-migrate commit\n\n```'
+$GRAPHILE_MIGRATE commit --help
+echo -e '```\n\n'
+
+echo -e '## graphile-migrate uncommit\n\n```'
+$GRAPHILE_MIGRATE uncommit --help
+echo -e '```\n\n'
+
+echo -e '## graphile-migrate reset\n\n```'
+$GRAPHILE_MIGRATE reset --help
+echo -e '```\n\n'
+
+echo -e '## graphile-migrate status\n\n```'
+$GRAPHILE_MIGRATE status --help
+echo -e '```\n\n'
