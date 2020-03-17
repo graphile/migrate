@@ -80,6 +80,10 @@ describe.each([[undefined], ["My Commit Message"]])(
           "utf8",
         ),
       ).toEqual(MIGRATION_2_COMMITTED);
+      const stat = await fsp.stat(
+        `migrations/committed/000002${commitMessageSlug}.sql`,
+      );
+      expect(stat.mode & 0o777).toEqual(0o440);
     });
 
     it("can execute a --! no-transaction migration", async () => {
