@@ -265,8 +265,9 @@ export async function parseSettings(
   });
 
   const validateAction = makeValidateActionCallback();
+  const rootValidateAction = makeValidateActionCallback(true);
 
-  const afterReset = await check("afterReset", validateAction);
+  const afterReset = await check("afterReset", rootValidateAction);
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
   const afterCurrent = await check("afterCurrent", validateAction);
 
