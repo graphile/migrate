@@ -119,39 +119,46 @@ the main selling points of the project.
 graphile-migrate <command>
 
 Commands:
-  graphile-migrate migrate     Runs any un-executed committed migrations. Does
-                               NOT run the current migration. For use in
-                               production and development.
-  graphile-migrate watch       Runs any un-executed committed migrations and
-                               then runs and watches the current migration,
-                               re-running it on any change. For development.
-  graphile-migrate commit      Commits the current migration into the
-                               `committed/` folder, resetting the current
-                               migration. Resets the shadow database.
-  graphile-migrate uncommit    Moves the latest commit out of the committed
-                               migrations folder and back to the current
-                               migration (assuming the current migration is
-                               empty-ish). Removes the migration tracking entry
-                               from ONLY the local database, do not use after
-                               other databases have executed this committed
-                               migration. Development only, and liable to cause
-                               conflicts with other developers. Be careful.
-  graphile-migrate status      Exits with a bitmap status code indicating
-                               statuses:
+  graphile-migrate migrate         Runs any un-executed committed migrations.
+                                   Does NOT run the current migration. For use
+                                   in production and development.
+  graphile-migrate watch           Runs any un-executed committed migrations and
+                                   then runs and watches the current migration,
+                                   re-running it on any change. For development.
+  graphile-migrate commit          Commits the current migration into the
+                                   `committed/` folder, resetting the current
+                                   migration. Resets the shadow database.
+  graphile-migrate uncommit        Moves the latest commit out of the committed
+                                   migrations folder and back to the current
+                                   migration (assuming the current migration is
+                                   empty-ish). Removes the migration tracking
+                                   entry from ONLY the local database, do not
+                                   use after other databases have executed this
+                                   committed migration. Development only, and
+                                   liable to cause conflicts with other
+                                   developers. Be careful.
+  graphile-migrate status          Exits with a bitmap status code indicating
+                                   statuses:
 
-                               - 1 if there are committed migrations that have
-                               not been executed yet
-                               - 2 if the current migration is non-empty
-                               (ignoring comments)
+                                   - 1 if there are committed migrations that
+                                   have not been executed yet
+                                   - 2 if the current migration is non-empty
+                                   (ignoring comments)
 
-                               If both of the above are true then the output
-                               status will be 3 (1+2). If neither
-                               are true, exit status will be 0 (success).
-                               Additional messages may also be output.
-  graphile-migrate reset       Drops and re-creates the database, re-running all
-                               committed migrations from the start. **HIGHLY
-                               DESTRUCTIVE**.
-  graphile-migrate completion  Generate shell completion script.
+                                   If both of the above are true then the output
+                                   status will be 3 (1+2). If neither
+                                   are true, exit status will be 0 (success).
+                                   Additional messages may also be output.
+  graphile-migrate reset           Drops and re-creates the database, re-running
+                                   all committed migrations from the start.
+                                   **HIGHLY DESTRUCTIVE**.
+  graphile-migrate compile [file]  Compiles a SQL file, inserting all the
+                                   placeholders and returning the result to
+                                   STDOUT
+  graphile-migrate run [file]      Compiles a SQL file, inserting all the
+                                   placeholders, and then runs it against the
+                                   database. Useful for seeding.
+  graphile-migrate completion      Generate shell completion script.
 
 Options:
   --help  Show help                                                    [boolean]
@@ -255,6 +262,40 @@ output.
 
 Options:
   --help  Show help                                                    [boolean]
+```
+
+
+## graphile-migrate compile
+
+```
+graphile-migrate compile [file]
+
+Compiles a SQL file, inserting all the placeholders and returning the result to
+STDOUT
+
+Options:
+  --help    Show help                                                  [boolean]
+  --shadow  Apply shadow DB placeholders (for development).
+                                                      [boolean] [default: false]
+```
+
+
+## graphile-migrate run
+
+```
+graphile-migrate run [file]
+
+Compiles a SQL file, inserting all the placeholders, and then runs it against
+the database. Useful for seeding.
+
+Options:
+  --help          Show help                                            [boolean]
+  --shadow        Apply to the shadow database (for development).
+                                                      [boolean] [default: false]
+  --root          Run the file using the root user (but application database).
+                                                      [boolean] [default: false]
+  --rootDatabase  Like --root, but also runs against the root database rather
+                  than application database.          [boolean] [default: false]
 ```
 <!-- CLI_USAGE_END -->
 <!-- prettier-ignore-end -->

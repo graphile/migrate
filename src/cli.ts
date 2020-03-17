@@ -5,8 +5,10 @@ import * as yargs from "yargs";
 // @ts-ignore
 import { version } from "../package.json";
 import { commitCommand } from "./commands/commit";
+import { compileCommand } from "./commands/compile";
 import { migrateCommand } from "./commands/migrate";
 import { resetCommand } from "./commands/reset";
+import { runCommand } from "./commands/run";
 import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
@@ -46,7 +48,7 @@ yargs
     "duplicate-arguments-array": false,
     "flatten-duplicate-arrays": false,
     "halt-at-non-option": false,
-    "parse-numbers": true,
+    "parse-numbers": false,
     "populate--": false,
     "set-placeholder-key": false,
     "short-option-groups": true,
@@ -71,6 +73,8 @@ yargs
   .command(wrapHandler(uncommitCommand))
   .command(wrapHandler(statusCommand))
   .command(wrapHandler(resetCommand))
+  .command(wrapHandler(compileCommand))
+  .command(wrapHandler(runCommand))
 
   .completion("completion", "Generate shell completion script.")
   .epilogue(

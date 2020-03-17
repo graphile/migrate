@@ -9,6 +9,7 @@ import {
   isActionSpec,
   isCommandActionSpec,
   isSqlActionSpec,
+  makeRootDatabaseConnectionString,
   ParsedSettings,
 } from "./settings";
 
@@ -38,58 +39,6 @@ export interface CommandActionSpec extends ActionSpecBase {
 export type ActionSpec = SqlActionSpec | CommandActionSpec;
 
 const exec = promisify(rawExec);
-
-function makeRootDatabaseConnectionString(
-  parsedSettings: ParsedSettings,
-  databaseName: string,
-): string {
-  const { rootConnectionString } = parsedSettings;
-  if (!rootConnectionString) {
-    throw new Error(
-      "Cannot execute SQL as root since rootConnectionString / ROOT_DATABASE_URL is not specified",
-    );
-  }
-  const parsed = parse(rootConnectionString);
-  // TODO: factor in other connection parameters
-  let str = "postgres://";
-  if (parsed.user) {
-    str += encodeURIComponent(parsed.user);
-  }
-  if (parsed.password) {
-    str += ":" + encodeURIComponent(parsed.password);
-  }
-  if (parsed.user || parsed.password) {
-    str += "@";
-  }
-  if (parsed.host) {
-    str += parsed.host;
-  }
-  if (parsed.port) {
-    str += ":" + parsed.port;
-  }
-  str += "/";
-  str += databaseName;
-  let sep = "?";
-  const q = (key: string, val: string | null | undefined | boolean): string => {
-    if (val != null) {
-      const str =
-        sep +
-        encodeURIComponent(key) +
-        "=" +
-        encodeURIComponent(val === true ? "1" : val === false ? "0" : val);
-      if (sep === "?") {
-        sep = "&";
-      }
-      return str;
-    }
-    return "";
-  };
-  str += q("ssl", parsed.ssl);
-  str += q("client_encoding", parsed.client_encoding);
-  str += q("application_name", parsed.application_name);
-  str += q("fallback_application_name", parsed.fallback_application_name);
-  return str;
-}
 
 export async function executeActions(
   parsedSettings: ParsedSettings,

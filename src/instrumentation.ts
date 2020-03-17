@@ -7,11 +7,12 @@ export async function runQueryWithErrorInstrumentation(
   pgClient: Client,
   body: string,
   filename: string,
-): Promise<void> {
+): Promise<any[] | undefined> {
   try {
-    await pgClient.query({
+    const { rows } = await pgClient.query({
       text: body,
     });
+    return rows;
   } catch (e) {
     if (e.position) {
       const p = parseInt(e.position, 10);
