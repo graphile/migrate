@@ -22,6 +22,8 @@ module.exports = {
     es6: true,
   },
   rules: {
+    "object-shorthand": "error",
+
     // If something might be async in future, using `await` guarantees it will return a promise
     "@typescript-eslint/require-await": "off",
     "@typescript-eslint/no-empty-function": "off",
