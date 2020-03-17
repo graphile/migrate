@@ -139,6 +139,9 @@ export async function withAdvisoryLock<T>(
   pgClient: PoolClient,
   callback: (pgClient: PoolClient) => Promise<T>,
 ): Promise<T> {
+  if (pgClient["__isMockClient"]) {
+    return callback(pgClient);
+  }
   const {
     rows: [{ locked }],
   } = await pgClient.query("select pg_try_advisory_lock($1) as locked", [

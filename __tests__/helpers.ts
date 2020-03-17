@@ -171,7 +171,12 @@ export function makeActionSpies(shadow = false): ActionSpies {
 }
 
 function makePgClientMock() {
-  return { query: jest.fn(async () => {}) };
+  return {
+    __isMockClient: true,
+    query: jest.fn(async () => {
+      return { rows: [] };
+    }),
+  };
 }
 
 export const mockPgClient = makePgClientMock();
