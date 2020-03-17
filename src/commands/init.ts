@@ -8,7 +8,11 @@ import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
 import { getSettings, GMRC_PATH } from "./_common";
 
-export async function init(): Promise<void> {
+interface InitOptions {
+  folder?: boolean;
+}
+
+export async function init(options: InitOptions = {}): Promise<void> {
   try {
     await fsp.stat(GMRC_PATH);
     throw new Error(".gmrc file already exists");
@@ -182,6 +186,10 @@ export async function init(): Promise<void> {
         ...settings,
       });
       await fsp.mkdir(parsedSettings.migrationsFolder);
+      await fsp.mkdir(parsedSettings.migrationsFolder + "/committed");
+      if (options.folder) {
+        await fsp.mkdir(parsedSettings.migrationsFolder + "/current");
+      }
       const currentLocation = await getCurrentMigrationLocation(parsedSettings);
       await writeCurrentMigration(
         parsedSettings,
@@ -202,11 +210,17 @@ export async function init(): Promise<void> {
   }
 }
 
-export const initCommand: CommandModule<{}, {}> = {
+export const initCommand: CommandModule<{}, InitOptions> = {
   command: "init",
   aliases: [],
   describe: `\
 Initializes a graphile-migrate project by creating a \`.gmrc\` file.`,
-  builder: {},
+  builder: {
+    folder: {
+      type: "boolean",
+      description: "Use a folder rather than a file for the current migration.",
+      default: false,
+    },
+  },
   handler: init,
 };
