@@ -13,7 +13,7 @@ import { getSettings } from "./_common";
 export async function _migrate(
   parsedSettings: ParsedSettings,
   shadow = false,
-  force = false,
+  forceActions = false,
 ): Promise<void> {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
@@ -41,7 +41,7 @@ export async function _migrate(
           logSuffix,
         );
       }
-      if (remainingMigrations.length > 0 || force) {
+      if (remainingMigrations.length > 0 || forceActions) {
         await executeActions(
           parsedSettings,
           shadow,
@@ -65,17 +65,17 @@ export async function _migrate(
 export async function migrate(
   settings: Settings,
   shadow = false,
-  force = false,
+  forceActions = false,
 ): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
-  return _migrate(parsedSettings, shadow, force);
+  return _migrate(parsedSettings, shadow, forceActions);
 }
 
 export const migrateCommand: CommandModule<
   never,
   {
     shadow: boolean;
-    force: boolean;
+    forceActions: boolean;
   }
 > = {
   command: "migrate",
@@ -88,7 +88,7 @@ export const migrateCommand: CommandModule<
       default: false,
       description: "Apply migrations to the shadow DB (for development).",
     },
-    force: {
+    forceActions: {
       type: "boolean",
       default: false,
       description:
@@ -96,6 +96,6 @@ export const migrateCommand: CommandModule<
     },
   },
   handler: async argv => {
-    await migrate(await getSettings(), argv.shadow, argv.force);
+    await migrate(await getSettings(), argv.shadow, argv.forceActions);
   },
 };
