@@ -214,7 +214,7 @@ export const initCommand: CommandModule<{}, InitOptions> = {
   command: "init",
   aliases: [],
   describe: `\
-Initializes a graphile-migrate project by creating a \`.gmrc\` file.`,
+Initializes a graphile-migrate project by creating a \`.gmrc\` file and \`migrations\` folder.`,
   builder: {
     folder: {
       type: "boolean",

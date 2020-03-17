@@ -133,7 +133,8 @@ graphile-migrate <command>
 
 Commands:
   graphile-migrate init            Initializes a graphile-migrate project by
-                                   creating a `.gmrc` file.
+                                   creating a `.gmrc` file and `migrations`
+                                   folder.
   graphile-migrate migrate         Runs any un-executed committed migrations.
                                    Does NOT run the current migration. For use
                                    in production and development.
@@ -197,10 +198,13 @@ You are running graphile-migrate v0.0.18.
 ```
 graphile-migrate init
 
-Initializes a graphile-migrate project by creating a `.gmrc` file.
+Initializes a graphile-migrate project by creating a `.gmrc` file and
+`migrations` folder.
 
 Options:
-  --help  Show help                                                    [boolean]
+  --help    Show help                                                  [boolean]
+  --folder  Use a folder rather than a file for the current migration.
+                                                      [boolean] [default: false]
 ```
 
 
