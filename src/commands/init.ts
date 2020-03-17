@@ -4,7 +4,9 @@ import { CommandModule } from "yargs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import { version } from "../../package.json";
-import { GMRC_PATH } from "./_common";
+import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
+import { parseSettings } from "../settings";
+import { getSettings, GMRC_PATH } from "./_common";
 
 export async function init(): Promise<void> {
   try {
@@ -165,13 +167,34 @@ export async function init(): Promise<void> {
    */
   // migrationsFolder: "./migrations",
 
-  "generatedWith": "${version}"
+  "//generatedWith": "${version}"
 }
 `,
       );
       // eslint-disable-next-line
       console.log(
-        "Template .gmrc file written; please read and edit it to suit your needs.",
+        `Template .gmrc file written to '${GMRC_PATH}'; please read and edit it to suit your needs.`,
+      );
+      const settings = await getSettings();
+      const parsedSettings = await parseSettings({
+        connectionString: process.env.DATABASE_URL || "NOT_NEEDED",
+        shadowConnectionString: process.env.SHADOW_DATABASE_URL || "NOT_NEEDED",
+        ...settings,
+      });
+      await fsp.mkdir(parsedSettings.migrationsFolder);
+      const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+      await writeCurrentMigration(
+        parsedSettings,
+        currentLocation,
+        parsedSettings.blankMigrationContent.trim() + "\n",
+      );
+      // eslint-disable-next-line
+      console.log(
+        `The current migration was created at '${currentLocation.path}'.\n${
+          process.env.DATABASE_URL
+            ? "Try"
+            : "After configuring your connectionString/DATABASE_URL try"
+        } running \`graphile-migrate watch\` and editing the current migration.`,
       );
     } else {
       throw e;

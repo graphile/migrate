@@ -91,10 +91,23 @@ framework such as these awesome (and quite diverse) projects:
 
 `graphile-migrate` requires two databases: the first is your main database
 against which you perform development, the second is a "shadow" database which
-is used by the system to apply migrations. You should never interact with the
-"shadow" database directly. Further all members of your team should run the same
-PostgreSQL version to ensure that the shadow dump matches for everyone (one way
-of achieving this is through Docker, but that isn't required).
+is used by the system to test migrations are consistent. You should never
+interact with the "shadow" database directly.
+
+All members of your team should run the same PostgreSQL version to ensure that
+the shadow dump matches for everyone (one way of achieving this is through
+Docker, but that isn't required).
+
+We recommend dumping your database schema with `pg_dump` after migrations are
+completed; you can
+[see an example of this in Graphile Starter](https://github.com/graphile/starter/blob/4854f77e461062a95cdfff9c62082eb90a3a0d5b/%40app/db/.gmrc#L20).
+Tracking this file in git will allow you to easily see the changes that
+different migrations are making, so you can be sure you're making the changes
+you intend to. We recommend that you dump the shadow database as it will be
+unaffected by the iteration you've been applying to your development database
+(which may have come out of sync).
+
+To get started run `graphile-migrate init`
 
 ## Usage
 

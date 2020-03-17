@@ -1,4 +1,5 @@
 import { promises as fsp } from "fs";
+import * as JSON5 from "json5";
 import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
@@ -15,7 +16,7 @@ export async function getSettings(): Promise<Settings> {
     );
   }
   try {
-    return JSON.parse(data);
+    return JSON5.parse(data);
   } catch (e) {
     throw new Error("Failed to parse .gmrc file: " + e.message);
   }
