@@ -20,7 +20,8 @@ it("parses basic config", async () => {
 it("throws error for missing connection string", async () => {
   await expect(parseSettings({})).rejects.toMatchInlineSnapshot(`
           [Error: Errors occurred during settings validation:
-          - Setting 'connectionString': Expected a string, or for DATABASE_URL envvar to be set]
+          - Setting 'connectionString': Expected a string, or for DATABASE_URL envvar to be set
+          - Setting 'databaseOwner': Expected a string or for user or database name to be specified in connectionString]
         `);
 });
 

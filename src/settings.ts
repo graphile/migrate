@@ -170,7 +170,9 @@ export async function parseSettings(
     "databaseOwner",
     (rawDatabaseOwner = user || databaseName) => {
       if (typeof rawDatabaseOwner !== "string") {
-        throw new Error("Expected settings.databaseOwner to be a string");
+        throw new Error(
+          "Expected a string or for user or database name to be specified in connectionString",
+        );
       }
       return rawDatabaseOwner;
     },
