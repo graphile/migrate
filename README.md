@@ -155,6 +155,9 @@ Commands:
   graphile-migrate compile [file]  Compiles a SQL file, inserting all the
                                    placeholders and returning the result to
                                    STDOUT
+  graphile-migrate run [file]      Compiles a SQL file, inserting all the
+                                   placeholders, and then runs it against the
+                                   database. Useful for seeding.
   graphile-migrate completion      Generate shell completion script.
 
 Options:
@@ -274,6 +277,25 @@ Options:
   --help    Show help                                                  [boolean]
   --shadow  Apply shadow DB placeholders (for development).
                                                       [boolean] [default: false]
+```
+
+
+## graphile-migrate run
+
+```
+graphile-migrate run [file]
+
+Compiles a SQL file, inserting all the placeholders, and then runs it against
+the database. Useful for seeding.
+
+Options:
+  --help          Show help                                            [boolean]
+  --shadow        Apply to the shadow database (for development).
+                                                      [boolean] [default: false]
+  --root          Run the file using the root user (but application database).
+                                                      [boolean] [default: false]
+  --rootDatabase  Like --root, but also runs against the root database rather
+                  than application database.          [boolean] [default: false]
 ```
 <!-- CLI_USAGE_END -->
 <!-- prettier-ignore-end -->

@@ -1,4 +1,5 @@
 import { promises as fsp } from "fs";
+import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
 
@@ -36,4 +37,14 @@ export function readStdin(): Promise<string> {
       resolve(data);
     });
   });
+}
+
+export function getDatabaseName(connectionString: string): string {
+  const databaseName = parse(connectionString).database;
+  if (!databaseName) {
+    throw new Error(
+      "Could not determine database name from connection string.",
+    );
+  }
+  return databaseName;
 }

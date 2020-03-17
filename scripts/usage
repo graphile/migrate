@@ -36,3 +36,7 @@ echo -e '```\n\n'
 echo -e '## graphile-migrate compile\n\n```'
 $GRAPHILE_MIGRATE compile --help
 echo -e '```\n\n'
+
+echo -e '## graphile-migrate run\n\n```'
+$GRAPHILE_MIGRATE run --help
+echo -e '```\n\n'
