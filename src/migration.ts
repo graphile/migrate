@@ -6,6 +6,7 @@ import { isNoTransactionDefined } from "./header";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";
 import memoize from "./memoize";
 import { Client, Context, withClient } from "./pg";
+import { withAdvisoryLock } from "./pgReal";
 import { ParsedSettings } from "./settings";
 
 // From https://stackoverflow.com/a/3561711/141284
@@ -400,30 +401,32 @@ export async function runStringMigration(
   if (dryRun) {
     return { sql, transaction };
   }
-  if (transaction) {
-    await pgClient.query("begin");
-  }
-  try {
-    await runQueryWithErrorInstrumentation(pgClient, sql, filename);
-    if (committedMigration) {
-      const { hash, previousHash, filename } = committedMigration;
-      await pgClient.query({
-        name: "migration-insert",
-        text:
-          "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
-        values: [hash, previousHash, filename],
-      });
-    }
+  return withAdvisoryLock(pgClient, async () => {
     if (transaction) {
-      await pgClient.query("commit");
+      await pgClient.query("begin");
     }
-    return { sql, transaction };
-  } catch (e) {
-    if (transaction) {
-      await pgClient.query("rollback");
+    try {
+      await runQueryWithErrorInstrumentation(pgClient, sql, filename);
+      if (committedMigration) {
+        const { hash, previousHash, filename } = committedMigration;
+        await pgClient.query({
+          name: "migration-insert",
+          text:
+            "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
+          values: [hash, previousHash, filename],
+        });
+      }
+      if (transaction) {
+        await pgClient.query("commit");
+      }
+      return { sql, transaction };
+    } catch (e) {
+      if (transaction) {
+        await pgClient.query("rollback");
+      }
+      throw e;
     }
-    throw e;
-  }
+  });
 }
 
 export async function undoMigration(
