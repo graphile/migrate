@@ -8,7 +8,7 @@ import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
 import { migrateCommand } from "./commands/migrate";
 import { resetCommand } from "./commands/reset";
-import { runCommand } from "./commands/run.js";
+import { runCommand } from "./commands/run";
 import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
