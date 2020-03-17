@@ -532,11 +532,7 @@ PR to this paragraph.)
 
 ## TODO:
 
-- [ ] Use a proper CLI parsing library
-
 - [ ] Store pgSettings with committed transactions to protect against user edits
-
-- [ ] Add automated tests
 
 - [ ] Add `graphile-migrate check` command: reset the shadow database to the
       latest dump, apply the current migration to the shadow database, and
