@@ -288,7 +288,9 @@ export async function parseSettings(
 
   /******/
 
-  const uncheckedKeys = keysToCheck.filter(key => !checkedKeys.includes(key));
+  const uncheckedKeys = keysToCheck
+    .filter(key => !checkedKeys.includes(key))
+    .filter(key => !key.startsWith("//"));
   if (uncheckedKeys.length) {
     errors.push(
       `The following config settings were not understood: '${uncheckedKeys.join(

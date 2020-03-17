@@ -91,10 +91,57 @@ framework such as these awesome (and quite diverse) projects:
 
 `graphile-migrate` requires two databases: the first is your main database
 against which you perform development, the second is a "shadow" database which
-is used by the system to apply migrations. You should never interact with the
-"shadow" database directly. Further all members of your team should run the same
-PostgreSQL version to ensure that the shadow dump matches for everyone (one way
-of achieving this is through Docker, but that isn't required).
+is used by the system to test migrations are consistent. You should never
+interact with the "shadow" database directly.
+
+All members of your team should run the same PostgreSQL version to ensure that
+the shadow dump matches for everyone (one way of achieving this is through
+Docker, but that isn't required).
+
+We recommend dumping your database schema with `pg_dump` after migrations are
+completed; you can
+[see an example of this in Graphile Starter](https://github.com/graphile/starter/blob/4854f77e461062a95cdfff9c62082eb90a3a0d5b/%40app/db/.gmrc#L20).
+Tracking this file in git will allow you to easily see the changes that
+different migrations are making, so you can be sure you're making the changes
+you intend to. We recommend that you dump the shadow database as it will be
+unaffected by the iteration you've been applying to your development database
+(which may have come out of sync).
+
+### Getting started
+
+Create your database role (if desired), database and shadow database:
+
+```bash
+createuser --pwprompt appuser
+createdb myapp --owner=appuser
+createdb myapp_shadow --owner=appuser
+```
+
+Export your database and shadow database URLs (you'll need these for all the
+Graphile Migrate commands) and a "root" database URL which should be a superuser
+account connection to any **other** database.
+
+```bash
+export DATABASE_URL="postgres://appuser:password@localhost/myapp"
+export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
+
+export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
+```
+
+Then run:
+
+```bash
+graphile-migrate init
+```
+
+At this point you should be ready to use Graphile Migrate. You may want to store
+these environmental variables to a file so you can easily source them (with the
+`.` command in bash, for example) in future:
+
+```bash
+. ./.env
+graphile-migrate watch
+```
 
 ## Usage
 
@@ -119,6 +166,9 @@ the main selling points of the project.
 graphile-migrate <command>
 
 Commands:
+  graphile-migrate init            Initializes a graphile-migrate project by
+                                   creating a `.gmrc` file and `migrations`
+                                   folder.
   graphile-migrate migrate         Runs any un-executed committed migrations.
                                    Does NOT run the current migration. For use
                                    in production and development.
@@ -177,6 +227,21 @@ You are running graphile-migrate v0.0.18.
 ```
 
 
+## graphile-migrate init
+
+```
+graphile-migrate init
+
+Initializes a graphile-migrate project by creating a `.gmrc` file and
+`migrations` folder.
+
+Options:
+  --help    Show help                                                  [boolean]
+  --folder  Use a folder rather than a file for the current migration.
+                                                      [boolean] [default: false]
+```
+
+
 ## graphile-migrate migrate
 
 ```
@@ -186,11 +251,11 @@ Runs any un-executed committed migrations. Does NOT run the current migration.
 For use in production and development.
 
 Options:
-  --help    Show help                                                  [boolean]
-  --shadow  Apply migrations to the shadow DB (for development).
+  --help          Show help                                            [boolean]
+  --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
-  --force   Run afterAllMigrations actions even if no migration was necessary.
-                                                      [boolean] [default: false]
+  --forceActions  Run afterAllMigrations actions even if no migration was
+                  necessary.                          [boolean] [default: false]
 ```
 
 
@@ -374,6 +439,11 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   migrations isn't granted schema creation privileges. If you set this to
   `false`, you must be sure to migrate the `graphile_migrate` database schema
   any time you update the `graphile-migrate` module.
+- `blankMigrationContent` ─ what should be written to the current migration
+  after commit. NOTE: this should only contain comments such that the current
+  commit is "empty-ish" on creation.
+- `migrationsFolder` ─ allows you to override where migrations are stored;
+  defaults to `./migrations`.
 
 What follows is an example configuration file that depends on the following
 environmental variables being set:
@@ -624,9 +694,6 @@ your root user - this is expected.
       latest dump, apply the current migration to the shadow database, and
       output a SQL schema diff you can use to ensure no accidental changes have
       been made
-
-- [ ] Add `graphile-migrate init` command: ask questions and set up the relevant
-      files for running graphile-migrate.
 
 - [ ] Add `graphile-migrate import` command: used after init but before running
       any other commands, imports the existing database as if it were the first

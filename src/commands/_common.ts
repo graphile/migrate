@@ -1,19 +1,22 @@
 import { promises as fsp } from "fs";
+import * as JSON5 from "json5";
 import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
 
+export const GMRC_PATH = `${process.cwd()}/.gmrc`;
+
 export async function getSettings(): Promise<Settings> {
   let data;
   try {
-    data = await fsp.readFile(`${process.cwd()}/.gmrc`, "utf8");
+    data = await fsp.readFile(GMRC_PATH, "utf8");
   } catch (e) {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
     );
   }
   try {
-    return JSON.parse(data);
+    return JSON5.parse(data);
   } catch (e) {
     throw new Error("Failed to parse .gmrc file: " + e.message);
   }

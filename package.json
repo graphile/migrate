@@ -38,9 +38,11 @@
   },
   "homepage": "https://github.com/graphile/migrate#readme",
   "dependencies": {
+    "@types/json5": "^0.0.30",
     "@types/pg": "^7.14.1",
     "chalk": "^3.0.0",
     "chokidar": "^3.3.1",
+    "json5": "^2.1.2",
     "pg": ">=6.5 <8",
     "pg-connection-string": "^2.1.0",
     "pg-minify": "^1.5.2",
