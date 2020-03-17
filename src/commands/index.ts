@@ -1,3 +1,4 @@
+export { init } from "./init";
 export { migrate } from "./migrate";
 export { watch } from "./watch";
 export { commit } from "./commit";

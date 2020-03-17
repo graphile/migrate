@@ -6,6 +6,7 @@ import * as yargs from "yargs";
 import { version } from "../package.json";
 import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
+import { initCommand } from "./commands/init";
 import { migrateCommand } from "./commands/migrate";
 import { resetCommand } from "./commands/reset";
 import { runCommand } from "./commands/run";
@@ -67,6 +68,7 @@ yargs
   .recommendCommands()
 
   // Commands
+  .command(wrapHandler(initCommand))
   .command(wrapHandler(migrateCommand))
   .command(wrapHandler(watchCommand))
   .command(wrapHandler(commitCommand))

@@ -119,6 +119,8 @@ the main selling points of the project.
 graphile-migrate <command>
 
 Commands:
+  graphile-migrate init            Initializes a graphile-migrate project by
+                                   creating a `.gmrc` file.
   graphile-migrate migrate         Runs any un-executed committed migrations.
                                    Does NOT run the current migration. For use
                                    in production and development.
@@ -177,6 +179,18 @@ You are running graphile-migrate v0.0.18.
 ```
 
 
+## graphile-migrate init
+
+```
+graphile-migrate init
+
+Initializes a graphile-migrate project by creating a `.gmrc` file.
+
+Options:
+  --help  Show help                                                    [boolean]
+```
+
+
 ## graphile-migrate migrate
 
 ```
@@ -186,11 +200,11 @@ Runs any un-executed committed migrations. Does NOT run the current migration.
 For use in production and development.
 
 Options:
-  --help    Show help                                                  [boolean]
-  --shadow  Apply migrations to the shadow DB (for development).
+  --help          Show help                                            [boolean]
+  --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
-  --force   Run afterAllMigrations actions even if no migration was necessary.
-                                                      [boolean] [default: false]
+  --forceActions  Run afterAllMigrations actions even if no migration was
+                  necessary.                          [boolean] [default: false]
 ```
 
 
@@ -629,9 +643,6 @@ your root user - this is expected.
       latest dump, apply the current migration to the shadow database, and
       output a SQL schema diff you can use to ensure no accidental changes have
       been made
-
-- [ ] Add `graphile-migrate init` command: ask questions and set up the relevant
-      files for running graphile-migrate.
 
 - [ ] Add `graphile-migrate import` command: used after init but before running
       any other commands, imports the existing database as if it were the first

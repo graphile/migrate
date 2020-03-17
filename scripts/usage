@@ -9,6 +9,10 @@ echo -e '## graphile-migrate\n\n```'
 $GRAPHILE_MIGRATE --help
 echo -e '```\n\n'
 
+echo -e '## graphile-migrate init\n\n```'
+$GRAPHILE_MIGRATE init --help
+echo -e '```\n\n'
+
 echo -e '## graphile-migrate migrate\n\n```'
 $GRAPHILE_MIGRATE migrate --help
 echo -e '```\n\n'
