@@ -64,6 +64,7 @@ export interface Settings {
   shadowConnectionString?: string;
   rootConnectionString?: string;
   databaseOwner?: string;
+  migrationsFolder?: string;
   manageGraphileMigrateSchema?: boolean;
   pgSettings?: {
     [key: string]: string;
@@ -74,15 +75,17 @@ export interface Settings {
   afterReset?: Actions;
   afterAllMigrations?: Actions;
   afterCurrent?: Actions;
+  blankMigrationContent?: string;
 }
 
+// NOTE: only override values that differ (e.g. changing non-nullability)
 export interface ParsedSettings extends Settings {
   connectionString: string;
   rootConnectionString: string;
   databaseOwner: string;
-  migrationsFolder: string;
   databaseName: string;
   shadowDatabaseName?: string;
+  migrationsFolder: string;
   afterReset: ActionSpec[];
   afterAllMigrations: ActionSpec[];
   afterCurrent: ActionSpec[];
@@ -93,7 +96,6 @@ export async function parseSettings(
   settings: Settings,
   requireShadow = false,
 ): Promise<ParsedSettings> {
-  const migrationsFolder = `${process.cwd()}/migrations`;
   if (!settings) {
     throw new Error("Expected settings object");
   }
@@ -117,7 +119,6 @@ export async function parseSettings(
     }
   }
 
-  const blankMigrationContent = "-- Enter migration here\n";
   const connectionString = await check(
     "connectionString",
     (rawConnectionString = process.env.DATABASE_URL): string => {
@@ -141,6 +142,26 @@ export async function parseSettings(
         );
       }
       return rawRootConnectionString;
+    },
+  );
+
+  const migrationsFolder = await check(
+    "migrationsFolder",
+    (rawMigrationsFolder = `${process.cwd()}/migrations`): string => {
+      if (typeof rawMigrationsFolder !== "string") {
+        throw new Error("Expected a string");
+      }
+      return rawMigrationsFolder;
+    },
+  );
+
+  const blankMigrationContent = await check(
+    "blankMigrationContent",
+    (rawBlankMigrationContent = "-- Enter migration here\n"): string => {
+      if (typeof rawBlankMigrationContent !== "string") {
+        throw new Error("Expected a string");
+      }
+      return rawBlankMigrationContent;
     },
   );
 
