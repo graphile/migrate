@@ -326,15 +326,15 @@ export async function parseSettings(
 
   return {
     ...settings,
-    afterReset: afterReset,
-    afterAllMigrations: afterAllMigrations,
-    afterCurrent: afterCurrent,
-    rootConnectionString: rootConnectionString,
-    connectionString: connectionString,
+    afterReset,
+    afterAllMigrations,
+    afterCurrent,
+    rootConnectionString,
+    connectionString,
     manageGraphileMigrateSchema,
-    databaseOwner: databaseOwner,
+    databaseOwner,
     migrationsFolder,
-    databaseName: databaseName,
+    databaseName,
     shadowConnectionString: shadowConnectionString
       ? shadowConnectionString
       : void 0,
