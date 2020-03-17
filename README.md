@@ -107,7 +107,41 @@ you intend to. We recommend that you dump the shadow database as it will be
 unaffected by the iteration you've been applying to your development database
 (which may have come out of sync).
 
-To get started run `graphile-migrate init`
+### Getting started
+
+Create your database role (if desired), database and shadow database:
+
+```bash
+createuser --pwprompt appuser
+createdb myapp --owner=appuser
+createdb myapp_shadow --owner=appuser
+```
+
+Export your database and shadow database URLs (you'll need these for all the
+Graphile Migrate commands) and a "root" database URL which should be a superuser
+account connection to any **other** database.
+
+```bash
+export DATABASE_URL="postgres://appuser:password@localhost/myapp"
+export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
+
+export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
+```
+
+Then run:
+
+```bash
+graphile-migrate init
+```
+
+At this point you should be ready to use Graphile Migrate. You may want to store
+these environmental variables to a file so you can easily source them (with the
+`.` command in bash, for example) in future:
+
+```bash
+. ./.env
+graphile-migrate watch
+```
 
 ## Usage
 
