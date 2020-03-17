@@ -14,12 +14,23 @@ export async function compile(
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
-export const compileCommand: CommandModule<{}, {}> = {
+export const compileCommand: CommandModule<
+  {},
+  {
+    shadow?: boolean;
+  }
+> = {
   command: "compile [file]",
   aliases: [],
   describe: `\
 Compiles a SQL file, inserting all the placeholders and returning the result to STDOUT`,
-  builder: {},
+  builder: {
+    shadow: {
+      type: "boolean",
+      default: false,
+      description: "Apply shadow DB placeholders (for development).",
+    },
+  },
   handler: async argv => {
     const settings = await getSettings();
     const content =
@@ -27,7 +38,7 @@ Compiles a SQL file, inserting all the placeholders and returning the result to 
         ? await fsp.readFile(argv.file, "utf8")
         : await readStdin();
 
-    const compiled = await compile(settings, content);
+    const compiled = await compile(settings, content, argv.shadow);
 
     // eslint-disable-next-line no-console
     console.log(compiled);

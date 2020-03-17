@@ -271,7 +271,9 @@ Compiles a SQL file, inserting all the placeholders and returning the result to
 STDOUT
 
 Options:
-  --help  Show help                                                    [boolean]
+  --help    Show help                                                  [boolean]
+  --shadow  Apply shadow DB placeholders (for development).
+                                                      [boolean] [default: false]
 ```
 <!-- CLI_USAGE_END -->
 <!-- prettier-ignore-end -->
