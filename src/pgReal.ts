@@ -133,6 +133,29 @@ export async function withClient<T = void>(
   }
 }
 
+const ADVISORY_LOCK_MIGRATE =
+  "4727445306447283"; /* `GRAPHILE MIGRATE` on phone keypad */
+export async function withAdvisoryLock<T>(
+  pgClient: PoolClient,
+  callback: (pgClient: PoolClient) => Promise<T>,
+): Promise<T> {
+  const {
+    rows: [{ locked }],
+  } = await pgClient.query("select pg_try_advisory_lock($1) as locked", [
+    ADVISORY_LOCK_MIGRATE,
+  ]);
+  if (!locked) {
+    throw new Error("Failed to get exclusive lock");
+  }
+  try {
+    return await callback(pgClient);
+  } finally {
+    await pgClient.query("select pg_advisory_unlock($1)", [
+      ADVISORY_LOCK_MIGRATE,
+    ]);
+  }
+}
+
 export async function withTransaction<T>(
   pgClient: PoolClient,
   callback: () => Promise<T>,

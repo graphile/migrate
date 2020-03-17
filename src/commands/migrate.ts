@@ -7,6 +7,7 @@ import {
   runCommittedMigration,
 } from "../migration";
 import { withClient } from "../pg";
+import { withAdvisoryLock } from "../pgReal";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { getSettings } from "./_common";
 
@@ -26,38 +27,40 @@ export async function _migrate(
     connectionString,
     parsedSettings,
     async (pgClient, context) => {
-      const lastMigration = await getLastMigration(pgClient, parsedSettings);
-      const remainingMigrations = await getMigrationsAfter(
-        parsedSettings,
-        lastMigration,
-      );
-      // Run migrations in series
-      for (const migration of remainingMigrations) {
-        await runCommittedMigration(
-          pgClient,
+      await withAdvisoryLock(pgClient, async () => {
+        const lastMigration = await getLastMigration(pgClient, parsedSettings);
+        const remainingMigrations = await getMigrationsAfter(
           parsedSettings,
-          context,
-          migration,
-          logSuffix,
+          lastMigration,
         );
-      }
-      if (remainingMigrations.length > 0 || forceActions) {
-        await executeActions(
-          parsedSettings,
-          shadow,
-          parsedSettings.afterAllMigrations,
+        // Run migrations in series
+        for (const migration of remainingMigrations) {
+          await runCommittedMigration(
+            pgClient,
+            parsedSettings,
+            context,
+            migration,
+            logSuffix,
+          );
+        }
+        if (remainingMigrations.length > 0 || forceActions) {
+          await executeActions(
+            parsedSettings,
+            shadow,
+            parsedSettings.afterAllMigrations,
+          );
+        }
+        // eslint-disable-next-line no-console
+        console.log(
+          `graphile-migrate${logSuffix}: ${
+            remainingMigrations.length > 0
+              ? `${remainingMigrations.length} committed migrations executed`
+              : lastMigration
+              ? "Already up to date"
+              : `Up to date — no committed migrations to run`
+          }`,
         );
-      }
-      // eslint-disable-next-line no-console
-      console.log(
-        `graphile-migrate${logSuffix}: ${
-          remainingMigrations.length > 0
-            ? `${remainingMigrations.length} committed migrations executed`
-            : lastMigration
-            ? "Already up to date"
-            : `Up to date — no committed migrations to run`
-        }`,
-      );
+      });
     },
   );
 }

@@ -19,3 +19,6 @@ const { withTransaction: originalWithTransaction } = jest.requireActual(
 );
 
 export const withTransaction = jest.fn(originalWithTransaction);
+export const withAdvisoryLock = jest.fn((pgClient, callback) =>
+  callback(pgClient),
+);
