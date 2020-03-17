@@ -279,12 +279,13 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   database which will be dropped frequently, so don't store anything to it that
   you care about. **This database should not already exist.**
 - `rootConnectionString` (or `ROOT_DATABASE_URL` envvar) — this is used to
-  connect to the database server with superuser privileges to drop and re-create
-  the relevant databases (via the `reset` command directly, or via the `commit`
-  command for the shadow database). It **must not** be a connection to the
-  database in `connectionString` or `shadowConnectionString`. It defaults to
-  "template1" if the key or environment variable is not set so it may result in
-  PG connection errors if a default PG `template1` database is not available.
+  connect to the database server with superuser (or superuser-like) privileges
+  to drop and re-create the relevant databases (via the `reset` command
+  directly, or via the `commit` command for the shadow database). It **must
+  not** be a connection to the database in `connectionString` or
+  `shadowConnectionString`. It defaults to "template1" if the key or environment
+  variable is not set so it may result in PG connection errors if a default PG
+  `template1` database is not available.
 - `pgSettings` — optional string-string key-value object defining settings to
   set in PostgreSQL when migrating. Useful for setting `search_path` for
   example. Beware of changing this, a full reset will use the new values which
@@ -529,6 +530,32 @@ ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Admin';
 so `--! no-transaction` migrations must contain exactly one statement. You might
 be able to work around this with a `DO $$` block? (If this works, please send a
 PR to this paragraph.)
+
+## Terminology
+
+### The current migration
+
+The file (or files) in which the non-committed migration that would be executed
+by `graphile-migrate watch` is defined. By default this is in the
+`migrations/current.sql` file, but it might be `migrations/current/*.sql` if
+you're using folder mode.
+
+### Committed migration(s)
+
+The files for migrations that you've committed with `graphile-migrate commit`
+(note: this is different to committing the files using your version control
+system, e.g. git). By default they're located in `migrations/committed/*.sql`
+and are numbered.
+
+### Root
+
+We use the term "root" to indicate a database role with superuser or
+superuser-like privileges. This should include the ability to create and delete
+databases, but may also include the abilities to create extensions and/or roles.
+
+Since "superuser" has a specific meaning and is not strictly required for these
+activities we avoid that term, however you may find that you use a superuser as
+your root user - this is expected.
 
 ## TODO:
 

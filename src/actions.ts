@@ -24,10 +24,10 @@ export interface SqlActionSpec extends ActionSpecBase {
   /**
    * USE THIS WITH CARE! Currently only supported by the afterReset hook, all
    * other hooks will throw an error when set. Runs the file using the
-   * superuser role (i.e. the one defined in rootConnectionString, but with
-   * database name from connectionString), useful for creating extensions.
+   * rootConnectionString role (i.e. a superuser, but with database name from
+   * connectionString), useful for creating extensions.
    */
-  superuser?: boolean;
+  root?: boolean;
 }
 
 export interface CommandActionSpec extends ActionSpecBase {
@@ -39,14 +39,14 @@ export type ActionSpec = SqlActionSpec | CommandActionSpec;
 
 const exec = promisify(rawExec);
 
-function makeSuperuserDatabaseConnectionString(
+function makeRootDatabaseConnectionString(
   parsedSettings: ParsedSettings,
   databaseName: string,
 ): string {
   const { rootConnectionString } = parsedSettings;
   if (!rootConnectionString) {
     throw new Error(
-      "Cannot execute SQL as superuser since rootConnectionString / ROOT_DATABASE_URL is not specified",
+      "Cannot execute SQL as root since rootConnectionString / ROOT_DATABASE_URL is not specified",
     );
   }
   const parsed = parse(rootConnectionString);
@@ -122,8 +122,8 @@ export async function executeActions(
         `${parsedSettings.migrationsFolder}/${actionSpec.file}`,
         "utf8",
       );
-      const hookConnectionString = actionSpec.superuser
-        ? makeSuperuserDatabaseConnectionString(parsedSettings, databaseName)
+      const hookConnectionString = actionSpec.root
+        ? makeRootDatabaseConnectionString(parsedSettings, databaseName)
         : connectionString;
       await withClient(
         hookConnectionString,
@@ -199,7 +199,7 @@ export function makeValidateActionCallback(allowRoot = false) {
             ? {
                 _: "sql",
                 file: rawSpec.substr(1),
-                superuser: true,
+                root: true,
               }
             : {
                 _: "sql",
@@ -224,9 +224,9 @@ export function makeValidateActionCallback(allowRoot = false) {
 
     // Final validations
     for (const spec of specs) {
-      if (!allowRoot && spec._ === "sql" && spec.superuser) {
+      if (!allowRoot && spec._ === "sql" && spec.root) {
         throw new Error(
-          "This hooks isn't permitted to require superuser privileges.",
+          "This hooks isn't permitted to require root privileges.",
         );
       }
     }
