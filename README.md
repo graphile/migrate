@@ -141,7 +141,8 @@ Commands:
                                    statuses:
 
                                    - 1 if there are committed migrations that
-                                   have not been executed yet
+                                   have not been executed yet (requires DB
+                                   connection)
                                    - 2 if the current migration is non-empty
                                    (ignoring comments)
 
@@ -253,7 +254,8 @@ graphile-migrate status
 
 Exits with a bitmap status code indicating statuses:
 
-- 1 if there are committed migrations that have not been executed yet
+- 1 if there are committed migrations that have not been executed yet (requires
+DB connection)
 - 2 if the current migration is non-empty (ignoring comments)
 
 If both of the above are true then the output status will be 3 (1+2). If neither
@@ -261,7 +263,9 @@ are true, exit status will be 0 (success). Additional messages may also be
 output.
 
 Options:
-  --help  Show help                                                    [boolean]
+  --help          Show help                                            [boolean]
+  --skipDatabase  Skip checks that require a database connection.
+                                                      [boolean] [default: false]
 ```
 
 
