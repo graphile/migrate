@@ -4,3 +4,4 @@ export { reset } from "./reset";
 export { commit } from "./commit";
 export { uncommit } from "./uncommit";
 export { status } from "./status";
+export { compile } from "./compile";

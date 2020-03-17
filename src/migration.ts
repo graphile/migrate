@@ -92,6 +92,26 @@ export const generatePlaceholderReplacement = memoize(
   slowGeneratePlaceholderReplacement,
 );
 
+// So memoization above holds from compilePlaceholders
+const contextObj = memoize(database => ({ database }));
+
+export function compilePlaceholders(
+  parsedSettings: ParsedSettings,
+  content: string,
+  shadow = false,
+): string {
+  const database = shadow
+    ? parsedSettings.shadowDatabaseName
+    : parsedSettings.databaseName;
+  if (!database) {
+    throw new Error("Could not determine name of the database");
+  }
+  return generatePlaceholderReplacement(
+    parsedSettings,
+    contextObj(database),
+  )(content);
+}
+
 const TABLE_CHECKS = {
   migrations: {
     columnCount: 4,

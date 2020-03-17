@@ -32,3 +32,7 @@ echo -e '```\n\n'
 echo -e '## graphile-migrate status\n\n```'
 $GRAPHILE_MIGRATE status --help
 echo -e '```\n\n'
+
+echo -e '## graphile-migrate compile\n\n```'
+$GRAPHILE_MIGRATE compile --help
+echo -e '```\n\n'

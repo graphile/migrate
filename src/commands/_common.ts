@@ -17,3 +17,23 @@ export async function getSettings(): Promise<Settings> {
     throw new Error("Failed to parse .gmrc file: " + e.message);
   }
 }
+
+export function readStdin(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    process.stdin.setEncoding("utf8");
+
+    process.stdin.on("error", reject);
+    process.stdin.on("readable", () => {
+      let chunk;
+      // Use a loop to make sure we read all available data.
+      while ((chunk = process.stdin.read()) !== null) {
+        data += chunk;
+      }
+    });
+
+    process.stdin.on("end", () => {
+      resolve(data);
+    });
+  });
+}
