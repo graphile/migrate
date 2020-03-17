@@ -12,9 +12,13 @@ interface Status {
   hasCurrentMigration: boolean;
 }
 
+interface StatusOptions {
+  skipDatabase?: boolean;
+}
+
 async function _status(
   parsedSettings: ParsedSettings,
-  { skipDatabase }: { skipDatabase?: boolean },
+  { skipDatabase }: StatusOptions,
 ): Promise<Status> {
   // Checks that don't need a database connection
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -50,13 +54,13 @@ async function _status(
 
 export async function status(
   settings: Settings,
-  config: { skipDatabase?: boolean } = {},
+  options: StatusOptions = {},
 ): Promise<Status> {
   const parsedSettings = await parseSettings(settings, true);
-  return _status(parsedSettings, config);
+  return _status(parsedSettings, options);
 }
 
-export const statusCommand: CommandModule<never, { skipDatabase?: boolean }> = {
+export const statusCommand: CommandModule<never, StatusOptions> = {
   command: "status",
   aliases: [],
   describe: `\
