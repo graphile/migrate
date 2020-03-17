@@ -374,6 +374,11 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   migrations isn't granted schema creation privileges. If you set this to
   `false`, you must be sure to migrate the `graphile_migrate` database schema
   any time you update the `graphile-migrate` module.
+- `blankMigrationContent` ─ what should be written to the current migration
+  after commit. NOTE: this should only contain comments such that the current
+  commit is "empty-ish" on creation.
+- `migrationsFolder` ─ allows you to override where migrations are stored;
+  defaults to `./migrations`.
 
 What follows is an example configuration file that depends on the following
 environmental variables being set:
