@@ -454,16 +454,24 @@ export async function runCommittedMigration(
   committedMigration: FileMigration,
   logSuffix: string,
 ): Promise<void> {
-  const { hash, filename, body, previousHash } = committedMigration;
+  const {
+    hash,
+    realFilename,
+    filename,
+    body,
+    previousHash,
+  } = committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
   if (newHash !== hash) {
     throw new Error(
-      `Hash for ${filename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`,
+      `Hash for ${realFilename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`,
     );
   }
   // eslint-disable-next-line no-console
-  console.log(`graphile-migrate${logSuffix}: Running migration '${filename}'`);
+  console.log(
+    `graphile-migrate${logSuffix}: Running migration '${realFilename}'`,
+  );
   await runStringMigration(
     pgClient,
     parsedSettings,
