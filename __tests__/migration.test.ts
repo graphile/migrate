@@ -30,6 +30,9 @@ it("doesn't mind about placeholder order", async () => {
       ":DATABASE_AUTHENTICATOR": "[DATABASE_AUTHENTICATOR]",
       ":DATABASE_AUTHENTICATOR_PASSWORD": "[DATABASE_AUTHENTICATOR_PASSWORD]",
     },
+    beforeReset: [],
+    beforeAllMigrations: [],
+    beforeCurrent: [],
     afterReset: [],
     afterAllMigrations: [],
     afterCurrent: [],
@@ -67,7 +70,7 @@ it("calls afterAllMigrations action (only) if force is true", async () => {
   expect(getActionCalls()).toEqual(["afterAllMigrations"]);
 });
 
-it("calls afterAllMigrations action (only) if we did some migrations", async () => {
+it("calls beforeAllMigrations and afterAllMigrations action (only) if we did some migrations", async () => {
   (getMigrationsAfter as any).mockImplementationOnce(
     async (): Promise<FileMigration[]> => {
       return [
@@ -91,5 +94,8 @@ it("calls afterAllMigrations action (only) if we did some migrations", async () 
     ...settings,
   });
   await _migrate(parsedSettings, false, false);
-  expect(getActionCalls()).toEqual(["afterAllMigrations"]);
+  expect(getActionCalls()).toEqual([
+    "beforeAllMigrations",
+    "afterAllMigrations",
+  ]);
 });

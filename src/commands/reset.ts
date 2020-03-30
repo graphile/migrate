@@ -16,6 +16,7 @@ export async function _reset(
   if (!connectionString) {
     throw new Error("Could not determine connection string for reset");
   }
+  await executeActions(parsedSettings, shadow, parsedSettings.beforeReset);
   await withClient(
     parsedSettings.rootConnectionString,
     parsedSettings,

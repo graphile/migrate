@@ -80,6 +80,14 @@ export function _makeCurrentMigrationRunner(
 
             // 4: if different
             if (!migrationsAreEquivalent) {
+              if (parsedSettings.beforeCurrent) {
+                await executeActions(
+                  parsedSettings,
+                  shadow,
+                  parsedSettings.beforeCurrent,
+                );
+              }
+
               // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
               if (previousBody) {
                 await reverseMigration(lockingPgClient, previousBody);

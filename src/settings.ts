@@ -72,8 +72,11 @@ export interface Settings {
   placeholders?: {
     [key: string]: string;
   };
+  beforeReset?: Actions;
   afterReset?: Actions;
+  beforeAllMigrations?: Actions;
   afterAllMigrations?: Actions;
+  beforeCurrent?: Actions;
   afterCurrent?: Actions;
   blankMigrationContent?: string;
 }
@@ -86,8 +89,11 @@ export interface ParsedSettings extends Settings {
   databaseName: string;
   shadowDatabaseName?: string;
   migrationsFolder: string;
+  beforeReset: ActionSpec[];
   afterReset: ActionSpec[];
+  beforeAllMigrations: ActionSpec[];
   afterAllMigrations: ActionSpec[];
+  beforeCurrent: ActionSpec[];
   afterCurrent: ActionSpec[];
   blankMigrationContent: string;
 }
@@ -267,8 +273,14 @@ export async function parseSettings(
   const validateAction = makeValidateActionCallback();
   const rootValidateAction = makeValidateActionCallback(true);
 
+  const beforeReset = await check("beforeReset", rootValidateAction);
   const afterReset = await check("afterReset", rootValidateAction);
+  const beforeAllMigrations = await check(
+    "beforeAllMigrations",
+    validateAction,
+  );
   const afterAllMigrations = await check("afterAllMigrations", validateAction);
+  const beforeCurrent = await check("beforeCurrent", validateAction);
   const afterCurrent = await check("afterCurrent", validateAction);
 
   const manageGraphileMigrateSchema = await check(
@@ -331,6 +343,9 @@ export async function parseSettings(
 
   return {
     ...settings,
+    beforeReset,
+    beforeAllMigrations,
+    beforeCurrent,
     afterReset,
     afterAllMigrations,
     afterCurrent,
