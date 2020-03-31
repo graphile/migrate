@@ -86,7 +86,7 @@ framework such as these awesome (and quite diverse) projects:
 - Roles should be managed outside of migrations (since they can be shared
   between databases)
 - Certain schemas are managed by other tools and should not be interfered with;
-  e.g. `graphile_jobs`
+  e.g. `graphile_worker`
 
 ## Setup
 
