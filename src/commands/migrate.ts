@@ -33,7 +33,7 @@ export async function _migrate(
           parsedSettings,
           lastMigration,
         );
-        if (remainingMigrations.length > 0) {
+        if (remainingMigrations.length > 0 || forceActions) {
           await executeActions(
             parsedSettings,
             shadow,
