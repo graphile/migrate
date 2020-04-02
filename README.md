@@ -7,6 +7,8 @@
 
 Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
 
+<!-- SPONSORS_BEGIN -->
+
 ## Crowd-funded open-source software
 
 To help us develop this software sustainably under the MIT license, we ask all
@@ -22,6 +24,8 @@ And please give some love to our featured sponsors 🤩:
 <td align="center"><a href="https://storyscript.io/?utm_source=postgraphile"><img src="https://www.graphile.org/images/sponsors/storyscript.png" width="90" height="90" alt="Storyscript" /><br />Storyscript</a></td>
 <td align="center"><a href="https://postlight.com/?utm_source=graphile"><img src="https://www.graphile.org/images/sponsors/postlight.png" width="90" height="90" alt="Postlight" /><br />Postlight</a></td>
 </tr></table>
+
+<!-- SPONSORS_END -->
 
 ## Why?
 
