@@ -67,7 +67,10 @@ it("calls afterAllMigrations action (only) if force is true", async () => {
     ...settings,
   });
   await _migrate(parsedSettings, false, true);
-  expect(getActionCalls()).toEqual(["afterAllMigrations"]);
+  expect(getActionCalls()).toEqual([
+    "beforeAllMigrations",
+    "afterAllMigrations",
+  ]);
 });
 
 it("calls beforeAllMigrations and afterAllMigrations action (only) if we did some migrations", async () => {
