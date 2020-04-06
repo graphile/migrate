@@ -130,7 +130,12 @@ interface ActionSpies {
   getActionCalls: () => string[];
   settings: Pick<
     Settings,
-    "afterAllMigrations" | "afterReset" | "afterCurrent"
+    | "beforeReset"
+    | "afterReset"
+    | "beforeAllMigrations"
+    | "afterAllMigrations"
+    | "beforeCurrent"
+    | "afterCurrent"
   >;
 }
 export function makeActionSpies(shadow = false): ActionSpies {
@@ -161,10 +166,15 @@ export function makeActionSpies(shadow = false): ActionSpies {
   return {
     getActionCalls,
     settings: {
+      beforeAllMigrations: [
+        { _: "command", command: "touch beforeAllMigrations" },
+      ],
       afterAllMigrations: [
         { _: "command", command: "touch afterAllMigrations" },
       ],
+      beforeReset: [{ _: "command", command: "touch beforeReset" }],
       afterReset: [{ _: "command", command: "touch afterReset" }],
+      beforeCurrent: [{ _: "command", command: "touch beforeCurrent" }],
       afterCurrent: [{ _: "command", command: "touch afterCurrent" }],
     },
   };

@@ -33,6 +33,15 @@ export async function _migrate(
           parsedSettings,
           lastMigration,
         );
+        const shouldExecuteActions =
+          remainingMigrations.length > 0 || forceActions;
+        if (shouldExecuteActions) {
+          await executeActions(
+            parsedSettings,
+            shadow,
+            parsedSettings.beforeAllMigrations,
+          );
+        }
         // Run migrations in series
         for (const migration of remainingMigrations) {
           await runCommittedMigration(
@@ -43,7 +52,7 @@ export async function _migrate(
             logSuffix,
           );
         }
-        if (remainingMigrations.length > 0 || forceActions) {
+        if (shouldExecuteActions) {
           await executeActions(
             parsedSettings,
             shadow,
@@ -95,7 +104,7 @@ export const migrateCommand: CommandModule<
       type: "boolean",
       default: false,
       description:
-        "Run afterAllMigrations actions even if no migration was necessary.",
+        "Run beforeAllMigrations and afterAllMigrations actions even if no migration was necessary.",
     },
   },
   handler: async argv => {

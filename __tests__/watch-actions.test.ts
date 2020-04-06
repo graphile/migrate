@@ -16,7 +16,7 @@ import {
 
 beforeEach(resetDb);
 
-it("calls afterCurrent when ran once", async () => {
+it("calls beforeCurrent and afterCurrent when ran once", async () => {
   const { settings, getActionCalls } = makeActionSpies();
   const parsedSettings = await parseSettings({
     connectionString: TEST_DATABASE_URL,
@@ -27,5 +27,5 @@ it("calls afterCurrent when ran once", async () => {
   mockCurrentSqlContentOnce(parsedSettings, "SQL");
 
   await _watch(parsedSettings, true, false);
-  expect(getActionCalls()).toEqual(["afterCurrent"]);
+  expect(getActionCalls()).toEqual(["beforeCurrent", "afterCurrent"]);
 });

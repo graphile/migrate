@@ -36,7 +36,7 @@ SELECT ':DATABASE_NAME';
 `,
   );
   await migrationRunner();
-  expect(getActionCalls()).toEqual(["afterCurrent"]);
+  expect(getActionCalls()).toEqual(["beforeCurrent", "afterCurrent"]);
 
   // This one is identical
   mockCurrentSqlContentOnce(
@@ -47,7 +47,7 @@ SELECT ':DATABASE_NAME';
 `,
   );
   await migrationRunner();
-  expect(getActionCalls()).toEqual(["afterCurrent"]);
+  expect(getActionCalls()).toEqual(["beforeCurrent", "afterCurrent"]);
 
   mockCurrentSqlContentOnce(
     parsedSettings,
@@ -57,5 +57,10 @@ SELECT ':DATABASE_NAME', 2 * 2;
 `,
   );
   await migrationRunner();
-  expect(getActionCalls()).toEqual(["afterCurrent", "afterCurrent"]);
+  expect(getActionCalls()).toEqual([
+    "beforeCurrent",
+    "afterCurrent",
+    "beforeCurrent",
+    "afterCurrent",
+  ]);
 });

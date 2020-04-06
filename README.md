@@ -428,14 +428,20 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   values) — graphile-migrate does not perform any escaping for you. The special
   value `!ENV` will tell graphile-migrate to load the setting from the
   environment variable with the same name.
+- `beforeReset` — optional list of actions to execute before deleting and
+  recreating the database.
 - `afterReset` — optional list of actions to execute after the database has been
   created but before the migrations run, useful to set default permissions,
   install extensions or install external schemas like `graphile-worker` that
   your migrations may depend on. See "Actions" below.
+- `beforeAllMigrations` — optional list of actions to execute before any pending
+  migrations are executed.
 - `afterAllMigrations` — optional list of actions to execute after all the
   migrations have ran, useful for performing a tasks like dumping the database
   or regenerating dependent data (GraphQL schema, type definitions, etc). See
   "Actions" below.
+- `beforeCurrent` — optional list of actions to execute before `current.sql` is
+  executed.
 - `afterCurrent` — optional list of actions to execute after `current.sql` is
   loaded into the database. See "Actions" below.
 - `manageGraphileMigrateSchema` (defaults to `true`) — if set to `false`, you

@@ -22,6 +22,9 @@ Object {
   ],
   "afterCurrent": Array [],
   "afterReset": Array [],
+  "beforeAllMigrations": Array [],
+  "beforeCurrent": Array [],
+  "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
@@ -55,6 +58,9 @@ Object {
       "file": "foo.sql",
     },
   ],
+  "beforeAllMigrations": Array [],
+  "beforeCurrent": Array [],
+  "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
@@ -83,6 +89,9 @@ Object {
   ],
   "afterCurrent": Array [],
   "afterReset": Array [],
+  "beforeAllMigrations": Array [],
+  "beforeCurrent": Array [],
+  "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
@@ -119,6 +128,9 @@ Object {
   ],
   "afterCurrent": Array [],
   "afterReset": Array [],
+  "beforeAllMigrations": Array [],
+  "beforeCurrent": Array [],
+  "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
@@ -152,6 +164,9 @@ Object {
       "file": "foo.sql",
     },
   ],
+  "beforeAllMigrations": Array [],
+  "beforeCurrent": Array [],
+  "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=1",
