@@ -33,7 +33,9 @@ export async function _migrate(
           parsedSettings,
           lastMigration,
         );
-        if (remainingMigrations.length > 0 || forceActions) {
+        const shouldExecuteActions =
+          remainingMigrations.length > 0 || forceActions;
+        if (shouldExecuteActions) {
           await executeActions(
             parsedSettings,
             shadow,
@@ -50,7 +52,7 @@ export async function _migrate(
             logSuffix,
           );
         }
-        if (remainingMigrations.length > 0 || forceActions) {
+        if (shouldExecuteActions) {
           await executeActions(
             parsedSettings,
             shadow,
