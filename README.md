@@ -434,8 +434,8 @@ Configuration goes in `.gmrc`, which is a JSON file with the following keys:
   created but before the migrations run, useful to set default permissions,
   install extensions or install external schemas like `graphile-worker` that
   your migrations may depend on. See "Actions" below.
-- `beforeAllMigrations` — optional list of actions to execute before any
-  pending migrations are executed.
+- `beforeAllMigrations` — optional list of actions to execute before any pending
+  migrations are executed.
 - `afterAllMigrations` — optional list of actions to execute after all the
   migrations have ran, useful for performing a tasks like dumping the database
   or regenerating dependent data (GraphQL schema, type definitions, etc). See
