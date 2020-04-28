@@ -10,7 +10,7 @@ function sanitise(parsedSettings: ParsedSettings) {
     "./" + path.relative(process.cwd(), parsedSettings.migrationsFolder);
 }
 
-const exampleConnectionString = "postgres://localhost:5432/dbname?ssl=1";
+const exampleConnectionString = "postgres://localhost:5432/dbname?ssl=true";
 it("parses basic config", async () => {
   await parseSettings({
     connectionString: exampleConnectionString,

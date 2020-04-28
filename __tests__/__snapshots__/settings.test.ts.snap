@@ -27,7 +27,7 @@ Object {
   "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
-  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
   "manageGraphileMigrateSchema": true,
@@ -63,7 +63,7 @@ Object {
   "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
-  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
   "manageGraphileMigrateSchema": true,
@@ -94,7 +94,7 @@ Object {
   "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
-  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
   "manageGraphileMigrateSchema": true,
@@ -133,7 +133,7 @@ Object {
   "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
-  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
   "manageGraphileMigrateSchema": true,
@@ -169,7 +169,7 @@ Object {
   "beforeReset": Array [],
   "blankMigrationContent": "-- Enter migration here
 ",
-  "connectionString": "postgres://localhost:5432/dbname?ssl=1",
+  "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
   "manageGraphileMigrateSchema": true,
