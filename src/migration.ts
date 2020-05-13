@@ -4,6 +4,7 @@ import { VALID_FILE_REGEX } from "./current";
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";
+import { mergeWithoutClobbering } from "./lib";
 import memoize from "./memoize";
 import { Client, Context, withClient } from "./pg";
 import { withAdvisoryLock } from "./pgReal";
@@ -71,11 +72,14 @@ export const slowGeneratePlaceholderReplacement = (
   parsedSettings: ParsedSettings,
   { database }: Context,
 ): ((str: string) => string) => {
-  const placeholders = {
-    ...parsedSettings.placeholders,
-    ":DATABASE_NAME": database,
-    ":DATABASE_OWNER": parsedSettings.databaseOwner,
-  };
+  const placeholders = mergeWithoutClobbering(
+    parsedSettings.placeholders || {},
+    {
+      ":DATABASE_NAME": database,
+      ":DATABASE_OWNER": parsedSettings.databaseOwner,
+    },
+    "do not specify reserved placeholders.",
+  );
 
   const regexp = new RegExp(
     "(?:" +

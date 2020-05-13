@@ -3,6 +3,7 @@ import { promises as fsp } from "fs";
 import { parse } from "pg-connection-string";
 import { promisify } from "util";
 
+import { mergeWithoutClobbering } from "./lib";
 import { generatePlaceholderReplacement } from "./migration";
 import { withClient } from "./pg";
 import {
@@ -90,19 +91,21 @@ export async function executeActions(
     } else if (actionSpec._ === "command") {
       // Run the command
       const { stdout, stderr } = await exec(actionSpec.command, {
-        env: {
-          ...process.env,
-          PATH: process.env.PATH,
-          DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleadling.
-          GM_DBNAME: databaseName,
-          GM_DBUSER: databaseUser,
-          GM_DBURL: connectionString,
-          ...(shadow
-            ? {
-                GM_SHADOW: "1",
-              }
-            : null),
-        },
+        env: mergeWithoutClobbering(
+          process.env,
+          {
+            DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleading.
+            GM_DBNAME: databaseName,
+            GM_DBUSER: databaseUser,
+            GM_DBURL: connectionString,
+            ...(shadow
+              ? {
+                  GM_SHADOW: "1",
+                }
+              : null),
+          },
+          "please ensure this environmental variable is not set because graphile-migrate sets it dynamically for children.",
+        ),
         encoding: "utf8",
         // 50MB of log data should be enough for any reasonable migration... right?
         maxBuffer: 50 * 1024 * 1024,
