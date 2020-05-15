@@ -574,6 +574,11 @@ When the command is invoked it will have access to the following envvars:
 - `GM_DBUSER` - the database user in `GM_DBURL`
 - `GM_SHADOW` - set to `1` if we're dealing with the shadow DB, unset otherwise
 
+**IMPORTANT NOTE** the `DATABASE_URL` envvar will be set to the nonsense value
+`postgres://PLEASE:USE@GM_DBURL/INSTEAD` to avoid ambiguity - you almost
+certainly mean to use `GM_DBURL` in your scripts since they will want to change
+whichever database was just reset/migrated/etc (which could be the shadow DB).
+
 ## Collaboration
 
 The intention is that developers can work on different migrations in parallel,

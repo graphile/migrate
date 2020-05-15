@@ -92,9 +92,11 @@ export async function executeActions(
       // Run the command
       const { stdout, stderr } = await exec(actionSpec.command, {
         env: mergeWithoutClobbering(
-          process.env,
           {
-            DATABASE_URL: connectionString, // DO NOT USE THIS! It can be misleading.
+            ...process.env,
+            DATABASE_URL: "postgres://PLEASE:USE@GM_DBURL/INSTEAD", // DO NOT USE THIS! It can be misleading.
+          },
+          {
             GM_DBNAME: databaseName,
             GM_DBUSER: databaseUser,
             GM_DBURL: connectionString,
