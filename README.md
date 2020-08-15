@@ -124,8 +124,8 @@ createdb myapp --owner=appuser
 createdb myapp_shadow --owner=appuser
 ```
 
-Export your database and shadow database URLs (you'll need these for all the
-Graphile Migrate commands) and a "root" database URL which should be a superuser
+Export your database URL (you'll need this for all Graphile Migrate commands), shadow database URL (you'll need this for all
+development-based commands - everything **except** `migrate`), and a "root" database URL which should be a superuser
 account connection to any **other** database.
 
 ```bash
