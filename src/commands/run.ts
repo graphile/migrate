@@ -1,6 +1,7 @@
 import { promises as fsp } from "fs";
 import { CommandModule } from "yargs";
 
+import { DO_NOT_USE_DATABASE_URL } from "../actions";
 import { runQueryWithErrorInstrumentation } from "../instrumentation";
 import { compilePlaceholders } from "../migration";
 import { withClient } from "../pgReal";
@@ -60,7 +61,7 @@ export const runCommand: CommandModule<
   command: "run [file]",
   aliases: [],
   describe: `\
-Compiles a SQL file, inserting all the placeholders, and then runs it against the database. Useful for seeding.`,
+Compiles a SQL file, inserting all the placeholders, and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
   builder: {
     shadow: {
       type: "boolean",
@@ -81,7 +82,25 @@ Compiles a SQL file, inserting all the placeholders, and then runs it against th
     },
   },
   handler: async argv => {
-    const settings = await getSettings();
+    const defaultSettings = await getSettings();
+
+    // `run` might be called from an action; in this case `DATABASE_URL` will
+    // be unavailable (overwritten with DO_NOT_USE_DATABASE_URL) to avoid
+    // ambiguity (so we don't accidentally run commands against the main
+    // database when it was the shadow database that triggered the action); in
+    // this case, unless stated otherwise, the user would want to `run` against
+    // whatever database was just modified, so we automatically use `GM_DBURL`
+    // in this case.
+    const settings =
+      argv.shadow ||
+      argv.rootDatabase ||
+      process.env.DATABASE_URL !== DO_NOT_USE_DATABASE_URL
+        ? defaultSettings
+        : {
+            ...defaultSettings,
+            connectionString: process.env.GM_DBURL,
+          };
+
     const { content, filename } =
       typeof argv.file === "string"
         ? {

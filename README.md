@@ -224,13 +224,16 @@ Commands:
                                    STDOUT
   graphile-migrate run [file]      Compiles a SQL file, inserting all the
                                    placeholders, and then runs it against the
-                                   database. Useful for seeding.
+                                   database. Useful for seeding. If called from
+                                   an action will automatically run against the
+                                   same database (via GM_DBURL envvar) unless
+                                   --shadow or --rootDatabase are supplied.
   graphile-migrate completion      Generate shell completion script.
 
 Options:
   --help  Show help                                                    [boolean]
 
-You are running graphile-migrate v0.0.18.
+You are running graphile-migrate v0.3.1.
 ```
 
 
@@ -261,8 +264,8 @@ Options:
   --help          Show help                                            [boolean]
   --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
-  --forceActions  Run afterAllMigrations actions even if no migration was
-                  necessary.                          [boolean] [default: false]
+  --forceActions  Run beforeAllMigrations and afterAllMigrations actions even if
+                  no migration was necessary.         [boolean] [default: false]
 ```
 
 
@@ -376,7 +379,9 @@ Options:
 graphile-migrate run [file]
 
 Compiles a SQL file, inserting all the placeholders, and then runs it against
-the database. Useful for seeding.
+the database. Useful for seeding. If called from an action will automatically
+run against the same database (via GM_DBURL envvar) unless --shadow or
+--rootDatabase are supplied.
 
 Options:
   --help          Show help                                            [boolean]
