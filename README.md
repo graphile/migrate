@@ -403,7 +403,7 @@ use library mode right now. CLI is more stable.
 
 Configuration can be stored in a `.gmrc` JSON5 file (compatible with JSON and
 [JSONC](https://code.visualstudio.com/docs/languages/json#_json-with-comments)),
-or in a `.gmrc.js` file which will be required. The following configuration
+or in a `.gmrc.js` file which will be `require()`'d. The following configuration
 options are available:
 
 - `connectionString` (or `DATABASE_URL` envvar) — this is your main development
