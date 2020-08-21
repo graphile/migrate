@@ -401,7 +401,10 @@ use library mode right now. CLI is more stable.
 
 ## Configuration
 
-Configuration goes in `.gmrc`, which is a JSON file with the following keys:
+Configuration can be stored in a `.gmrc` JSON5 file (compatible with JSON and
+[JSONC](https://code.visualstudio.com/docs/languages/json#_json-with-comments)),
+or in a `.gmrc.js` file which will be required. The following configuration
+options are available:
 
 - `connectionString` (or `DATABASE_URL` envvar) — this is your main development
   database. If you run `graphile-migrate reset` this will be dropped without
@@ -490,6 +493,13 @@ environmental variables being set:
   ],
   "afterCurrent": ["afterCurrent.sql"]
 }
+```
+
+A `.gmrc.js` configuration file could be identical to the above, except the
+opening brace `{` would be prepended with `module.exports =`:
+
+```js
+module.exports = {
 ```
 
 ### Windows
