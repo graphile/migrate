@@ -11,6 +11,7 @@
     "clean": "rm -Rf dist",
     "test": "yarn lint && depcheck --ignores @types/jest,eslint_d,tslib && yarn run test:only --ci",
     "test:only": "jest -i",
+    "version": "yarn prepack && ./scripts/update-docs.js && git add README.md",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && tsc --watch"
   },
   "bin": {
