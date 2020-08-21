@@ -6,29 +6,30 @@ import { CommandModule } from "yargs";
 import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
-import { getSettings, GMRC_PATH } from "./_common";
+import { exists, getSettings, GMRC_PATH, GMRCJS_PATH } from "./_common";
 
 interface InitOptions {
   folder?: boolean;
 }
 
 export async function init(options: InitOptions = {}): Promise<void> {
-  try {
-    await fsp.stat(GMRC_PATH);
-    throw new Error(".gmrc file already exists");
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      const dbStrings =
-        process.env.DATABASE_URL &&
-        process.env.SHADOW_DATABASE_URL &&
-        process.env.ROOT_DATABASE_URL
-          ? `
+  if (await exists(GMRC_PATH)) {
+    throw new Error(`.gmrc file already exists at ${GMRC_PATH}`);
+  }
+  if (await exists(GMRCJS_PATH)) {
+    throw new Error(`.gmrc.js file already exists at ${GMRCJS_PATH}`);
+  }
+  const dbStrings =
+    process.env.DATABASE_URL &&
+    process.env.SHADOW_DATABASE_URL &&
+    process.env.ROOT_DATABASE_URL
+      ? `
   /*
    * Database connections strings are sourced from the DATABASE_URL,
    * SHADOW_DATABASE_URL and ROOT_DATABASE_URL environmental variables.
    */
 `
-          : `
+      : `
   /*
    * connectionString: this tells Graphile Migrate where to find the database
    * to run the migrations against.
@@ -55,9 +56,9 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // "rootConnectionString": "postgres://adminuser:adminpassword@host:5432/postgres",
 `;
 
-      await fsp.writeFile(
-        GMRC_PATH,
-        `\
+  await fsp.writeFile(
+    GMRC_PATH,
+    `\
 /*
  * Graphile Migrate configuration.
  *
@@ -174,40 +175,36 @@ export async function init(options: InitOptions = {}): Promise<void> {
   "//generatedWith": "${version}"
 }
 `,
-      );
-      // eslint-disable-next-line
-      console.log(
-        `Template .gmrc file written to '${GMRC_PATH}'; please read and edit it to suit your needs.`,
-      );
-      const settings = await getSettings();
-      const parsedSettings = await parseSettings({
-        connectionString: process.env.DATABASE_URL || "NOT_NEEDED",
-        shadowConnectionString: process.env.SHADOW_DATABASE_URL || "NOT_NEEDED",
-        ...settings,
-      });
-      await fsp.mkdir(parsedSettings.migrationsFolder);
-      await fsp.mkdir(parsedSettings.migrationsFolder + "/committed");
-      if (options.folder) {
-        await fsp.mkdir(parsedSettings.migrationsFolder + "/current");
-      }
-      const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-      await writeCurrentMigration(
-        parsedSettings,
-        currentLocation,
-        parsedSettings.blankMigrationContent.trim() + "\n",
-      );
-      // eslint-disable-next-line
-      console.log(
-        `The current migration was created at '${currentLocation.path}'.\n${
-          process.env.DATABASE_URL
-            ? "Try"
-            : "After configuring your connectionString/DATABASE_URL try"
-        } running \`graphile-migrate watch\` and editing the current migration.`,
-      );
-    } else {
-      throw e;
-    }
+  );
+  // eslint-disable-next-line
+  console.log(
+    `Template .gmrc file written to '${GMRC_PATH}'; please read and edit it to suit your needs.`,
+  );
+  const settings = await getSettings();
+  const parsedSettings = await parseSettings({
+    connectionString: process.env.DATABASE_URL || "NOT_NEEDED",
+    shadowConnectionString: process.env.SHADOW_DATABASE_URL || "NOT_NEEDED",
+    ...settings,
+  });
+  await fsp.mkdir(parsedSettings.migrationsFolder);
+  await fsp.mkdir(parsedSettings.migrationsFolder + "/committed");
+  if (options.folder) {
+    await fsp.mkdir(parsedSettings.migrationsFolder + "/current");
   }
+  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+  await writeCurrentMigration(
+    parsedSettings,
+    currentLocation,
+    parsedSettings.blankMigrationContent.trim() + "\n",
+  );
+  // eslint-disable-next-line
+  console.log(
+    `The current migration was created at '${currentLocation.path}'.\n${
+      process.env.DATABASE_URL
+        ? "Try"
+        : "After configuring your connectionString/DATABASE_URL try"
+    } running \`graphile-migrate watch\` and editing the current migration.`,
+  );
 }
 
 export const initCommand: CommandModule<{}, InitOptions> = {

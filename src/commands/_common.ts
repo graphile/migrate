@@ -7,7 +7,7 @@ import { Settings } from "../settings";
 export const GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const GMRCJS_PATH = `${GMRC_PATH}.js`;
 
-async function exists(path: string): Promise<boolean> {
+export async function exists(path: string): Promise<boolean> {
   try {
     await fsp.access(path, constants.F_OK /* visible to us */);
     return true;
