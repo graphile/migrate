@@ -124,9 +124,20 @@ createdb myapp --owner=appuser
 createdb myapp_shadow --owner=appuser
 ```
 
-Export your database URL (you'll need this for all Graphile Migrate commands), shadow database URL (you'll need this for all
-development-based commands - everything **except** `migrate`), and a "root" database URL which should be a superuser
-account connection to any **other** database.
+Export your database URL, shadow database URL, and a "root" database URL which
+should be a superuser account connection to any **other** database (most
+PostgreSQL servers have a default database called `postgres` which is a good
+choice for this).
+
+> Your database URL is needed for most Graphile Migrate commands. The shadow
+> database URL is needed for the development-only commands `commit`, 
+> `uncommit` and `reset`. The root database URL is needed to drop and
+> recreate databases, i.e. for the `reset` command and for commands that call
+> it (`commit` and `uncommit`, which reset the shadow database).
+>
+> **NOTE**: you should not need the shadow database URL or root database URL
+> in production (you only need the `graphile-migrate migrate` command in
+> production) unless you have actions that need them.
 
 ```bash
 export DATABASE_URL="postgres://appuser:password@localhost/myapp"
