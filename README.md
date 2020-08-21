@@ -42,43 +42,6 @@ And please give some love to our featured sponsors 🤩:
   is instantly regenerated (without server restart) whenever the database
   changes
 
-## Status
-
-**STABLE**
-
-This project is intended to be consumed via the CLI, which is stable and is
-being used in production in many projects. The CLI doesn't have explicit tests
-(PR welcome!), but it's a thin wrapper around the programmatic API which has
-copious tests.
-
-The programmatic API is deliberately undocumented; it is not a public interface
-at this time (though it is fully typed in TypeScript). We reserve the right to
-make breaking changes to the programmatic API in patch releases (though this has
-not happened yet and is unlikely to happen without good reason). Should you need
-to use the programmatic API, please get in touch to encourage us to make this a
-supported interface ─ we'd love to know how you're using it!
-
-The project as a whole is stable, but the approach is still "experimental", in
-particular:
-
-- because committed migrations are hashed you cannot edit old migrations; this
-  may cause you issues should you upgrade PostgreSQL and it drops support for a
-  syntax or feature you were previously using. We plan to fix this issue _if and
-  when_ it occurs, so if this affects you please open a detailed issue.
-- the approach of up-only and re-runnable migrations is not for the faint of
-  heart ─ it requires solid SQL knowledge and if insufficient attention is paid
-  it could result in your migrations and your local database state drifting
-  apart (see 'Drift' below).
-
-If you don't understand what makes Graphile Migrate awesome, you may want to
-consider an alternative migration framework such as these awesome (and quite
-diverse) projects:
-
-- [db-migrate](https://db-migrate.readthedocs.io/en/latest/Getting%20Started/commands/)
-- [sqitch](https://sqitch.org/)
-- [Flyway](https://flywaydb.org/)
-- [migra](https://github.com/djrobstep/migra)
-
 ## Opinions
 
 - Local iteration should be easy and _fast_
@@ -742,6 +705,56 @@ databases, but may also include the abilities to create extensions and/or roles.
 Since "superuser" has a specific meaning and is not strictly required for these
 activities we avoid that term, however you may find that you use a superuser as
 your root user - this is expected.
+
+## Status
+
+**STABLE**
+
+This project is intended to be consumed via the CLI, which is stable and is
+being used in production in many projects. The CLI doesn't have explicit tests
+(PR welcome!), but it's a thin wrapper around the programmatic API which has
+copious tests.
+
+The programmatic API is deliberately undocumented; it is not a public interface
+at this time (though it is fully typed in TypeScript). We reserve the right to
+make breaking changes to the programmatic API in patch releases (though this has
+not happened yet and is unlikely to happen without good reason). Should you need
+to use the programmatic API, please get in touch to encourage us to make this a
+supported interface ─ we'd love to know how you're using it!
+
+The project as a whole is stable, but the approach is still "experimental", in
+particular:
+
+- because committed migrations are hashed you cannot edit old migrations; this
+  may cause you issues should you upgrade PostgreSQL and it drops support for a
+  syntax or feature you were previously using. We plan to fix this issue _if and
+  when_ it occurs, so if this affects you please open a detailed issue.
+- the approach of up-only and re-runnable migrations is not for the faint of
+  heart ─ it requires solid SQL knowledge and if insufficient attention is paid
+  it could result in your migrations and your local database state drifting
+  apart (see 'Drift' below).
+
+If you don't understand what makes Graphile Migrate awesome, you may want to
+consider an alternative migration framework such as these awesome (and quite
+diverse) projects:
+
+- [db-migrate](https://db-migrate.readthedocs.io/en/latest/Getting%20Started/commands/)
+- [sqitch](https://sqitch.org/)
+- [Flyway](https://flywaydb.org/)
+- [migra](https://github.com/djrobstep/migra)
+
+## Node.js versioning policy
+
+We only support LTS versions of Node.js; the currently supported versions are:
+
+- Node v12.x
+- Node v14.x
+
+Other versions of Node may work, but are not officially supported.
+
+Once a Node.js version becomes "unsupported" (i.e. the maintenance LTS window
+ends), this project will no longer support it either. We may drop support for
+unmaintained versions of Node.js in a **minor** release.
 
 ## Drift
 
