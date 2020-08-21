@@ -72,10 +72,11 @@ And please give some love to our featured sponsors 🤩:
 
 ## Setup
 
-`graphile-migrate` requires two databases: the first is your main database
-against which you perform development, the second is a "shadow" database which
+In development, `graphile-migrate` requires two databases in development: the
+first is your main development database, the second is a "shadow" database which
 is used by the system to test migrations are consistent. You should never
-interact with the "shadow" database directly.
+interact with the "shadow" database directly. In production you'll only have the
+main database.
 
 All members of your team should run the same PostgreSQL version to ensure that
 the shadow dump matches for everyone (one way of achieving this is through
@@ -88,7 +89,7 @@ Tracking this file in git will allow you to easily see the changes that
 different migrations are making, so you can be sure you're making the changes
 you intend to. We recommend that you dump the shadow database as it will be
 unaffected by the iteration you've been applying to your development database
-(which may have come out of sync).
+(which may have come out of sync - see 'Drift' below).
 
 ### Getting started
 
@@ -105,6 +106,13 @@ should be a superuser account connection to any **other** database (most
 PostgreSQL servers have a default database called `postgres` which is a good
 choice for this).
 
+```bash
+export DATABASE_URL="postgres://appuser:password@localhost/myapp"
+export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
+
+export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
+```
+
 > Your database URL is needed for most Graphile Migrate commands. The shadow
 > database URL is needed for the development-only commands `commit`, `uncommit`
 > and `reset`. The root database URL is needed to drop and recreate databases,
@@ -114,13 +122,6 @@ choice for this).
 > **NOTE**: you should not need the shadow database URL or root database URL in
 > production (you only need the `graphile-migrate migrate` command in
 > production) unless you have actions that need them.
-
-```bash
-export DATABASE_URL="postgres://appuser:password@localhost/myapp"
-export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
-
-export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
-```
 
 Then run:
 
@@ -381,15 +382,6 @@ Options:
 ```
 <!-- CLI_USAGE_END -->
 <!-- prettier-ignore-end -->
-
-## Library usage
-
-It's possible to consume this module as a JavaScript library rather than via the
-CLI. There's no documentation on this, but the CLI code in `cli.ts` is very
-approachable.
-
-ALPHA WARNING: internals are likely to change a lot, so expect breakage if you
-use library mode right now. CLI is more stable.
 
 ## Configuration
 
@@ -721,6 +713,7 @@ make breaking changes to the programmatic API in patch releases (though this has
 not happened yet and is unlikely to happen without good reason). Should you need
 to use the programmatic API, please get in touch to encourage us to make this a
 supported interface ─ we'd love to know how you're using it!
+[src/cli.ts](src/cli.ts) is the best place to start.
 
 The project as a whole is stable, but the approach is still "experimental", in
 particular:
