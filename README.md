@@ -67,8 +67,8 @@ particular:
   when_ it occurs, so if this affects you please open a detailed issue.
 - the approach of up-only and re-runnable migrations is not for the faint of
   heart ─ it requires solid SQL knowledge and if insufficient attention is paid
-  it could result in your migrations and your local database state to drift
-  apart.
+  it could result in your migrations and your local database state drifting
+  apart (see 'Drift' below).
 
 If you don't understand what makes Graphile Migrate awesome, you may want to
 consider an alternative migration framework such as these awesome (and quite
@@ -742,6 +742,76 @@ databases, but may also include the abilities to create extensions and/or roles.
 Since "superuser" has a specific meaning and is not strictly required for these
 activities we avoid that term, however you may find that you use a superuser as
 your root user - this is expected.
+
+## Drift
+
+> **NOTE**: drift only affects your local development database, it cannot occur
+> in your production database assuming you're only using
+> `graphile-migrate migrate` in production.
+
+In development, if you're insufficiently careful with modifications to
+`current.sql` (including when you choose to save the file, and when switching
+branches in `git`) you may end up with a local database state that differs from
+what you'd expect given the committed migrations and contents of `current.sql`.
+We **strongly recommend against auto-save** for this reason; and recommend that
+you keep a dumped `schema.sql` to help you spot unexpected changes.
+
+Here's an illustrative example to explain the drift phenomenon, with function
+inspired by [XKCD221](https://xkcd.com/221/). Imagine that you're running
+`graphile-migrate watch` locally and you write the following to `current.sql`:
+
+```sql
+-- Revision 1
+create function rnd() returns int as $$
+  select 4;
+$$ language sql stable;
+```
+
+Because `watch` runs the contents of `current.sql` whenever it changes, this
+will create the `rnd()` function in your local database.
+
+A couple seconds later you change your mind, and decide to rename the function,
+writing the following to `current.sql`:
+
+```sql
+-- Revision 2
+create function get_random_number() returns int as $$
+  select 4;
+$$ language sql stable;
+```
+
+This creates `get_random_number()`, but no-one ever said to delete `rnd()`, so
+now both functions exist. According to the committed migrations and
+`current.sql` only `get_random_number()` should exist. The existence of the
+orphaned `rnd()` function in your local database is what we term "drift" ─ this
+function will never appear in your production database even after you commit
+this latest migration; it also won't be in your shadow database (because we
+reset the shadow database and reapply all the migrations frequently).
+
+Since Graphile Migrate doesn't know how to reverse the SQL you've written, it's
+up to you to make the SQL safe so that it can be ran over and over, and adjust
+to your changes. The two to `current.sql` versions above should have been
+
+```sql
+-- Revision 1
+drop function if exists rnd();
+
+create function rnd() returns int as $$
+  select 4;
+$$ language sql stable;
+```
+
+and
+
+```sql
+-- Revision 2
+drop function if exists rnd();
+drop function if exists get_random_number();
+
+create function get_random_number() returns int as $$
+  select 4;
+$$ language sql stable;
+```
 
 ## TODO:
 
