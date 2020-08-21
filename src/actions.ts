@@ -19,6 +19,8 @@ interface ActionSpecBase {
   shadow?: boolean;
 }
 
+export const DO_NOT_USE_DATABASE_URL = "postgres://PLEASE:USE@GM_DBURL/INSTEAD";
+
 export interface SqlActionSpec extends ActionSpecBase {
   _: "sql";
   file: string;
@@ -94,7 +96,7 @@ export async function executeActions(
         env: mergeWithoutClobbering(
           {
             ...process.env,
-            DATABASE_URL: "postgres://PLEASE:USE@GM_DBURL/INSTEAD", // DO NOT USE THIS! It can be misleading.
+            DATABASE_URL: DO_NOT_USE_DATABASE_URL, // DO NOT USE THIS! It can be misleading.
           },
           {
             GM_DBNAME: databaseName,
