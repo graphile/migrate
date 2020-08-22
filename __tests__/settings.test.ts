@@ -65,7 +65,7 @@ describe("makeRootDatabaseConnectionString", () => {
     const parsedSettings = await parseSettings({
       connectionString: exampleConnectionString,
       rootConnectionString:
-        "postgres://root:pass@localhost:5432/modified?ssl=true&sslrootcert=./__tests__/data/amazon-rds-ca-cert.pem",
+        "postgres://root:pass@localhost:5432/dbname?ssl=true&sslrootcert=./__tests__/data/amazon-rds-ca-cert.pem",
     });
     const connectionString = makeRootDatabaseConnectionString(
       parsedSettings,
