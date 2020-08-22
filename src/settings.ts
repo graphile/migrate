@@ -1,4 +1,5 @@
 import { parse } from "pg-connection-string";
+import { format as formatURL, parse as parseURL } from "url";
 
 import {
   ActionSpec,
@@ -378,44 +379,7 @@ export function makeRootDatabaseConnectionString(
       "Cannot execute SQL as root since rootConnectionString / ROOT_DATABASE_URL is not specified",
     );
   }
-  const parsed = parse(rootConnectionString);
-  // TODO: factor in other connection parameters
-  let str = "postgres://";
-  if (parsed.user) {
-    str += encodeURIComponent(parsed.user);
-  }
-  if (parsed.password) {
-    str += ":" + encodeURIComponent(parsed.password);
-  }
-  if (parsed.user || parsed.password) {
-    str += "@";
-  }
-  if (parsed.host) {
-    str += parsed.host;
-  }
-  if (parsed.port) {
-    str += ":" + parsed.port;
-  }
-  str += "/";
-  str += databaseName;
-  let sep = "?";
-  const q = (key: string, val: string | null | undefined | boolean): string => {
-    if (val != null) {
-      const str =
-        sep +
-        encodeURIComponent(key) +
-        "=" +
-        encodeURIComponent(val === true ? "1" : val === false ? "0" : val);
-      if (sep === "?") {
-        sep = "&";
-      }
-      return str;
-    }
-    return "";
-  };
-  str += q("ssl", parsed.ssl);
-  str += q("client_encoding", parsed.client_encoding);
-  str += q("application_name", parsed.application_name);
-  str += q("fallback_application_name", parsed.fallback_application_name);
-  return str;
+  const parsed = parseURL(rootConnectionString);
+  parsed.pathname = `/${databaseName}`;
+  return formatURL(parsed);
 }
