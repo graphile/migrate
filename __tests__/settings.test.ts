@@ -3,7 +3,11 @@ import "./helpers"; // Side effects - must come first
 import * as mockFs from "mock-fs";
 import * as path from "path";
 
-import { ParsedSettings, parseSettings } from "../src/settings";
+import {
+  makeRootDatabaseConnectionString,
+  ParsedSettings,
+  parseSettings,
+} from "../src/settings";
 
 function sanitise(parsedSettings: ParsedSettings) {
   parsedSettings.migrationsFolder =
@@ -38,6 +42,39 @@ it("throws if shadow attempted but no shadow DB", async () => {
           - Setting 'shadowConnectionString': Expected \`shadowConnectionString\` to be a string, or for SHADOW_DATABASE_URL to be set
           - Could not determine the shadow database name, please ensure shadowConnectionString includes the database name.]
         `);
+});
+
+describe("makeRootDatabaseConnectionString", () => {
+  it("modifies the database name", async () => {
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString:
+        "postgres://root:pass@localhost:5432/dbname?ssl=true",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe(
+      "postgres://root:pass@localhost:5432/modified?ssl=true",
+    );
+  });
+
+  it("preserves complex arguments", async () => {
+    mockFs.restore();
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString:
+        "postgres://root:pass@localhost:5432/modified?ssl=true&sslrootcert=./__tests__/data/amazon-rds-ca-cert.pem",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe(
+      "postgres://root:pass@localhost:5432/modified?ssl=true&sslrootcert=./__tests__/data/amazon-rds-ca-cert.pem",
+    );
+  });
 });
 
 describe("actions", () => {
