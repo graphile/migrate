@@ -1,4 +1,5 @@
 import { parse } from "pg-connection-string";
+import * as querystring from "querystring";
 import { format as formatURL, parse as parseURL } from "url";
 
 import {
@@ -379,7 +380,17 @@ export function makeRootDatabaseConnectionString(
       "Cannot execute SQL as root since rootConnectionString / ROOT_DATABASE_URL is not specified",
     );
   }
-  const parsed = parseURL(rootConnectionString);
+  const parsed = parseURL(rootConnectionString, true);
+  if (parsed.protocol === "socket:") {
+    parsed.query.db = databaseName;
+    const query = querystring.stringify(parsed.query);
+
+    if (parsed.auth) {
+      return `socket://${parsed.auth}@${parsed.pathname}?${query}`;
+    }
+    return `socket:${parsed.pathname}?${query}`;
+  }
+
   parsed.pathname = `/${databaseName}`;
   return formatURL(parsed);
 }

@@ -60,6 +60,60 @@ describe("makeRootDatabaseConnectionString", () => {
     );
   });
 
+  it("handles socket URLs", async () => {
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "socket:/var/run/pgsql",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe("socket:/var/run/pgsql?db=modified");
+  });
+
+  it("handles socket URLs with auth", async () => {
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "socket://user:pass@/var/run/pgsql",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe(
+      "socket://user:pass@/var/run/pgsql?db=modified",
+    );
+  });
+
+  it("handles socket URLs with existing database", async () => {
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "socket://user:pass@/var/run/pgsql?db=dbname",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe(
+      "socket://user:pass@/var/run/pgsql?db=modified",
+    );
+  });
+
+  it("handles socket URLs with existing encoding", async () => {
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "socket://user:pass@/var/run/pgsql?encoding=utf8",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe(
+      "socket://user:pass@/var/run/pgsql?encoding=utf8&db=modified",
+    );
+  });
+
   it("preserves complex arguments", async () => {
     mockFs.restore();
     const parsedSettings = await parseSettings({
