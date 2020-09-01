@@ -221,7 +221,7 @@ Commands:
 Options:
   --help  Show help                                                    [boolean]
 
-You are running graphile-migrate v1.0.0.
+You are running graphile-migrate v1.0.1.
 ```
 
 
