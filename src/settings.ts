@@ -387,10 +387,11 @@ export function makeRootDatabaseConnectionString(
 
     if (parsed.auth) {
       return `socket://${parsed.auth}@${parsed.pathname}?${query}`;
+    } else {
+      return `socket:${parsed.pathname}?${query}`;
     }
-    return `socket:${parsed.pathname}?${query}`;
+  } else {
+    parsed.pathname = `/${databaseName}`;
+    return formatURL(parsed);
   }
-
-  parsed.pathname = `/${databaseName}`;
-  return formatURL(parsed);
 }
