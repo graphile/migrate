@@ -395,7 +395,7 @@ options are available:
   warning, so be careful.
 - `shadowConnectionString` (or `SHADOW_DATABASE_URL` envvar) — the shadow
   database which will be dropped frequently, so don't store anything to it that
-  you care about. **This database should not already exist.**
+  you care about.
 - `rootConnectionString` (or `ROOT_DATABASE_URL` envvar) — this is used to
   connect to the database server with superuser (or superuser-like) privileges
   to drop and re-create the relevant databases (via the `reset` command
