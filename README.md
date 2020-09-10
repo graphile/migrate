@@ -550,8 +550,8 @@ The `root` property should be used _with care_, and is only supported by the
 `rootConnectionString`) but with the database name from `connectionString`. This
 is primarily useful for creating extensions.
 
-An identical effect can be achieved using the shorthand syntax of prepending
-the file name with an exclamation point, like so:
+An identical effect can be achieved using the shorthand syntax of prepending the
+file name with an exclamation point, like so:
 
 ```json
 "afterReset": [ "!install_extensions.sql" ]
