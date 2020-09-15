@@ -395,7 +395,7 @@ options are available:
   warning, so be careful.
 - `shadowConnectionString` (or `SHADOW_DATABASE_URL` envvar) — the shadow
   database which will be dropped frequently, so don't store anything to it that
-  you care about. **This database should not already exist.**
+  you care about.
 - `rootConnectionString` (or `ROOT_DATABASE_URL` envvar) — this is used to
   connect to the database server with superuser (or superuser-like) privileges
   to drop and re-create the relevant databases (via the `reset` command
@@ -526,7 +526,7 @@ Action spec objects are plain JSON objects with the following properties:
   should only occur against the shadow DB, `false` indicates that the action
   should not occur against the shadow DB, unset runs against both databases
 
-Each action spec subtype can have its own properties
+Each action spec subtype can have its own properties.
 
 #### `sql` action spec
 
@@ -535,13 +535,27 @@ e.g.
 ```json
 {
   "_": "sql",
-  "file": "install_extensions.sql"
+  "file": "install_extensions.sql",
+  "root": false
 }
 ```
 
 The `file` indicates the name of a SQL file in the `migrations/` folder to
 execute against the database (e.g. to set permissions, load data, install
 extensions, etc).
+
+The `root` property should be used _with care_, and is only supported by the
+`afterReset` hook (all other hooks will throw an error when it is set). When
+`true`, the file will be run using the superuser role (i.e. the one defined in
+`rootConnectionString`) but with the database name from `connectionString`. This
+is primarily useful for creating extensions.
+
+An identical effect can be achieved using the shorthand syntax of prepending the
+file name with an exclamation point, like so:
+
+```json
+"afterReset": [ "!install_extensions.sql" ]
+```
 
 #### `command` action spec
 
