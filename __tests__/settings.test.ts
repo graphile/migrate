@@ -29,6 +29,38 @@ it("throws error for missing connection string", async () => {
         `);
 });
 
+it("throws error if connection string is the same as root connection string", async () => {
+  await expect(
+    parseSettings(
+      {
+        connectionString: exampleConnectionString,
+        rootConnectionString: exampleConnectionString,
+        shadowConnectionString: "notthesamestring",
+      },
+      true,
+    ),
+  ).rejects.toMatchInlineSnapshot(`
+          [Error: Errors occurred during settings validation:
+          - connectionString cannot be the same value as rootConnectionString or shadowConnectionString.]
+    `);
+});
+
+it("throws error if connection string is the same as shadow connection string", async () => {
+  await expect(
+    parseSettings(
+      {
+        connectionString: exampleConnectionString,
+        rootConnectionString: "notthesamestring",
+        shadowConnectionString: exampleConnectionString,
+      },
+      true,
+    ),
+  ).rejects.toMatchInlineSnapshot(`
+          [Error: Errors occurred during settings validation:
+          - connectionString cannot be the same value as rootConnectionString or shadowConnectionString.]
+    `);
+});
+
 it("throws if shadow attempted but no shadow DB", async () => {
   await expect(
     parseSettings(

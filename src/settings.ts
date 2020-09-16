@@ -325,6 +325,15 @@ export async function parseSettings(
         "Could not determine the database name, please ensure connectionString includes the database name.",
       );
     }
+
+    if (
+      connectionString === rootConnectionString ||
+      (requireShadow && connectionString === shadowConnectionString)
+    ) {
+      errors.push(
+        "connectionString cannot be the same value as rootConnectionString or shadowConnectionString.",
+      );
+    }
   }
 
   if (requireShadow && !shadowDatabaseName) {
