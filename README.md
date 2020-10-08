@@ -72,7 +72,7 @@ And please give some love to our featured sponsors 🤩:
 
 ## Setup
 
-In development, `graphile-migrate` requires two databases in development: the
+In development `graphile-migrate` requires two databases: the
 first is your main development database, the second is a "shadow" database which
 is used by the system to test migrations are consistent. You should never
 interact with the "shadow" database directly. In production you'll only have the
