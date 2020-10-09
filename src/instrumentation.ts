@@ -59,20 +59,31 @@ export async function runQueryWithErrorInstrumentation(
 }
 
 export const logDbError = (e: Error): void => {
+  /* eslint-disable no-console */
   e["_gmlogged"] = true;
-  // eslint-disable-next-line no-console
   console.error("");
   if (e["_gmMessageOverride"]) {
-    // eslint-disable-next-line no-console
     console.error(e["_gmMessageOverride"]);
   } else {
-    // eslint-disable-next-line no-console
     console.error(
       chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
-    // eslint-disable-next-line no-console
-    console.error(indent(e.stack ? e.stack : e.message, 4));
   }
-  // eslint-disable-next-line no-console
+  const { severity, code, detail, hint } = e as any;
+  console.error(indent(e.stack ? e.stack : e.message, 4));
   console.error("");
+  if (severity) {
+    console.error(indent(`Severity:\t${severity}`, 4));
+  }
+  if (code) {
+    console.error(indent(`Code:    \t${code}`, 4));
+  }
+  if (detail) {
+    console.error(indent(`Detail:  \t${detail}`, 4));
+  }
+  if (hint) {
+    console.error(indent(`Hint:    \t${hint}`, 4));
+  }
+  console.error("");
+  /* eslint-enable */
 };
