@@ -193,13 +193,20 @@ export async function _watch(
       }
       running = true;
 
-      run().finally(() => {
-        running = false;
-        if (runAgain) {
-          runAgain = false;
-          queue();
-        }
-      });
+      run()
+        .catch(e => {
+          if (!e["_gmlogged"]) {
+            // eslint-disable-next-line no-console
+            console.error(e);
+          }
+        })
+        .finally(() => {
+          running = false;
+          if (runAgain) {
+            runAgain = false;
+            queue();
+          }
+        });
     };
     const watcher = chokidar.watch(currentLocation.path, {
       /*
