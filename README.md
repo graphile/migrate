@@ -72,10 +72,9 @@ And please give some love to our featured sponsors 🤩:
 
 ## Setup
 
-In development `graphile-migrate` requires two databases: the first is your main
-development database, the second is a "shadow" database which is used by the
-system to test migrations are consistent. You should never interact with the
-"shadow" database directly. In production you'll only have the main database.
+`graphile-migrate` uses two databases in development mode. A development database and 
+a "shadow" database. The "shadow" database is used by `graphile-migrate` to test the 
+consistency of the migrations. Only a single database is used in production environments.
 
 All members of your team should run the same PostgreSQL version to ensure that
 the shadow dump matches for everyone (one way of achieving this is through
