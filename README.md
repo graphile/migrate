@@ -77,8 +77,8 @@ In development, `graphile-migrate` uses two databases: the main database and a
 `graphile-migrate` to test the consistency of the migrations and perform various
 other tasks.
 
-In production, you'll likely only need to run `graphile-migrate migrate` which
-only requires the main database - there is no need for a shadow database in
+In production, most users only run `graphile-migrate migrate` which operates
+solely on the main database - there is no need for a shadow database in
 production.
 
 All members of your team should run the same PostgreSQL version to ensure that
