@@ -3,13 +3,12 @@ import "./helpers"; // Side effects - must come first
 import * as mockFs from "mock-fs";
 import * as path from "path";
 
+import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
 import {
   makeRootDatabaseConnectionString,
   ParsedSettings,
   parseSettings,
 } from "../src/settings";
-
-import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
 
 function sanitise(parsedSettings: ParsedSettings) {
   parsedSettings.migrationsFolder =
