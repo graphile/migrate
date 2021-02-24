@@ -86,6 +86,7 @@ export async function migrate(
 export const migrateCommand: CommandModule<
   never,
   {
+    config: string;
     shadow: boolean;
     forceActions: boolean;
   }
@@ -108,6 +109,10 @@ export const migrateCommand: CommandModule<
     },
   },
   handler: async argv => {
-    await migrate(await getSettings(), argv.shadow, argv.forceActions);
+    await migrate(
+      await getSettings(argv.config),
+      argv.shadow,
+      argv.forceActions,
+    );
   },
 };

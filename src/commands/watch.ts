@@ -14,7 +14,7 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
-import { getSettings } from "./_common";
+import { ConfigOptions, getSettings } from "./_common";
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
@@ -245,7 +245,7 @@ export const watchCommand: CommandModule<
   {
     once: boolean;
     shadow: boolean;
-  }
+  } & ConfigOptions
 > = {
   command: "watch",
   aliases: [],
@@ -264,6 +264,6 @@ export const watchCommand: CommandModule<
     },
   },
   handler: async argv => {
-    await watch(await getSettings(), argv.once, argv.shadow);
+    await watch(await getSettings(argv.config), argv.once, argv.shadow);
   },
 };

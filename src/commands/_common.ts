@@ -4,8 +4,12 @@ import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
 
-export const GMRC_PATH = `${process.cwd()}/.gmrc`;
-export const GMRCJS_PATH = `${GMRC_PATH}.js`;
+export const makeGmrcJsPath = (gmrcPath: string): string => `${gmrcPath}.js`;
+export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
+export const DEFAULT_GMRCJS_PATH = makeGmrcJsPath(DEFAULT_GMRC_PATH);
+
+// Used to type `argv` in all commands
+export type ConfigOptions = { config: string };
 
 export async function exists(path: string): Promise<boolean> {
   try {
@@ -30,15 +34,18 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   }
 }
 
-export async function getSettings(): Promise<Settings> {
-  if (await exists(GMRC_PATH)) {
-    return getSettingsFromJSON(GMRC_PATH);
-  } else if (await exists(GMRCJS_PATH)) {
+export async function getSettings(userGmrcPath?: string): Promise<Settings> {
+  const gmrcPath = userGmrcPath ?? DEFAULT_GMRC_PATH;
+  const gmrcJsPath = makeGmrcJsPath(gmrcPath);
+
+  if (await exists(gmrcPath)) {
+    return getSettingsFromJSON(gmrcPath);
+  } else if (await exists(gmrcJsPath)) {
     try {
-      return require(GMRCJS_PATH);
+      return require(gmrcJsPath);
     } catch (e) {
       throw new Error(
-        `Failed to import '${GMRCJS_PATH}'; error:\n    ${e.stack.replace(
+        `Failed to import '${gmrcJsPath}'; error:\n    ${e.stack.replace(
           /\n/g,
           "\n    ",
         )}`,

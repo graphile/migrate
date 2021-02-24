@@ -5,7 +5,7 @@ import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { getSettings } from "./_common";
+import { ConfigOptions, getSettings } from "./_common";
 
 interface Status {
   remainingMigrations?: Array<string>;
@@ -60,7 +60,10 @@ export async function status(
   return _status(parsedSettings, options);
 }
 
-export const statusCommand: CommandModule<never, StatusOptions> = {
+export const statusCommand: CommandModule<
+  never,
+  StatusOptions & ConfigOptions
+> = {
   command: "status",
   aliases: [],
   describe: `\
@@ -81,7 +84,7 @@ are true, exit status will be 0 (success). Additional messages may also be outpu
   handler: async argv => {
     /* eslint-disable no-console */
     let exitCode = 0;
-    const details = await status(await getSettings(), argv);
+    const details = await status(await getSettings(argv.config), argv);
     if (details.remainingMigrations) {
       const remainingCount = details.remainingMigrations?.length;
       if (remainingCount > 0) {

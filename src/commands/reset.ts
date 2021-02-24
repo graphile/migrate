@@ -3,7 +3,7 @@ import { CommandModule } from "yargs";
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { getSettings } from "./_common";
+import { ConfigOptions, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
 export async function _reset(
@@ -64,7 +64,7 @@ export const resetCommand: CommandModule<
   {
     shadow: boolean;
     erase: boolean;
-  }
+  } & ConfigOptions
 > = {
   command: "reset",
   aliases: [],
@@ -91,6 +91,6 @@ export const resetCommand: CommandModule<
       );
       process.exit(2);
     }
-    await reset(await getSettings(), argv.shadow);
+    await reset(await getSettings(argv.config), argv.shadow);
   },
 };

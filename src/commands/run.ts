@@ -10,7 +10,12 @@ import {
   parseSettings,
   Settings,
 } from "../settings";
-import { getDatabaseName, getSettings, readStdin } from "./_common";
+import {
+  ConfigOptions,
+  getDatabaseName,
+  getSettings,
+  readStdin,
+} from "./_common";
 
 export async function run(
   settings: Settings,
@@ -56,7 +61,7 @@ export const runCommand: CommandModule<
     shadow?: boolean;
     root?: boolean;
     rootDatabase?: boolean;
-  }
+  } & ConfigOptions
 > = {
   command: "run [file]",
   aliases: [],
@@ -82,7 +87,7 @@ Compiles a SQL file, inserting all the placeholders, and then runs it against th
     },
   },
   handler: async argv => {
-    const defaultSettings = await getSettings();
+    const defaultSettings = await getSettings(argv.config);
 
     // `run` might be called from an action; in this case `DATABASE_URL` will
     // be unavailable (overwritten with DO_NOT_USE_DATABASE_URL) to avoid

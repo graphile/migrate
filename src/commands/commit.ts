@@ -17,7 +17,7 @@ import {
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
-import { getSettings } from "./_common";
+import { ConfigOptions, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
@@ -132,7 +132,7 @@ export const commitCommand: CommandModule<
   never,
   {
     message?: string;
-  }
+  } & ConfigOptions
 > = {
   command: "commit",
   aliases: [],
@@ -151,6 +151,6 @@ export const commitCommand: CommandModule<
     if (argv.message !== undefined && !argv.message) {
       throw new Error("Missing or empty commit message after --message flag");
     }
-    await commit(await getSettings(), argv.message);
+    await commit(await getSettings(argv.config), argv.message);
   },
 };

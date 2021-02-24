@@ -6,18 +6,23 @@ import { CommandModule } from "yargs";
 import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
-import { exists, getSettings, GMRC_PATH, GMRCJS_PATH } from "./_common";
+import {
+  DEFAULT_GMRC_PATH,
+  DEFAULT_GMRCJS_PATH,
+  exists,
+  getSettings,
+} from "./_common";
 
 interface InitOptions {
   folder?: boolean;
 }
 
 export async function init(options: InitOptions = {}): Promise<void> {
-  if (await exists(GMRC_PATH)) {
-    throw new Error(`.gmrc file already exists at ${GMRC_PATH}`);
+  if (await exists(DEFAULT_GMRC_PATH)) {
+    throw new Error(`.gmrc file already exists at ${DEFAULT_GMRC_PATH}`);
   }
-  if (await exists(GMRCJS_PATH)) {
-    throw new Error(`.gmrc.js file already exists at ${GMRCJS_PATH}`);
+  if (await exists(DEFAULT_GMRCJS_PATH)) {
+    throw new Error(`.gmrc.js file already exists at ${DEFAULT_GMRCJS_PATH}`);
   }
   const dbStrings =
     process.env.DATABASE_URL &&
@@ -57,7 +62,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
 `;
 
   await fsp.writeFile(
-    GMRC_PATH,
+    DEFAULT_GMRC_PATH,
     `\
 /*
  * Graphile Migrate configuration.
@@ -178,7 +183,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   );
   // eslint-disable-next-line
   console.log(
-    `Template .gmrc file written to '${GMRC_PATH}'; please read and edit it to suit your needs.`,
+    `Template .gmrc file written to '${DEFAULT_GMRC_PATH}'; please read and edit it to suit your needs.`,
   );
   const settings = await getSettings();
   const parsedSettings = await parseSettings({

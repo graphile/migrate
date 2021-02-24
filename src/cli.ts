@@ -78,6 +78,12 @@ yargs
   .command(wrapHandler(compileCommand))
   .command(wrapHandler(runCommand))
 
+  .option("config", {
+    alias: "c",
+    type: "string",
+    description: "Optional path to .gmrc(.js) - default is `${pwd}.gmrc`",
+  })
+
   .completion("completion", "Generate shell completion script.")
   .epilogue(
     process.env.GRAPHILE_SPONSOR
