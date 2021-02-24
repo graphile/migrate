@@ -224,6 +224,7 @@ Commands:
 
 Options:
   --help  Show help                                                    [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
 
 You are running graphile-migrate v1.0.2.
 ```
@@ -239,6 +240,7 @@ Initializes a graphile-migrate project by creating a `.gmrc` file and
 
 Options:
   --help    Show help                                                  [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --folder  Use a folder rather than a file for the current migration.
                                                       [boolean] [default: false]
 ```
@@ -254,6 +256,7 @@ For use in production and development.
 
 Options:
   --help          Show help                                            [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
   --forceActions  Run beforeAllMigrations and afterAllMigrations actions even if
@@ -271,6 +274,7 @@ migration, re-running it on any change. For development.
 
 Options:
   --help    Show help                                                  [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --once    Runs the current migration and then exits.[boolean] [default: false]
   --shadow  Applies changes to shadow DB.             [boolean] [default: false]
 ```
@@ -286,6 +290,7 @@ current migration. Resets the shadow database.
 
 Options:
   --help         Show help                                             [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --message, -m  Optional commit message to label migration, must not contain
                  newlines.                                              [string]
 ```
@@ -309,6 +314,7 @@ conflicts with other developers - be careful.
 
 Options:
   --help  Show help                                                    [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
 ```
 
 
@@ -322,6 +328,7 @@ start. **HIGHLY DESTRUCTIVE**.
 
 Options:
   --help    Show help                                                  [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --shadow  Applies migrations to shadow DB.          [boolean] [default: false]
   --erase   This is your double opt-in to make it clear this DELETES EVERYTHING.
                                                       [boolean] [default: false]
@@ -345,6 +352,7 @@ output.
 
 Options:
   --help          Show help                                            [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --skipDatabase  Skip checks that require a database connection.
                                                       [boolean] [default: false]
 ```
@@ -360,6 +368,7 @@ STDOUT
 
 Options:
   --help    Show help                                                  [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --shadow  Apply shadow DB placeholders (for development).
                                                       [boolean] [default: false]
 ```
@@ -377,6 +386,7 @@ run against the same database (via GM_DBURL envvar) unless --shadow or
 
 Options:
   --help          Show help                                            [boolean]
+  --config Optional path to .gmrc(.js) - default is `${pwd}.gmrc`      [string]
   --shadow        Apply to the shadow database (for development).
                                                       [boolean] [default: false]
   --root          Run the file using the root user (but application database).
@@ -489,6 +499,10 @@ opening brace `{` would be prepended with `module.exports =`:
 ```js
 module.exports = {
 ```
+
+All commands accept an optional `--config` parameter with a custom path to a
+`.gmrc(.js)` file. This is useful if, for example, you have a monorepo or other
+project with multiple interacting databases.
 
 ### Windows
 
