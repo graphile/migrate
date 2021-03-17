@@ -110,7 +110,7 @@ export const migrateCommand: CommandModule<
   },
   handler: async argv => {
     await migrate(
-      await getSettings(argv.config),
+      await getSettings({ configFile: argv.config }),
       argv.shadow,
       argv.forceActions,
     );

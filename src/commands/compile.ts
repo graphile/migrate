@@ -32,7 +32,7 @@ Compiles a SQL file, inserting all the placeholders and returning the result to 
     },
   },
   handler: async argv => {
-    const settings = await getSettings(argv.config);
+    const settings = await getSettings({ configFile: argv.config });
     const content =
       typeof argv.file === "string"
         ? await fsp.readFile(argv.file, "utf8")

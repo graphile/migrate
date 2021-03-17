@@ -84,7 +84,10 @@ are true, exit status will be 0 (success). Additional messages may also be outpu
   handler: async argv => {
     /* eslint-disable no-console */
     let exitCode = 0;
-    const details = await status(await getSettings(argv.config), argv);
+    const details = await status(
+      await getSettings({ configFile: argv.config }),
+      argv,
+    );
     if (details.remainingMigrations) {
       const remainingCount = details.remainingMigrations?.length;
       if (remainingCount > 0) {

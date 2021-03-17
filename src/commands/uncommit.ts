@@ -74,6 +74,6 @@ export const uncommitCommand: CommandModule<never, ConfigOptions> = {
     if (argv.message !== undefined && !argv.message) {
       throw new Error("Missing or empty commit message after --message flag");
     }
-    await uncommit(await getSettings(argv.config));
+    await uncommit(await getSettings({ configFile: argv.config }));
   },
 };

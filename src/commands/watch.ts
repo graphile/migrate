@@ -264,6 +264,10 @@ export const watchCommand: CommandModule<
     },
   },
   handler: async argv => {
-    await watch(await getSettings(argv.config), argv.once, argv.shadow);
+    await watch(
+      await getSettings({ configFile: argv.config }),
+      argv.once,
+      argv.shadow,
+    );
   },
 };

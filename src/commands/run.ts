@@ -87,7 +87,7 @@ Compiles a SQL file, inserting all the placeholders, and then runs it against th
     },
   },
   handler: async argv => {
-    const defaultSettings = await getSettings(argv.config);
+    const defaultSettings = await getSettings({ configFile: argv.config });
 
     // `run` might be called from an action; in this case `DATABASE_URL` will
     // be unavailable (overwritten with DO_NOT_USE_DATABASE_URL) to avoid

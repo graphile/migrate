@@ -305,7 +305,7 @@ describe("gmrc path", () => {
         { "connectionString": "postgres://appuser:apppassword@host:5432/otherdb" }
       `,
     });
-    const settings = await getSettings(".other-gmrc");
+    const settings = await getSettings({ configFile: ".other-gmrc" });
     expect(settings.connectionString).toEqual(
       "postgres://appuser:apppassword@host:5432/otherdb",
     );

@@ -91,6 +91,6 @@ export const resetCommand: CommandModule<
       );
       process.exit(2);
     }
-    await reset(await getSettings(argv.config), argv.shadow);
+    await reset(await getSettings({ configFile: argv.config }), argv.shadow);
   },
 };

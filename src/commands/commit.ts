@@ -151,6 +151,6 @@ export const commitCommand: CommandModule<
     if (argv.message !== undefined && !argv.message) {
       throw new Error("Missing or empty commit message after --message flag");
     }
-    await commit(await getSettings(argv.config), argv.message);
+    await commit(await getSettings({ configFile: argv.config }), argv.message);
   },
 };
