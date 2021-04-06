@@ -11,6 +11,12 @@ import {
 
 export type Actions = string | Array<string | ActionSpec>;
 
+export interface MigrateLogger {
+  log(message: string): void;
+  error(message: string, error?: Error): void;
+  warn(message: string): void;
+}
+
 export function isActionSpec(o: unknown): o is ActionSpec {
   if (!(typeof o === "object" && o && typeof o["_"] === "string")) {
     return false;
@@ -81,6 +87,7 @@ export interface Settings {
   beforeCurrent?: Actions;
   afterCurrent?: Actions;
   blankMigrationContent?: string;
+  logger?: MigrateLogger;
 }
 
 // NOTE: only override values that differ (e.g. changing non-nullability)
@@ -98,6 +105,7 @@ export interface ParsedSettings extends Settings {
   beforeCurrent: ActionSpec[];
   afterCurrent: ActionSpec[];
   blankMigrationContent: string;
+  logger: MigrateLogger;
 }
 
 export async function parseSettings(
@@ -136,6 +144,24 @@ export async function parseSettings(
         );
       }
       return rawConnectionString;
+    },
+  );
+
+  const logger = await check(
+    "logger",
+    (logger = console): MigrateLogger => {
+      const typedLogger = logger as MigrateLogger;
+      if (
+        typeof logger !== "object" ||
+        !("log" in typedLogger && typeof typedLogger.log === "function") ||
+        !("error" in typedLogger && typeof typedLogger.error === "function") ||
+        !("warn" in typedLogger && typeof typedLogger.warn === "function")
+      ) {
+        throw new Error(
+          "Expected an object with log, error, and warn functions",
+        );
+      }
+      return typedLogger;
     },
   );
 
@@ -272,8 +298,8 @@ export async function parseSettings(
     return undefined;
   });
 
-  const validateAction = makeValidateActionCallback();
-  const rootValidateAction = makeValidateActionCallback(true);
+  const validateAction = makeValidateActionCallback(logger);
+  const rootValidateAction = makeValidateActionCallback(logger, true);
 
   const beforeReset = await check("beforeReset", rootValidateAction);
   const afterReset = await check("afterReset", rootValidateAction);
@@ -372,6 +398,7 @@ export async function parseSettings(
     shadowDatabaseName: shadowDatabaseName ? shadowDatabaseName : void 0,
     placeholders,
     blankMigrationContent,
+    logger,
   };
 }
 

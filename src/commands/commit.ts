@@ -1,4 +1,5 @@
 import pgMinify = require("pg-minify");
+import { Console } from "console";
 import { promises as fsp } from "fs";
 import { CommandModule } from "yargs";
 
@@ -96,8 +97,7 @@ export async function _commit(
   await fsp.writeFile(newMigrationFilepath, finalBody);
   await fsp.chmod(newMigrationFilepath, "440");
 
-  // eslint-disable-next-line no-console
-  console.log(
+  parsedSettings.logger.log(
     `graphile-migrate: New migration '${newMigrationFilename}' created`,
   );
   try {
@@ -109,13 +109,14 @@ export async function _commit(
       parsedSettings.blankMigrationContent.trim() + "\n",
     );
   } catch (e) {
-    logDbError(e);
-    // eslint-disable-next-line no-console
-    console.error("ABORTING...");
+    if (parsedSettings.logger instanceof Console) {
+      logDbError(e);
+    }
+
+    parsedSettings.logger.error("ABORTING...");
     await writeCurrentMigration(parsedSettings, currentLocation, body);
     await fsp.unlink(newMigrationFilepath);
-    // eslint-disable-next-line no-console
-    console.error("ABORTED AND ROLLED BACK");
+    parsedSettings.logger.error("ABORTED AND ROLLED BACK");
     throw e;
   }
 }

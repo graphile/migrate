@@ -32,8 +32,7 @@ export async function _reset(
       await pgClient.query(
         `DROP DATABASE IF EXISTS ${escapeIdentifier(databaseName)};`,
       );
-      // eslint-disable-next-line no-console
-      console.log(
+      parsedSettings.logger.log(
         `graphile-migrate${logSuffix}: dropped database '${databaseName}'`,
       );
       await pgClient.query(
@@ -44,8 +43,7 @@ export async function _reset(
       await pgClient.query(
         `REVOKE ALL ON DATABASE ${escapeIdentifier(databaseName)} FROM PUBLIC;`,
       );
-      // eslint-disable-next-line no-console
-      console.log(
+      parsedSettings.logger.log(
         `graphile-migrate${logSuffix}: recreated database '${databaseName}'`,
       );
     },

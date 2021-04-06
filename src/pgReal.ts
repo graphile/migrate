@@ -1,7 +1,7 @@
 import { Pool, PoolClient } from "pg";
 import { parse } from "pg-connection-string";
 
-import { ParsedSettings } from "./settings";
+import { MigrateLogger, ParsedSettings } from "./settings";
 
 export interface Context {
   database: string;
@@ -38,6 +38,7 @@ export function clearAllPools(): void {
 
 function getPoolDetailsFromConnectionString(
   connectionString: string,
+  logger: MigrateLogger = console,
 ): PoolDetails {
   let details:
     | PoolDetailsInternal
@@ -49,8 +50,7 @@ function getPoolDetailsFromConnectionString(
     }
     const pool = new Pool({ connectionString });
     pool.on("error", (err: Error) => {
-      // eslint-disable-next-line no-console
-      console.error("An error occurred in the PgPool", err);
+      logger.error("An error occurred in the PgPool", err);
       process.exit(1);
     });
 
@@ -98,7 +98,10 @@ export async function withClient<T = void>(
   parsedSettings: ParsedSettings,
   callback: (pgClient: PoolClient, context: Context) => Promise<T>,
 ): Promise<T> {
-  const details = getPoolDetailsFromConnectionString(connectionString);
+  const details = getPoolDetailsFromConnectionString(
+    connectionString,
+    parsedSettings.logger,
+  );
   const { pool: pgPool, database } = details;
   try {
     const pgClient = await pgPool.connect();

@@ -7,6 +7,7 @@ import { withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import pgMinify = require("pg-minify");
+import { Console } from "console";
 import { CommandModule } from "yargs";
 
 import {
@@ -27,8 +28,9 @@ export function _makeCurrentMigrationRunner(
     let migrationsAreEquivalent = false;
 
     try {
-      // eslint-disable-next-line no-console
-      console.log(`[${new Date().toISOString()}]: Running current.sql`);
+      parsedSettings.logger.log(
+        `[${new Date().toISOString()}]: Running current.sql`,
+      );
       const start = process.hrtime();
       const connectionString = shadow
         ? parsedSettings.shadowConnectionString
@@ -116,8 +118,7 @@ export function _makeCurrentMigrationRunner(
                 );
               }
             } else {
-              // eslint-disable-next-line no-console
-              console.log(
+              parsedSettings.logger.log(
                 `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`,
               );
             }
@@ -149,8 +150,7 @@ export function _makeCurrentMigrationRunner(
       }
       const interval2 = process.hrtime(start);
       const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
-      // eslint-disable-next-line no-console
-      console.log(
+      parsedSettings.logger.log(
         `[${new Date().toISOString()}]: Finished (${duration2.toFixed(0)}ms${
           duration2 - duration >= 5
             ? `; excluding actions: ${duration.toFixed(0)}ms`
@@ -158,7 +158,9 @@ export function _makeCurrentMigrationRunner(
         })`,
       );
     } catch (e) {
-      logDbError(e);
+      if (parsedSettings.logger instanceof Console) {
+        logDbError(e);
+      }
       throw e;
     }
   }
@@ -196,8 +198,7 @@ export async function _watch(
       run()
         .catch(e => {
           if (!e["_gmlogged"]) {
-            // eslint-disable-next-line no-console
-            console.error(e);
+            parsedSettings.logger.error(e);
           }
         })
         .finally(() => {
