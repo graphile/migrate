@@ -76,6 +76,24 @@ it("throws if shadow attempted but no shadow DB", async () => {
         `);
 });
 
+it.each([
+  [[]],
+  [{}],
+  [{ log: (message: string) => message, error: (message: string) => message }],
+])("throws error for invalid logger", async logger => {
+  await expect(
+    parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "notthesamestring1",
+      shadowConnectionString: "notthesamestring2",
+      logger: logger as any,
+    }),
+  ).rejects.toMatchInlineSnapshot(`
+          [Error: Errors occurred during settings validation:
+          - Setting 'logger': Expected an object with log, error, and warn functions]
+        `);
+});
+
 describe("makeRootDatabaseConnectionString", () => {
   it("modifies the database name", async () => {
     const parsedSettings = await parseSettings({
