@@ -5,6 +5,7 @@ import * as path from "path";
 
 import {
   makeRootDatabaseConnectionString,
+  MigrateLogger,
   ParsedSettings,
   parseSettings,
 } from "../src/settings";
@@ -13,6 +14,12 @@ function sanitise(parsedSettings: ParsedSettings) {
   parsedSettings.migrationsFolder =
     "./" + path.relative(process.cwd(), parsedSettings.migrationsFolder);
 }
+
+const exampleLogger: MigrateLogger = {
+  log: () => {},
+  error: () => {},
+  warn: () => {},
+};
 
 const exampleConnectionString = "postgres://localhost:5432/dbname?ssl=true";
 it("parses basic config", async () => {
@@ -184,6 +191,7 @@ describe("makeRootDatabaseConnectionString", () => {
 describe("actions", () => {
   it("parses string values into SQL actions", async () => {
     const parsedSettings = await parseSettings({
+      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterReset: "foo.sql",
       afterAllMigrations: ["bar.sql", "baz.sql"],
@@ -200,6 +208,7 @@ describe("actions", () => {
 
   it("parses SQL actions", async () => {
     const parsedSettings = await parseSettings({
+      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterReset: "foo.sql",
       afterAllMigrations: [
@@ -219,6 +228,7 @@ describe("actions", () => {
 
   it("parses command actions", async () => {
     const parsedSettings = await parseSettings({
+      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterAllMigrations: [
         { _: "command", command: "pg_dump --schema-only" },
@@ -237,6 +247,7 @@ describe("actions", () => {
 
   it("parses mixed actions", async () => {
     const parsedSettings = await parseSettings({
+      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterAllMigrations: [
         "foo.sql",
@@ -259,6 +270,7 @@ describe("actions", () => {
 
   it("is backwards-compatible with untagged command specs", async () => {
     const parsedSettings = await parseSettings({
+      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterAllMigrations: [
         "foo.sql",
