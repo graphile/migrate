@@ -109,14 +109,17 @@ describe.each([[undefined], ["My Commit Message"]])(
       });
       expect(await fsp.readFile("migrations/current/001.sql", "utf8")).toEqual(
         (commitMessage ? `--! Message: ${commitMessage}\n\n` : "") +
-          MIGRATION_MULTIFILE_FILES["001.sql"].trim() +
+          MIGRATION_MULTIFILE_FILES["migrations/current"]["001.sql"].trim() +
           "\n",
       );
       expect(
         await fsp.readFile("migrations/current/002-two.sql", "utf8"),
-      ).toEqual(MIGRATION_MULTIFILE_FILES["002-two.sql"].trim() + "\n");
+      ).toEqual(
+        MIGRATION_MULTIFILE_FILES["migrations/links/two.sql"].trim() + "\n",
+      );
       expect(await fsp.readFile("migrations/current/003.sql", "utf8")).toEqual(
-        MIGRATION_MULTIFILE_FILES["003.sql"].trim() + "\n",
+        MIGRATION_MULTIFILE_FILES["migrations/current"]["003.sql"].trim() +
+          "\n",
       );
 
       await commit(settings);
