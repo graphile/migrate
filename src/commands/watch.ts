@@ -224,8 +224,12 @@ export async function _watch(
         stabilityThreshold: 200,
         pollInterval: 100,
       },
+
+      ignoreInitial: true,
     });
+    watcher.on("add", queue);
     watcher.on("change", queue);
+    watcher.on("unlink", queue);
     queue();
     return Promise.resolve();
   }
