@@ -5,9 +5,8 @@ import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
 
-export const makeGmrcJsPath = (gmrcPath: string): string => `${gmrcPath}.js`;
 export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
-export const DEFAULT_GMRCJS_PATH = makeGmrcJsPath(DEFAULT_GMRC_PATH);
+export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
 
 /**
  * Represents the option flags that are valid for all commands (see
