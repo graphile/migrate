@@ -44,7 +44,7 @@ export async function getSettings({
       return require(path);
     } catch (e) {
       throw new Error(
-        `Failed to import '${DEFAULT_GMRCJS_PATH}'; error:\n    ${e.stack.replace(
+        `Failed to import '${path}'; error:\n    ${e.stack.replace(
           /\n/g,
           "\n    ",
         )}`,
