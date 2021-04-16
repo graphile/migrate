@@ -187,7 +187,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
 `;
 
   const fileContent = gmrcPath.endsWith(".js")
-    ? `module.exports = ${jsonContent};`
+    ? `module.exports = ${jsonContent.trim()};\n`
     : jsonContent;
   await fsp.writeFile(gmrcPath, fileContent);
 
