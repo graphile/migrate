@@ -14,7 +14,12 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
-import { getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
+
+interface WatchArgv extends CommonArgv {
+  once: boolean;
+  shadow: boolean;
+}
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
@@ -248,13 +253,7 @@ export async function watch(
   return _watch(parsedSettings, once, shadow);
 }
 
-export const watchCommand: CommandModule<
-  never,
-  {
-    once: boolean;
-    shadow: boolean;
-  }
-> = {
+export const watchCommand: CommandModule<never, WatchArgv> = {
   command: "watch",
   aliases: [],
   describe:
@@ -272,6 +271,10 @@ export const watchCommand: CommandModule<
     },
   },
   handler: async argv => {
-    await watch(await getSettings(), argv.once, argv.shadow);
+    await watch(
+      await getSettings({ configFile: argv.config }),
+      argv.once,
+      argv.shadow,
+    );
   },
 };

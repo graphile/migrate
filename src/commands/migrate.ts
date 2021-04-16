@@ -9,7 +9,12 @@ import {
 import { withClient } from "../pg";
 import { withAdvisoryLock } from "../pgReal";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
+
+interface MigrateArgv extends CommonArgv {
+  shadow: boolean;
+  forceActions: boolean;
+}
 
 export async function _migrate(
   parsedSettings: ParsedSettings,
@@ -83,13 +88,7 @@ export async function migrate(
   return _migrate(parsedSettings, shadow, forceActions);
 }
 
-export const migrateCommand: CommandModule<
-  never,
-  {
-    shadow: boolean;
-    forceActions: boolean;
-  }
-> = {
+export const migrateCommand: CommandModule<never, MigrateArgv> = {
   command: "migrate",
   aliases: [],
   describe:
@@ -108,6 +107,10 @@ export const migrateCommand: CommandModule<
     },
   },
   handler: async argv => {
-    await migrate(await getSettings(), argv.shadow, argv.forceActions);
+    await migrate(
+      await getSettings({ configFile: argv.config }),
+      argv.shadow,
+      argv.forceActions,
+    );
   },
 };

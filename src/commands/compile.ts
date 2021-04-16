@@ -3,7 +3,11 @@ import { CommandModule } from "yargs";
 
 import { compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
-import { getSettings, readStdin } from "./_common";
+import { CommonArgv, getSettings, readStdin } from "./_common";
+
+interface CompileArgv extends CommonArgv {
+  shadow?: boolean;
+}
 
 export async function compile(
   settings: Settings,
@@ -14,12 +18,7 @@ export async function compile(
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
-export const compileCommand: CommandModule<
-  {},
-  {
-    shadow?: boolean;
-  }
-> = {
+export const compileCommand: CommandModule<{}, CompileArgv> = {
   command: "compile [file]",
   aliases: [],
   describe: `\
@@ -32,7 +31,7 @@ Compiles a SQL file, inserting all the placeholders and returning the result to 
     },
   },
   handler: async argv => {
-    const settings = await getSettings();
+    const settings = await getSettings({ configFile: argv.config });
     const content =
       typeof argv.file === "string"
         ? await fsp.readFile(argv.file, "utf8")

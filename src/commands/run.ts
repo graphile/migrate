@@ -10,7 +10,13 @@ import {
   parseSettings,
   Settings,
 } from "../settings";
-import { getDatabaseName, getSettings, readStdin } from "./_common";
+import { CommonArgv, getDatabaseName, getSettings, readStdin } from "./_common";
+
+interface RunArgv extends CommonArgv {
+  shadow?: boolean;
+  root?: boolean;
+  rootDatabase?: boolean;
+}
 
 export async function run(
   settings: Settings,
@@ -50,14 +56,7 @@ export async function run(
   );
 }
 
-export const runCommand: CommandModule<
-  {},
-  {
-    shadow?: boolean;
-    root?: boolean;
-    rootDatabase?: boolean;
-  }
-> = {
+export const runCommand: CommandModule<{}, RunArgv> = {
   command: "run [file]",
   aliases: [],
   describe: `\
@@ -82,7 +81,7 @@ Compiles a SQL file, inserting all the placeholders, and then runs it against th
     },
   },
   handler: async argv => {
-    const defaultSettings = await getSettings();
+    const defaultSettings = await getSettings({ configFile: argv.config });
 
     // `run` might be called from an action; in this case `DATABASE_URL` will
     // be unavailable (overwritten with DO_NOT_USE_DATABASE_URL) to avoid

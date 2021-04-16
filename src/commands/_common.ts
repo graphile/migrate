@@ -1,11 +1,23 @@
 import { constants, promises as fsp } from "fs";
 import * as JSON5 from "json5";
+import { resolve } from "path";
 import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
 
-export const GMRC_PATH = `${process.cwd()}/.gmrc`;
-export const GMRCJS_PATH = `${GMRC_PATH}.js`;
+export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
+export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
+
+/**
+ * Represents the option flags that are valid for all commands (see
+ * src/cli.ts).
+ */
+export interface CommonArgv {
+  /**
+   * Optional path to the gmrc file.
+   */
+  config?: string;
+}
 
 export async function exists(path: string): Promise<boolean> {
   try {
@@ -30,20 +42,59 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   }
 }
 
-export async function getSettings(): Promise<Settings> {
-  if (await exists(GMRC_PATH)) {
-    return getSettingsFromJSON(GMRC_PATH);
-  } else if (await exists(GMRCJS_PATH)) {
+/**
+ * Options passed to the getSettings function.
+ */
+interface Options {
+  /**
+   * Optional path to the gmrc config path to use; if not provided we'll fall
+   * back to `./.gmrc` and `./.gmrc.js`.
+   *
+   * This must be the full path, including extension. If the extension is `.js`
+   * then we'll use `require` to import it, otherwise we'll read it as JSON5.
+   */
+  configFile?: string;
+}
+
+/**
+ * Gets the raw settings from the relevant .gmrc file. Does *not* validate the
+ * settings - the result of this call should not be trusted. Pass the result of
+ * this function to `parseSettings` to get validated settings.
+ */
+export async function getSettings(options: Options = {}): Promise<Settings> {
+  const { configFile } = options;
+  const tryRequire = (path: string): Settings => {
+    // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
+    // `node_modules`; we don't want this - instead force it to be a relative
+    // path.
+    const relativePath = resolve(process.cwd(), path);
+
     try {
-      return require(GMRCJS_PATH);
+      return require(relativePath);
     } catch (e) {
       throw new Error(
-        `Failed to import '${GMRCJS_PATH}'; error:\n    ${e.stack.replace(
+        `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
           /\n/g,
           "\n    ",
         )}`,
       );
     }
+  };
+
+  if (configFile != null) {
+    if (!(await exists(configFile))) {
+      throw new Error(`Failed to import '${configFile}': file not found`);
+    }
+
+    if (configFile.endsWith(".js")) {
+      return tryRequire(configFile);
+    } else {
+      return await getSettingsFromJSON(configFile);
+    }
+  } else if (await exists(DEFAULT_GMRC_PATH)) {
+    return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
+  } else if (await exists(DEFAULT_GMRCJS_PATH)) {
+    return tryRequire(DEFAULT_GMRCJS_PATH);
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",

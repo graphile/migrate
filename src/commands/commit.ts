@@ -17,9 +17,13 @@ import {
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
-import { getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
+
+interface CommitArgv extends CommonArgv {
+  message?: string;
+}
 
 function omit<T extends object, K extends keyof T>(
   obj: T,
@@ -128,12 +132,7 @@ export async function commit(
   return _commit(parsedSettings, message);
 }
 
-export const commitCommand: CommandModule<
-  never,
-  {
-    message?: string;
-  }
-> = {
+export const commitCommand: CommandModule<never, CommitArgv> = {
   command: "commit",
   aliases: [],
   describe:
@@ -151,6 +150,6 @@ export const commitCommand: CommandModule<
     if (argv.message !== undefined && !argv.message) {
       throw new Error("Missing or empty commit message after --message flag");
     }
-    await commit(await getSettings(), argv.message);
+    await commit(await getSettings({ configFile: argv.config }), argv.message);
   },
 };

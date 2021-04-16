@@ -6,19 +6,31 @@ import { CommandModule } from "yargs";
 import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
-import { exists, getSettings, GMRC_PATH, GMRCJS_PATH } from "./_common";
+import {
+  CommonArgv,
+  DEFAULT_GMRC_PATH,
+  DEFAULT_GMRCJS_PATH,
+  exists,
+  getSettings,
+} from "./_common";
 
-interface InitOptions {
+interface InitArgv extends CommonArgv {
   folder?: boolean;
 }
 
-export async function init(options: InitOptions = {}): Promise<void> {
-  if (await exists(GMRC_PATH)) {
-    throw new Error(`.gmrc file already exists at ${GMRC_PATH}`);
+export async function init(options: InitArgv = {}): Promise<void> {
+  if (await exists(DEFAULT_GMRC_PATH)) {
+    throw new Error(`.gmrc file already exists at ${DEFAULT_GMRC_PATH}`);
   }
-  if (await exists(GMRCJS_PATH)) {
-    throw new Error(`.gmrc.js file already exists at ${GMRCJS_PATH}`);
+  if (await exists(DEFAULT_GMRCJS_PATH)) {
+    throw new Error(`.gmrc.js file already exists at ${DEFAULT_GMRCJS_PATH}`);
   }
+  if (options.config && (await exists(options.config))) {
+    throw new Error(`.gmrc file already exists at ${options.config}`);
+  }
+
+  const gmrcPath = options.config || DEFAULT_GMRC_PATH;
+
   const dbStrings =
     process.env.DATABASE_URL &&
     process.env.SHADOW_DATABASE_URL &&
@@ -56,9 +68,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // "rootConnectionString": "postgres://adminuser:adminpassword@host:5432/postgres",
 `;
 
-  await fsp.writeFile(
-    GMRC_PATH,
-    `\
+  const initialComment = `\
 /*
  * Graphile Migrate configuration.
  *
@@ -69,7 +79,9 @@ export async function init(options: InitOptions = {}): Promise<void> {
  * This file is in JSON5 format, in VSCode you can use "JSON with comments" as
  * the file format.
  */
+`;
 
+  const jsonContent = `\
 {${dbStrings}
   /*
    * pgSettings: key-value settings to be automatically loaded into PostgreSQL
@@ -173,14 +185,18 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // migrationsFolder: "./migrations",
 
   "//generatedWith": "${version}"
-}
-`,
-  );
+}`;
+
+  const fileContent = gmrcPath.endsWith(".js")
+    ? `${initialComment}module.exports = ${jsonContent};\n`
+    : `${initialComment}${jsonContent}\n`;
+  await fsp.writeFile(gmrcPath, fileContent);
+
   // eslint-disable-next-line
   console.log(
-    `Template .gmrc file written to '${GMRC_PATH}'; please read and edit it to suit your needs.`,
+    `Template .gmrc file written to '${gmrcPath}'; please read and edit it to suit your needs.`,
   );
-  const settings = await getSettings();
+  const settings = await getSettings({ configFile: options.config });
   const parsedSettings = await parseSettings({
     connectionString: process.env.DATABASE_URL || "NOT_NEEDED",
     shadowConnectionString: process.env.SHADOW_DATABASE_URL || "NOT_NEEDED",
@@ -207,7 +223,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   );
 }
 
-export const initCommand: CommandModule<{}, InitOptions> = {
+export const initCommand: CommandModule<{}, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\
