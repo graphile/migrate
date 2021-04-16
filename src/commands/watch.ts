@@ -225,12 +225,16 @@ export async function _watch(
         pollInterval: 100,
       },
 
+      /*
+       * We don't want to run the queue too many times during startup; so we
+       * call it once on the 'ready' event.
+       */
       ignoreInitial: true,
     });
     watcher.on("add", queue);
     watcher.on("change", queue);
     watcher.on("unlink", queue);
-    queue();
+    watcher.once("ready", queue);
     return Promise.resolve();
   }
 }
