@@ -9,7 +9,9 @@ export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const DEFAULT_GMRCJS_PATH = makeGmrcJsPath(DEFAULT_GMRC_PATH);
 
 // Used to type `argv` in all commands
-export type ConfigOptions = { config?: string };
+export interface ConfigOptions {
+  config?: string;
+}
 
 export async function exists(path: string): Promise<boolean> {
   try {

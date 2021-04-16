@@ -7,13 +7,14 @@ import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
 import {
+  ConfigOptions,
   DEFAULT_GMRC_PATH,
   DEFAULT_GMRCJS_PATH,
   exists,
   getSettings,
 } from "./_common";
 
-interface InitOptions {
+interface InitOptions extends ConfigOptions {
   folder?: boolean;
 }
 
@@ -24,6 +25,12 @@ export async function init(options: InitOptions = {}): Promise<void> {
   if (await exists(DEFAULT_GMRCJS_PATH)) {
     throw new Error(`.gmrc.js file already exists at ${DEFAULT_GMRCJS_PATH}`);
   }
+  if (options.config && (await exists(options.config))) {
+    throw new Error(`.gmrc file already exists at ${options.config}`);
+  }
+
+  const gmrcPath = options.config || DEFAULT_GMRC_PATH;
+
   const dbStrings =
     process.env.DATABASE_URL &&
     process.env.SHADOW_DATABASE_URL &&
@@ -61,9 +68,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // "rootConnectionString": "postgres://adminuser:adminpassword@host:5432/postgres",
 `;
 
-  await fsp.writeFile(
-    DEFAULT_GMRC_PATH,
-    `\
+  const jsonContent = `\
 /*
  * Graphile Migrate configuration.
  *
@@ -179,13 +184,18 @@ export async function init(options: InitOptions = {}): Promise<void> {
 
   "//generatedWith": "${version}"
 }
-`,
-  );
+`;
+
+  const fileContent = gmrcPath.endsWith(".js")
+    ? `module.exports = ${jsonContent};`
+    : jsonContent;
+  await fsp.writeFile(gmrcPath, fileContent);
+
   // eslint-disable-next-line
   console.log(
-    `Template .gmrc file written to '${DEFAULT_GMRC_PATH}'; please read and edit it to suit your needs.`,
+    `Template .gmrc file written to '${gmrcPath}'; please read and edit it to suit your needs.`,
   );
-  const settings = await getSettings();
+  const settings = await getSettings({ configFile: options.config });
   const parsedSettings = await parseSettings({
     connectionString: process.env.DATABASE_URL || "NOT_NEEDED",
     shadowConnectionString: process.env.SHADOW_DATABASE_URL || "NOT_NEEDED",
