@@ -226,7 +226,7 @@ Options:
   --help        Show help                                              [boolean]
   --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
 
-You are running graphile-migrate v1.0.2.
+You are running graphile-migrate v1.1.0.
 ```
 
 
