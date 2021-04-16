@@ -3,9 +3,9 @@ import { CommandModule } from "yargs";
 
 import { compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
-import { ConfigOptions, getSettings, readStdin } from "./_common";
+import { CommonOptions, getSettings, readStdin } from "./_common";
 
-interface CompileOptions extends ConfigOptions {
+interface CompileOptions extends CommonOptions {
   shadow?: boolean;
 }
 

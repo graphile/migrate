@@ -11,13 +11,13 @@ import {
   Settings,
 } from "../settings";
 import {
-  ConfigOptions,
+  CommonOptions,
   getDatabaseName,
   getSettings,
   readStdin,
 } from "./_common";
 
-interface RunOptions extends ConfigOptions {
+interface RunOptions extends CommonOptions {
   shadow?: boolean;
   root?: boolean;
   rootDatabase?: boolean;

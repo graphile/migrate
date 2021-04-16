@@ -78,6 +78,7 @@ yargs
   .command(wrapHandler(compileCommand))
   .command(wrapHandler(runCommand))
 
+  // Make sure options added here are represented in CommonOptions
   .option("config", {
     alias: "c",
     type: "string",

@@ -9,9 +9,9 @@ import {
 import { withClient } from "../pg";
 import { withAdvisoryLock } from "../pgReal";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { ConfigOptions, getSettings } from "./_common";
+import { CommonOptions, getSettings } from "./_common";
 
-interface MigrateOptions extends ConfigOptions {
+interface MigrateOptions extends CommonOptions {
   shadow: boolean;
   forceActions: boolean;
 }

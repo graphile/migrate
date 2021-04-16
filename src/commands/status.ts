@@ -5,9 +5,9 @@ import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { ConfigOptions, getSettings } from "./_common";
+import { CommonOptions, getSettings } from "./_common";
 
-interface StatusOptions extends ConfigOptions {
+interface StatusOptions extends CommonOptions {
   skipDatabase?: boolean;
 }
 

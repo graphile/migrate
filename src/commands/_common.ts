@@ -8,8 +8,14 @@ export const makeGmrcJsPath = (gmrcPath: string): string => `${gmrcPath}.js`;
 export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const DEFAULT_GMRCJS_PATH = makeGmrcJsPath(DEFAULT_GMRC_PATH);
 
-// Used to type `argv` in all commands
-export interface ConfigOptions {
+/**
+ * Represents the option flags that are valid for all commands (see
+ * src/cli.ts).
+ */
+export interface CommonOptions {
+  /**
+   * Optional path to the gmrc file.
+   */
   config?: string;
 }
 

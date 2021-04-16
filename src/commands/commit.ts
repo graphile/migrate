@@ -17,11 +17,11 @@ import {
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
-import { ConfigOptions, getSettings } from "./_common";
+import { CommonOptions, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
-interface CommitOptions extends ConfigOptions {
+interface CommitOptions extends CommonOptions {
   message?: string;
 }
 

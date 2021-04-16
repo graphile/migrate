@@ -7,14 +7,14 @@ import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
 import {
-  ConfigOptions,
+  CommonOptions,
   DEFAULT_GMRC_PATH,
   DEFAULT_GMRCJS_PATH,
   exists,
   getSettings,
 } from "./_common";
 
-interface InitOptions extends ConfigOptions {
+interface InitOptions extends CommonOptions {
   folder?: boolean;
 }
 

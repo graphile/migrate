@@ -14,9 +14,9 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
-import { ConfigOptions, getSettings } from "./_common";
+import { CommonOptions, getSettings } from "./_common";
 
-interface WatchOptions extends ConfigOptions {
+interface WatchOptions extends CommonOptions {
   once: boolean;
   shadow: boolean;
 }

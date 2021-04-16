@@ -3,10 +3,10 @@ import { CommandModule } from "yargs";
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { ConfigOptions, getSettings } from "./_common";
+import { CommonOptions, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
-interface ResetOptions extends ConfigOptions {
+interface ResetOptions extends CommonOptions {
   shadow: boolean;
   erase: boolean;
 }
