@@ -37,8 +37,6 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
 export async function getSettings({
   configFile,
 }: { configFile?: string } = {}): Promise<Settings> {
-  let settings: Settings;
-
   const tryRequire = (path: string): Settings => {
     try {
       return require(path);
@@ -58,21 +56,19 @@ export async function getSettings({
     }
 
     if (configFile.endsWith(".js")) {
-      settings = tryRequire(configFile);
+      return tryRequire(configFile);
     } else {
-      settings = await getSettingsFromJSON(configFile);
+      return await getSettingsFromJSON(configFile);
     }
   } else if (await exists(DEFAULT_GMRC_PATH)) {
-    settings = await getSettingsFromJSON(DEFAULT_GMRC_PATH);
+    return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
   } else if (await exists(DEFAULT_GMRCJS_PATH)) {
-    settings = tryRequire(DEFAULT_GMRCJS_PATH);
+    return tryRequire(DEFAULT_GMRCJS_PATH);
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
     );
   }
-
-  return settings;
 }
 
 export function readStdin(): Promise<string> {
