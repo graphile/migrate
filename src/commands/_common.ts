@@ -1,5 +1,6 @@
 import { constants, promises as fsp } from "fs";
 import * as JSON5 from "json5";
+import { resolve } from "path";
 import { parse } from "pg-connection-string";
 
 import { Settings } from "../settings";
@@ -46,11 +47,16 @@ export async function getSettings({
   configFile,
 }: { configFile?: string } = {}): Promise<Settings> {
   const tryRequire = (path: string): Settings => {
+    // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
+    // `node_modules`; we don't want this - instead force it to be a relative
+    // path.
+    const relativePath = resolve(process.cwd(), path);
+
     try {
-      return require(path);
+      return require(relativePath);
     } catch (e) {
       throw new Error(
-        `Failed to import '${path}'; error:\n    ${e.stack.replace(
+        `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
           /\n/g,
           "\n    ",
         )}`,
