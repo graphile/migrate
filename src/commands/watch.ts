@@ -16,6 +16,11 @@ import {
 } from "../current";
 import { ConfigOptions, getSettings } from "./_common";
 
+interface WatchOptions extends ConfigOptions {
+  once: boolean;
+  shadow: boolean;
+}
+
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
   _once = false,
@@ -240,13 +245,7 @@ export async function watch(
   return _watch(parsedSettings, once, shadow);
 }
 
-export const watchCommand: CommandModule<
-  never,
-  {
-    once: boolean;
-    shadow: boolean;
-  } & ConfigOptions
-> = {
+export const watchCommand: CommandModule<never, WatchOptions> = {
   command: "watch",
   aliases: [],
   describe:

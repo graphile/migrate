@@ -5,6 +5,10 @@ import { compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
 import { ConfigOptions, getSettings, readStdin } from "./_common";
 
+interface CompileOptions extends ConfigOptions {
+  shadow?: boolean;
+}
+
 export async function compile(
   settings: Settings,
   content: string,
@@ -14,12 +18,7 @@ export async function compile(
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
-export const compileCommand: CommandModule<
-  {},
-  {
-    shadow?: boolean;
-  } & ConfigOptions
-> = {
+export const compileCommand: CommandModule<{}, CompileOptions> = {
   command: "compile [file]",
   aliases: [],
   describe: `\

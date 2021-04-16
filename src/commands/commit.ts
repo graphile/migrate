@@ -21,6 +21,10 @@ import { ConfigOptions, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
+interface CommitOptions extends ConfigOptions {
+  message?: string;
+}
+
 function omit<T extends object, K extends keyof T>(
   obj: T,
   keys: K[],
@@ -128,12 +132,7 @@ export async function commit(
   return _commit(parsedSettings, message);
 }
 
-export const commitCommand: CommandModule<
-  never,
-  {
-    message?: string;
-  } & ConfigOptions
-> = {
+export const commitCommand: CommandModule<never, CommitOptions> = {
   command: "commit",
   aliases: [],
   describe:

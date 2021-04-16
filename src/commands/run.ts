@@ -17,6 +17,12 @@ import {
   readStdin,
 } from "./_common";
 
+interface RunOptions extends ConfigOptions {
+  shadow?: boolean;
+  root?: boolean;
+  rootDatabase?: boolean;
+}
+
 export async function run(
   settings: Settings,
   content: string,
@@ -55,14 +61,7 @@ export async function run(
   );
 }
 
-export const runCommand: CommandModule<
-  {},
-  {
-    shadow?: boolean;
-    root?: boolean;
-    rootDatabase?: boolean;
-  } & ConfigOptions
-> = {
+export const runCommand: CommandModule<{}, RunOptions> = {
   command: "run [file]",
   aliases: [],
   describe: `\

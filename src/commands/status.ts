@@ -7,13 +7,13 @@ import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { ConfigOptions, getSettings } from "./_common";
 
+interface StatusOptions extends ConfigOptions {
+  skipDatabase?: boolean;
+}
+
 interface Status {
   remainingMigrations?: Array<string>;
   hasCurrentMigration: boolean;
-}
-
-interface StatusOptions {
-  skipDatabase?: boolean;
 }
 
 async function _status(
@@ -60,10 +60,7 @@ export async function status(
   return _status(parsedSettings, options);
 }
 
-export const statusCommand: CommandModule<
-  never,
-  StatusOptions & ConfigOptions
-> = {
+export const statusCommand: CommandModule<never, StatusOptions> = {
   command: "status",
   aliases: [],
   describe: `\

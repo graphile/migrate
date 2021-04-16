@@ -9,7 +9,12 @@ import {
 import { withClient } from "../pg";
 import { withAdvisoryLock } from "../pgReal";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { getSettings } from "./_common";
+import { ConfigOptions, getSettings } from "./_common";
+
+interface MigrateOptions extends ConfigOptions {
+  shadow: boolean;
+  forceActions: boolean;
+}
 
 export async function _migrate(
   parsedSettings: ParsedSettings,
@@ -83,14 +88,7 @@ export async function migrate(
   return _migrate(parsedSettings, shadow, forceActions);
 }
 
-export const migrateCommand: CommandModule<
-  never,
-  {
-    config: string;
-    shadow: boolean;
-    forceActions: boolean;
-  }
-> = {
+export const migrateCommand: CommandModule<never, MigrateOptions> = {
   command: "migrate",
   aliases: [],
   describe:

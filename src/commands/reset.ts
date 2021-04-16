@@ -6,6 +6,11 @@ import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { ConfigOptions, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
+interface ResetOptions extends ConfigOptions {
+  shadow: boolean;
+  erase: boolean;
+}
+
 export async function _reset(
   parsedSettings: ParsedSettings,
   shadow: boolean,
@@ -59,13 +64,7 @@ export async function reset(settings: Settings, shadow = false): Promise<void> {
   return _reset(parsedSettings, shadow);
 }
 
-export const resetCommand: CommandModule<
-  never,
-  {
-    shadow: boolean;
-    erase: boolean;
-  } & ConfigOptions
-> = {
+export const resetCommand: CommandModule<never, ResetOptions> = {
   command: "reset",
   aliases: [],
   describe:
