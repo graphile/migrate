@@ -10,14 +10,9 @@ import {
   parseSettings,
   Settings,
 } from "../settings";
-import {
-  CommonOptions,
-  getDatabaseName,
-  getSettings,
-  readStdin,
-} from "./_common";
+import { CommonArgv, getDatabaseName, getSettings, readStdin } from "./_common";
 
-interface RunOptions extends CommonOptions {
+interface RunArgv extends CommonArgv {
   shadow?: boolean;
   root?: boolean;
   rootDatabase?: boolean;
@@ -61,7 +56,7 @@ export async function run(
   );
 }
 
-export const runCommand: CommandModule<{}, RunOptions> = {
+export const runCommand: CommandModule<{}, RunArgv> = {
   command: "run [file]",
   aliases: [],
   describe: `\

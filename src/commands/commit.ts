@@ -17,11 +17,11 @@ import {
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
-import { CommonOptions, getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
-interface CommitOptions extends CommonOptions {
+interface CommitArgv extends CommonArgv {
   message?: string;
 }
 
@@ -132,7 +132,7 @@ export async function commit(
   return _commit(parsedSettings, message);
 }
 
-export const commitCommand: CommandModule<never, CommitOptions> = {
+export const commitCommand: CommandModule<never, CommitArgv> = {
   command: "commit",
   aliases: [],
   describe:

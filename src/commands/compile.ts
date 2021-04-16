@@ -3,9 +3,9 @@ import { CommandModule } from "yargs";
 
 import { compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
-import { CommonOptions, getSettings, readStdin } from "./_common";
+import { CommonArgv, getSettings, readStdin } from "./_common";
 
-interface CompileOptions extends CommonOptions {
+interface CompileArgv extends CommonArgv {
   shadow?: boolean;
 }
 
@@ -18,7 +18,7 @@ export async function compile(
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
-export const compileCommand: CommandModule<{}, CompileOptions> = {
+export const compileCommand: CommandModule<{}, CompileArgv> = {
   command: "compile [file]",
   aliases: [],
   describe: `\

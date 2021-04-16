@@ -12,7 +12,7 @@ export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
  * Represents the option flags that are valid for all commands (see
  * src/cli.ts).
  */
-export interface CommonOptions {
+export interface CommonArgv {
   /**
    * Optional path to the gmrc file.
    */

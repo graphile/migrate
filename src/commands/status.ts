@@ -5,11 +5,13 @@ import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import { withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { CommonOptions, getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 
-interface StatusOptions extends CommonOptions {
+interface StatusOptions {
   skipDatabase?: boolean;
 }
+
+interface StatusArgv extends StatusOptions, CommonArgv {}
 
 interface Status {
   remainingMigrations?: Array<string>;
@@ -60,7 +62,7 @@ export async function status(
   return _status(parsedSettings, options);
 }
 
-export const statusCommand: CommandModule<never, StatusOptions> = {
+export const statusCommand: CommandModule<never, StatusArgv> = {
   command: "status",
   aliases: [],
   describe: `\
@@ -81,9 +83,10 @@ are true, exit status will be 0 (success). Additional messages may also be outpu
   handler: async argv => {
     /* eslint-disable no-console */
     let exitCode = 0;
+    const { config, ...options } = argv;
     const details = await status(
-      await getSettings({ configFile: argv.config }),
-      argv,
+      await getSettings({ configFile: config }),
+      options,
     );
     if (details.remainingMigrations) {
       const remainingCount = details.remainingMigrations?.length;

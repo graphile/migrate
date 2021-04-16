@@ -3,10 +3,10 @@ import { CommandModule } from "yargs";
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { CommonOptions, getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
-interface ResetOptions extends CommonOptions {
+interface ResetArgv extends CommonArgv {
   shadow: boolean;
   erase: boolean;
 }
@@ -64,7 +64,7 @@ export async function reset(settings: Settings, shadow = false): Promise<void> {
   return _reset(parsedSettings, shadow);
 }
 
-export const resetCommand: CommandModule<never, ResetOptions> = {
+export const resetCommand: CommandModule<never, ResetArgv> = {
   command: "reset",
   aliases: [],
   describe:

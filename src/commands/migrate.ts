@@ -9,9 +9,9 @@ import {
 import { withClient } from "../pg";
 import { withAdvisoryLock } from "../pgReal";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { CommonOptions, getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 
-interface MigrateOptions extends CommonOptions {
+interface MigrateArgv extends CommonArgv {
   shadow: boolean;
   forceActions: boolean;
 }
@@ -88,7 +88,7 @@ export async function migrate(
   return _migrate(parsedSettings, shadow, forceActions);
 }
 
-export const migrateCommand: CommandModule<never, MigrateOptions> = {
+export const migrateCommand: CommandModule<never, MigrateArgv> = {
   command: "migrate",
   aliases: [],
   describe:

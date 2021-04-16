@@ -7,18 +7,18 @@ import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
 import {
-  CommonOptions,
+  CommonArgv,
   DEFAULT_GMRC_PATH,
   DEFAULT_GMRCJS_PATH,
   exists,
   getSettings,
 } from "./_common";
 
-interface InitOptions extends CommonOptions {
+interface InitArgv extends CommonArgv {
   folder?: boolean;
 }
 
-export async function init(options: InitOptions = {}): Promise<void> {
+export async function init(options: InitArgv = {}): Promise<void> {
   if (await exists(DEFAULT_GMRC_PATH)) {
     throw new Error(`.gmrc file already exists at ${DEFAULT_GMRC_PATH}`);
   }
@@ -223,7 +223,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   );
 }
 
-export const initCommand: CommandModule<{}, InitOptions> = {
+export const initCommand: CommandModule<{}, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\

@@ -14,7 +14,7 @@ import {
   undoMigration,
 } from "../migration";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { CommonOptions, getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
 
@@ -64,7 +64,7 @@ export async function uncommit(settings: Settings): Promise<void> {
   return _uncommit(parsedSettings);
 }
 
-export const uncommitCommand: CommandModule<never, CommonOptions> = {
+export const uncommitCommand: CommandModule<never, CommonArgv> = {
   command: "uncommit",
   aliases: [],
   describe:

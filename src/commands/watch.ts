@@ -14,9 +14,9 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
-import { CommonOptions, getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 
-interface WatchOptions extends CommonOptions {
+interface WatchArgv extends CommonArgv {
   once: boolean;
   shadow: boolean;
 }
@@ -253,7 +253,7 @@ export async function watch(
   return _watch(parsedSettings, once, shadow);
 }
 
-export const watchCommand: CommandModule<never, WatchOptions> = {
+export const watchCommand: CommandModule<never, WatchArgv> = {
   command: "watch",
   aliases: [],
   describe:
