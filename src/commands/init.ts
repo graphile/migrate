@@ -68,7 +68,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // "rootConnectionString": "postgres://adminuser:adminpassword@host:5432/postgres",
 `;
 
-  const jsonContent = `\
+  const initialComment = `\
 /*
  * Graphile Migrate configuration.
  *
@@ -79,7 +79,9 @@ export async function init(options: InitOptions = {}): Promise<void> {
  * This file is in JSON5 format, in VSCode you can use "JSON with comments" as
  * the file format.
  */
+`;
 
+  const jsonContent = `\
 {${dbStrings}
   /*
    * pgSettings: key-value settings to be automatically loaded into PostgreSQL
@@ -183,12 +185,11 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // migrationsFolder: "./migrations",
 
   "//generatedWith": "${version}"
-}
-`;
+}`;
 
   const fileContent = gmrcPath.endsWith(".js")
-    ? `module.exports = ${jsonContent.trim()};\n`
-    : jsonContent;
+    ? `${initialComment}module.exports = ${jsonContent};\n`
+    : `${initialComment}${jsonContent}\n`;
   await fsp.writeFile(gmrcPath, fileContent);
 
   // eslint-disable-next-line
