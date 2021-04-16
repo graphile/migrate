@@ -81,7 +81,8 @@ yargs
   .option("config", {
     alias: "c",
     type: "string",
-    description: "Optional path to .gmrc(.js) - default is `${pwd}.gmrc`",
+    description: "Optional path to gmrc file",
+    defaultDescription: ".gmrc[.js]",
   })
 
   .completion("completion", "Generate shell completion script.")
