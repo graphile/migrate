@@ -117,7 +117,7 @@ describe.each([[undefined], ["My Commit Message"]])(
     it("can commit multi-file migration", async () => {
       mockFs({
         [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
-        "migrations/current": MIGRATION_MULTIFILE_FILES,
+        ...MIGRATION_MULTIFILE_FILES,
       });
 
       await commit(settings, commitMessage);
@@ -138,7 +138,7 @@ describe.each([[undefined], ["My Commit Message"]])(
     it("throws on invalid message", async () => {
       mockFs({
         [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
-        "migrations/current": MIGRATION_MULTIFILE_FILES,
+        ...MIGRATION_MULTIFILE_FILES,
       });
 
       const promise = commit(
