@@ -36,11 +36,17 @@ export async function _reset(
       console.log(
         `graphile-migrate${logSuffix}: dropped database '${databaseName}'`,
       );
-      await pgClient.query(
-        `CREATE DATABASE ${escapeIdentifier(
-          databaseName,
-        )} OWNER ${escapeIdentifier(databaseOwner)};`,
-      );
+      try {
+        await pgClient.query(
+          `CREATE DATABASE ${escapeIdentifier(
+            databaseName,
+          )} OWNER ${escapeIdentifier(databaseOwner)};`,
+        );
+      } catch (e) {
+        throw new Error(
+          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e.message}`,
+        );
+      }
       await pgClient.query(
         `REVOKE ALL ON DATABASE ${escapeIdentifier(databaseName)} FROM PUBLIC;`,
       );
