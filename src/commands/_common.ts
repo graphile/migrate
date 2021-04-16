@@ -43,9 +43,27 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   }
 }
 
-export async function getSettings({
-  configFile,
-}: { configFile?: string } = {}): Promise<Settings> {
+/**
+ * Options passed to the getSettings function.
+ */
+interface Options {
+  /**
+   * Optional path to the gmrc config path to use; if not provided we'll fall
+   * back to `./.gmrc` and `./.gmrc.js`.
+   *
+   * This must be the full path, including extension. If the extension is `.js`
+   * then we'll use `require` to import it, otherwise we'll read it as JSON5.
+   */
+  configFile?: string;
+}
+
+/**
+ * Gets the raw settings from the relevant .gmrc file. Does *not* validate the
+ * settings - the result of this call should not be trusted. Pass the result of
+ * this function to `parseSettings` to get validated settings.
+ */
+export async function getSettings(options: Options = {}): Promise<Settings> {
+  const { configFile } = options;
   const tryRequire = (path: string): Settings => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
