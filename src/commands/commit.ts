@@ -1,5 +1,4 @@
 import pgMinify = require("pg-minify");
-import { Console } from "console";
 import { promises as fsp } from "fs";
 import { CommandModule } from "yargs";
 
@@ -101,7 +100,7 @@ export async function _commit(
   await fsp.writeFile(newMigrationFilepath, finalBody);
   await fsp.chmod(newMigrationFilepath, "440");
 
-  parsedSettings.logger.log(
+  parsedSettings.logger.info(
     `graphile-migrate: New migration '${newMigrationFilename}' created`,
   );
   try {
@@ -113,7 +112,7 @@ export async function _commit(
       parsedSettings.blankMigrationContent.trim() + "\n",
     );
   } catch (e) {
-    if (parsedSettings.logger instanceof Console) {
+    if (!parsedSettings.logFactory) {
       logDbError(e);
     }
 

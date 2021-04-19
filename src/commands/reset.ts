@@ -37,7 +37,7 @@ export async function _reset(
       await pgClient.query(
         `DROP DATABASE IF EXISTS ${escapeIdentifier(databaseName)};`,
       );
-      parsedSettings.logger.log(
+      parsedSettings.logger.info(
         `graphile-migrate${logSuffix}: dropped database '${databaseName}'`,
       );
       try {
@@ -54,7 +54,7 @@ export async function _reset(
       await pgClient.query(
         `REVOKE ALL ON DATABASE ${escapeIdentifier(databaseName)} FROM PUBLIC;`,
       );
-      parsedSettings.logger.log(
+      parsedSettings.logger.info(
         `graphile-migrate${logSuffix}: recreated database '${databaseName}'`,
       );
     },

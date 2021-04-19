@@ -151,6 +151,11 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+"@graphile/logger@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@graphile/logger/-/logger-0.2.0.tgz#e484ec420162157c6e6f0cfb080fa29ef3a714ba"
+  integrity sha512-jjcWBokl9eb1gVJ85QmoaQ73CQ52xAaOCF29ukRbYNl6lY+ts0ErTaDYOBlejcbUs2OpaiqYLO5uDhyLFzWw4w==
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.0.0.tgz#10602de5570baea82f8afbfa2630b24e7a8cfe5b"

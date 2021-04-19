@@ -64,7 +64,7 @@ export async function _migrate(
             parsedSettings.afterAllMigrations,
           );
         }
-        parsedSettings.logger.log(
+        parsedSettings.logger.info(
           `graphile-migrate${logSuffix}: ${
             remainingMigrations.length > 0
               ? `${remainingMigrations.length} committed migrations executed`

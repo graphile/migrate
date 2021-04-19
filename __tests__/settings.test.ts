@@ -6,7 +6,6 @@ import * as path from "path";
 import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
 import {
   makeRootDatabaseConnectionString,
-  MigrateLogger,
   ParsedSettings,
   parseSettings,
 } from "../src/settings";
@@ -15,12 +14,6 @@ function sanitise(parsedSettings: ParsedSettings) {
   parsedSettings.migrationsFolder =
     "./" + path.relative(process.cwd(), parsedSettings.migrationsFolder);
 }
-
-const exampleLogger: MigrateLogger = {
-  log: () => {},
-  error: () => {},
-  warn: () => {},
-};
 
 const exampleConnectionString = "postgres://localhost:5432/dbname?ssl=true";
 it("parses basic config", async () => {
@@ -84,23 +77,22 @@ it("throws if shadow attempted but no shadow DB", async () => {
         `);
 });
 
-it.each([
-  [[]],
-  [{}],
-  [{ log: (message: string) => message, error: (message: string) => message }],
-])("throws error for invalid logger", async logger => {
-  await expect(
-    parseSettings({
-      connectionString: exampleConnectionString,
-      rootConnectionString: "notthesamestring1",
-      shadowConnectionString: "notthesamestring2",
-      logger: logger as any,
-    }),
-  ).rejects.toMatchInlineSnapshot(`
+it.each([[[]], [{}], ["test"]])(
+  "throws error for invalid logger",
+  async factory => {
+    await expect(
+      parseSettings({
+        connectionString: exampleConnectionString,
+        rootConnectionString: "notthesamestring1",
+        shadowConnectionString: "notthesamestring2",
+        logFactory: factory as any,
+      }),
+    ).rejects.toMatchInlineSnapshot(`
           [Error: Errors occurred during settings validation:
-          - Setting 'logger': Expected an object with log, error, and warn functions]
+          - Setting 'logFactory': Expected a function]
         `);
-});
+  },
+);
 
 describe("makeRootDatabaseConnectionString", () => {
   it("modifies the database name", async () => {
@@ -192,7 +184,6 @@ describe("makeRootDatabaseConnectionString", () => {
 describe("actions", () => {
   it("parses string values into SQL actions", async () => {
     const parsedSettings = await parseSettings({
-      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterReset: "foo.sql",
       afterAllMigrations: ["bar.sql", "baz.sql"],
@@ -209,7 +200,6 @@ describe("actions", () => {
 
   it("parses SQL actions", async () => {
     const parsedSettings = await parseSettings({
-      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterReset: "foo.sql",
       afterAllMigrations: [
@@ -229,7 +219,6 @@ describe("actions", () => {
 
   it("parses command actions", async () => {
     const parsedSettings = await parseSettings({
-      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterAllMigrations: [
         { _: "command", command: "pg_dump --schema-only" },
@@ -248,7 +237,6 @@ describe("actions", () => {
 
   it("parses mixed actions", async () => {
     const parsedSettings = await parseSettings({
-      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterAllMigrations: [
         "foo.sql",
@@ -271,7 +259,6 @@ describe("actions", () => {
 
   it("is backwards-compatible with untagged command specs", async () => {
     const parsedSettings = await parseSettings({
-      logger: exampleLogger,
       connectionString: exampleConnectionString,
       afterAllMigrations: [
         "foo.sql",

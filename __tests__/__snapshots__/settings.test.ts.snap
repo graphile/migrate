@@ -30,10 +30,10 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
-  "logger": Object {
-    "error": [Function],
+  "logger": Logger {
+    "_logFactory": [Function],
+    "_scope": Object {},
     "log": [Function],
-    "warn": [Function],
   },
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
@@ -71,10 +71,10 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
-  "logger": Object {
-    "error": [Function],
+  "logger": Logger {
+    "_logFactory": [Function],
+    "_scope": Object {},
     "log": [Function],
-    "warn": [Function],
   },
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
@@ -107,10 +107,10 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
-  "logger": Object {
-    "error": [Function],
+  "logger": Logger {
+    "_logFactory": [Function],
+    "_scope": Object {},
     "log": [Function],
-    "warn": [Function],
   },
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
@@ -151,10 +151,10 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
-  "logger": Object {
-    "error": [Function],
+  "logger": Logger {
+    "_logFactory": [Function],
+    "_scope": Object {},
     "log": [Function],
-    "warn": [Function],
   },
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
@@ -192,10 +192,10 @@ Object {
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
-  "logger": Object {
-    "error": [Function],
+  "logger": Logger {
+    "_logFactory": [Function],
+    "_scope": Object {},
     "log": [Function],
-    "warn": [Function],
   },
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",

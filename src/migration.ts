@@ -472,7 +472,7 @@ export async function runCommittedMigration(
       `Hash for ${realFilename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`,
     );
   }
-  parsedSettings.logger.log(
+  parsedSettings.logger.info(
     `graphile-migrate${logSuffix}: Running migration '${realFilename}'`,
   );
   await runStringMigration(

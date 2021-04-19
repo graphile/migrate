@@ -1,3 +1,4 @@
+import { Logger } from "@graphile/logger";
 import { parse } from "pg-connection-string";
 import * as querystring from "querystring";
 import { format as formatURL, parse as parseURL } from "url";
@@ -8,14 +9,9 @@ import {
   makeValidateActionCallback,
   SqlActionSpec,
 } from "./actions";
+import { MigrateLogFactory, migrateLogFactory } from "./logger";
 
 export type Actions = string | Array<string | ActionSpec>;
-
-export interface MigrateLogger {
-  log(message: string): void;
-  error(message: string, error?: Error): void;
-  warn(message: string): void;
-}
 
 export function isActionSpec(o: unknown): o is ActionSpec {
   if (!(typeof o === "object" && o && typeof o["_"] === "string")) {
@@ -87,7 +83,7 @@ export interface Settings {
   beforeCurrent?: Actions;
   afterCurrent?: Actions;
   blankMigrationContent?: string;
-  logger?: MigrateLogger;
+  logFactory?: MigrateLogFactory;
 }
 
 // NOTE: only override values that differ (e.g. changing non-nullability)
@@ -105,7 +101,7 @@ export interface ParsedSettings extends Settings {
   beforeCurrent: ActionSpec[];
   afterCurrent: ActionSpec[];
   blankMigrationContent: string;
-  logger: MigrateLogger;
+  logger: Logger;
 }
 
 export async function parseSettings(
@@ -147,23 +143,17 @@ export async function parseSettings(
     },
   );
 
-  const logger = await check(
-    "logger",
-    (logger = console): MigrateLogger => {
-      const typedLogger = logger as MigrateLogger;
-      if (
-        typeof logger !== "object" ||
-        !("log" in typedLogger && typeof typedLogger.log === "function") ||
-        !("error" in typedLogger && typeof typedLogger.error === "function") ||
-        !("warn" in typedLogger && typeof typedLogger.warn === "function")
-      ) {
-        throw new Error(
-          "Expected an object with log, error, and warn functions",
-        );
+  const logFactory = await check(
+    "logFactory",
+    (logFactory: MigrateLogFactory): MigrateLogFactory => {
+      const factory = logFactory ?? migrateLogFactory;
+      if (typeof factory !== "function") {
+        throw new Error("Expected a function");
       }
-      return typedLogger;
+      return factory;
     },
   );
+  const logger = new Logger(logFactory);
 
   const rootConnectionString = await check(
     "rootConnectionString",

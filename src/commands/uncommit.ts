@@ -51,7 +51,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   await fsp.unlink(lastMigrationFilepath);
   await undoMigration(parsedSettings, lastMigration);
 
-  parsedSettings.logger.log(
+  parsedSettings.logger.info(
     `graphile-migrate: migration '${lastMigrationFilepath}' undone`,
   );
 

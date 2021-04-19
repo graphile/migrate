@@ -1,7 +1,8 @@
+import { Logger } from "@graphile/logger";
 import { Pool, PoolClient } from "pg";
 import { parse } from "pg-connection-string";
 
-import { MigrateLogger, ParsedSettings } from "./settings";
+import { ParsedSettings } from "./settings";
 
 export interface Context {
   database: string;
@@ -38,7 +39,7 @@ export function clearAllPools(): void {
 
 function getPoolDetailsFromConnectionString(
   connectionString: string,
-  logger: MigrateLogger = console,
+  logger: Logger,
 ): PoolDetails {
   let details:
     | PoolDetailsInternal
@@ -49,8 +50,8 @@ function getPoolDetailsFromConnectionString(
       throw new Error("Connection string does not specify a database");
     }
     const pool = new Pool({ connectionString });
-    pool.on("error", (err: Error) => {
-      logger.error("An error occurred in the PgPool", err);
+    pool.on("error", (error: Error) => {
+      logger.error("An error occurred in the PgPool", { error });
       process.exit(1);
     });
 

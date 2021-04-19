@@ -1,3 +1,4 @@
+import { Logger } from "@graphile/logger";
 import { exec as rawExec } from "child_process";
 import { promises as fsp } from "fs";
 import { parse } from "pg-connection-string";
@@ -11,7 +12,6 @@ import {
   isCommandActionSpec,
   isSqlActionSpec,
   makeRootDatabaseConnectionString,
-  MigrateLogger,
   ParsedSettings,
 } from "./settings";
 
@@ -116,7 +116,7 @@ export async function executeActions(
         maxBuffer: 50 * 1024 * 1024,
       });
       if (stdout) {
-        parsedSettings.logger.log(stdout);
+        parsedSettings.logger.info(stdout);
       }
       if (stderr) {
         parsedSettings.logger.error(stderr);
@@ -125,10 +125,7 @@ export async function executeActions(
   }
 }
 
-export function makeValidateActionCallback(
-  logger: MigrateLogger = console,
-  allowRoot = false,
-) {
+export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
   return async (inputValue: unknown): Promise<ActionSpec[]> => {
     const specs: ActionSpec[] = [];
     if (inputValue) {

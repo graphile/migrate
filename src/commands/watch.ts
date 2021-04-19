@@ -7,7 +7,6 @@ import { withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import pgMinify = require("pg-minify");
-import { Console } from "console";
 import { CommandModule } from "yargs";
 
 import {
@@ -33,7 +32,7 @@ export function _makeCurrentMigrationRunner(
     let migrationsAreEquivalent = false;
 
     try {
-      parsedSettings.logger.log(
+      parsedSettings.logger.info(
         `[${new Date().toISOString()}]: Running current.sql`,
       );
       const start = process.hrtime();
@@ -123,7 +122,7 @@ export function _makeCurrentMigrationRunner(
                 );
               }
             } else {
-              parsedSettings.logger.log(
+              parsedSettings.logger.info(
                 `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`,
               );
             }
@@ -155,7 +154,7 @@ export function _makeCurrentMigrationRunner(
       }
       const interval2 = process.hrtime(start);
       const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
-      parsedSettings.logger.log(
+      parsedSettings.logger.info(
         `[${new Date().toISOString()}]: Finished (${duration2.toFixed(0)}ms${
           duration2 - duration >= 5
             ? `; excluding actions: ${duration.toFixed(0)}ms`
@@ -163,7 +162,7 @@ export function _makeCurrentMigrationRunner(
         })`,
       );
     } catch (e) {
-      if (parsedSettings.logger instanceof Console) {
+      if (!parsedSettings.logFactory) {
         logDbError(e);
       }
       throw e;
@@ -201,9 +200,12 @@ export async function _watch(
       running = true;
 
       run()
-        .catch(e => {
-          if (!e["_gmlogged"]) {
-            parsedSettings.logger.error(e);
+        .catch(error => {
+          if (!error["_gmlogged"]) {
+            parsedSettings.logger.error(
+              "Error occurred whilst processing migration",
+              { error },
+            );
           }
         })
         .finally(() => {
