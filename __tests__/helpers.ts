@@ -255,9 +255,14 @@ export const makeMigrations = (commitMessage?: string) => {
   }\n\n${MIGRATION_NOTRX_TEXT.trim()}\n`;
 
   const MIGRATION_MULTIFILE_FILES = {
-    "001.sql": "select 1;",
-    "002-two.sql": "select 2;",
-    "003.sql": "select 3;",
+    "migrations/links/two.sql": "select 2;",
+    "migrations/current": {
+      "001.sql": "select 1;",
+      "002-two.sql": mockFs.symlink({
+        path: "../links/two.sql",
+      }),
+      "003.sql": "select 3;",
+    },
   };
 
   const MIGRATION_MULTIFILE_TEXT = `\

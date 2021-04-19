@@ -3,6 +3,7 @@ import "./helpers"; // Side effects - must come first
 import * as mockFs from "mock-fs";
 import * as path from "path";
 
+import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
 import {
   makeRootDatabaseConnectionString,
   MigrateLogger,
@@ -306,5 +307,38 @@ describe("actions", () => {
             [Error: Errors occurred during settings validation:
             - Setting 'afterAllMigrations': Action spec of type 'unknown_value' not supported; perhaps you need to upgrade?]
           `);
+  });
+});
+
+describe("gmrc path", () => {
+  it("defaults to .gmrc", async () => {
+    mockFs.restore();
+    mockFs({
+      [DEFAULT_GMRC_PATH]: `
+        { "connectionString": "postgres://appuser:apppassword@host:5432/defaultdb" }
+      `,
+    });
+    const settings = await getSettings();
+    expect(settings.connectionString).toEqual(
+      "postgres://appuser:apppassword@host:5432/defaultdb",
+    );
+    mockFs.restore();
+  });
+
+  it("accepts an override and follows it", async () => {
+    mockFs.restore();
+    mockFs({
+      [DEFAULT_GMRC_PATH]: `
+        { "connectionString": "postgres://appuser:apppassword@host:5432/defaultdb" }
+      `,
+      ".other-gmrc": `
+        { "connectionString": "postgres://appuser:apppassword@host:5432/otherdb" }
+      `,
+    });
+    const settings = await getSettings({ configFile: ".other-gmrc" });
+    expect(settings.connectionString).toEqual(
+      "postgres://appuser:apppassword@host:5432/otherdb",
+    );
+    mockFs.restore();
   });
 });

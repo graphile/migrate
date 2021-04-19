@@ -3,8 +3,13 @@ import { CommandModule } from "yargs";
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { getSettings } from "./_common";
+import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
+
+interface ResetArgv extends CommonArgv {
+  shadow: boolean;
+  erase: boolean;
+}
 
 export async function _reset(
   parsedSettings: ParsedSettings,
@@ -35,11 +40,17 @@ export async function _reset(
       parsedSettings.logger.log(
         `graphile-migrate${logSuffix}: dropped database '${databaseName}'`,
       );
-      await pgClient.query(
-        `CREATE DATABASE ${escapeIdentifier(
-          databaseName,
-        )} OWNER ${escapeIdentifier(databaseOwner)};`,
-      );
+      try {
+        await pgClient.query(
+          `CREATE DATABASE ${escapeIdentifier(
+            databaseName,
+          )} OWNER ${escapeIdentifier(databaseOwner)};`,
+        );
+      } catch (e) {
+        throw new Error(
+          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e.message}`,
+        );
+      }
       await pgClient.query(
         `REVOKE ALL ON DATABASE ${escapeIdentifier(databaseName)} FROM PUBLIC;`,
       );
@@ -57,13 +68,7 @@ export async function reset(settings: Settings, shadow = false): Promise<void> {
   return _reset(parsedSettings, shadow);
 }
 
-export const resetCommand: CommandModule<
-  never,
-  {
-    shadow: boolean;
-    erase: boolean;
-  }
-> = {
+export const resetCommand: CommandModule<never, ResetArgv> = {
   command: "reset",
   aliases: [],
   describe:
@@ -89,6 +94,6 @@ export const resetCommand: CommandModule<
       );
       process.exit(2);
     }
-    await reset(await getSettings(), argv.shadow);
+    await reset(await getSettings({ configFile: argv.config }), argv.shadow);
   },
 };

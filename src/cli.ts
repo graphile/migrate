@@ -78,6 +78,14 @@ yargs
   .command(wrapHandler(compileCommand))
   .command(wrapHandler(runCommand))
 
+  // Make sure options added here are represented in CommonArgv
+  .option("config", {
+    alias: "c",
+    type: "string",
+    description: "Optional path to gmrc file",
+    defaultDescription: ".gmrc[.js]",
+  })
+
   .completion("completion", "Generate shell completion script.")
   .epilogue(
     process.env.GRAPHILE_SPONSOR
