@@ -9,7 +9,7 @@ import {
   makeValidateActionCallback,
   SqlActionSpec,
 } from "./actions";
-import { defaultMigrateLogger } from "./logger";
+import { defaultLogger } from "./logger";
 
 export type Actions = string | Array<string | ActionSpec>;
 
@@ -145,7 +145,7 @@ export async function parseSettings(
 
   const logger = await check(
     "logger",
-    (rawLogger = defaultMigrateLogger): Logger => {
+    (rawLogger = defaultLogger): Logger => {
       if (!(rawLogger instanceof Logger)) {
         throw new Error(
           "Expected 'logger' to be a @graphile/logger Logger instance",

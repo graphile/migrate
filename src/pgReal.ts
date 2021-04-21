@@ -37,8 +37,8 @@ export function clearAllPools(): void {
 }
 
 function getPoolDetailsFromConnectionString(
-  connectionString: string,
   { logger }: ParsedSettings,
+  connectionString: string,
 ): PoolDetails {
   let details:
     | PoolDetailsInternal
@@ -101,8 +101,8 @@ export async function withClient<T = void>(
   callback: (pgClient: PoolClient, context: Context) => Promise<T>,
 ): Promise<T> {
   const details = getPoolDetailsFromConnectionString(
-    connectionString,
     parsedSettings,
+    connectionString,
   );
   const { pool: pgPool, database } = details;
   try {
