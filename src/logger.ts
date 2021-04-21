@@ -1,13 +1,14 @@
-import { LogFunctionFactory, LogLevel, LogMeta } from "@graphile/logger";
+import { LogFunctionFactory, Logger, LogLevel } from "@graphile/logger";
 
 export { LogLevel as MigrateLogLevel } from "@graphile/logger";
+export { Logger as MigrateLogger } from "@graphile/logger";
 export type MigrateLogFactory = LogFunctionFactory<Record<string, unknown>>;
-export interface MigrateLogMeta extends LogMeta {
+export interface MigrateLogMeta {
   error?: Error;
 }
 
-export const migrateLogFactory: MigrateLogFactory = () => {
-  return (level: LogLevel, message: string, meta?: MigrateLogMeta): void => {
+const migrateLogFactory: MigrateLogFactory = () => {
+  return (level: LogLevel, message: string): void => {
     // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     const method = (() => {
       switch (level) {
@@ -22,6 +23,8 @@ export const migrateLogFactory: MigrateLogFactory = () => {
     })();
 
     // eslint-disable-next-line no-console
-    meta ? console[method](message, meta) : console[method](message);
+    console[method](message);
   };
 };
+
+export const defaultMigrateLogger = new Logger(migrateLogFactory);

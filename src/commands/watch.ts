@@ -162,9 +162,7 @@ export function _makeCurrentMigrationRunner(
         })`,
       );
     } catch (e) {
-      if (!parsedSettings.logFactory) {
-        logDbError(e);
-      }
+      logDbError(parsedSettings, e);
       throw e;
     }
   }
@@ -203,7 +201,7 @@ export async function _watch(
         .catch(error => {
           if (!error["_gmlogged"]) {
             parsedSettings.logger.error(
-              "Error occurred whilst processing migration",
+              `Error occurred whilst processing migration: ${error.message}`,
               { error },
             );
           }

@@ -9,7 +9,7 @@ import {
   makeValidateActionCallback,
   SqlActionSpec,
 } from "./actions";
-import { MigrateLogFactory, migrateLogFactory } from "./logger";
+import { defaultMigrateLogger } from "./logger";
 
 export type Actions = string | Array<string | ActionSpec>;
 
@@ -83,7 +83,7 @@ export interface Settings {
   beforeCurrent?: Actions;
   afterCurrent?: Actions;
   blankMigrationContent?: string;
-  logFactory?: MigrateLogFactory;
+  logger?: Logger;
 }
 
 // NOTE: only override values that differ (e.g. changing non-nullability)
@@ -143,17 +143,17 @@ export async function parseSettings(
     },
   );
 
-  const logFactory = await check(
-    "logFactory",
-    (logFactory: MigrateLogFactory): MigrateLogFactory => {
-      const factory = logFactory ?? migrateLogFactory;
-      if (typeof factory !== "function") {
-        throw new Error("Expected a function");
+  const logger = await check(
+    "logger",
+    (rawLogger = defaultMigrateLogger): Logger => {
+      if (!(rawLogger instanceof Logger)) {
+        throw new Error(
+          "Expected 'logger' to be a @graphile/logger Logger instance",
+        );
       }
-      return factory;
+      return rawLogger;
     },
   );
-  const logger = new Logger(logFactory);
 
   const rootConnectionString = await check(
     "rootConnectionString",

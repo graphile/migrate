@@ -112,9 +112,7 @@ export async function _commit(
       parsedSettings.blankMigrationContent.trim() + "\n",
     );
   } catch (e) {
-    if (!parsedSettings.logFactory) {
-      logDbError(e);
-    }
+    logDbError(parsedSettings, e);
 
     parsedSettings.logger.error("ABORTING...");
     await writeCurrentMigration(parsedSettings, currentLocation, body);

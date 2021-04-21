@@ -1,4 +1,3 @@
-import { Logger } from "@graphile/logger";
 import { Pool, PoolClient } from "pg";
 import { parse } from "pg-connection-string";
 
@@ -39,7 +38,7 @@ export function clearAllPools(): void {
 
 function getPoolDetailsFromConnectionString(
   connectionString: string,
-  logger: Logger,
+  { logger }: ParsedSettings,
 ): PoolDetails {
   let details:
     | PoolDetailsInternal
@@ -51,7 +50,9 @@ function getPoolDetailsFromConnectionString(
     }
     const pool = new Pool({ connectionString });
     pool.on("error", (error: Error) => {
-      logger.error("An error occurred in the PgPool", { error });
+      logger.error(`An error occurred in the PgPool: ${error.message}`, {
+        error,
+      });
       process.exit(1);
     });
 
@@ -101,7 +102,7 @@ export async function withClient<T = void>(
 ): Promise<T> {
   const details = getPoolDetailsFromConnectionString(
     connectionString,
-    parsedSettings.logger,
+    parsedSettings,
   );
   const { pool: pgPool, database } = details;
   try {

@@ -1,3 +1,8 @@
 export * from "./commands";
-export * from "./settings";
-export * from "./logger";
+export { Settings } from "./settings";
+export {
+  MigrateLogger,
+  MigrateLogFactory,
+  MigrateLogLevel,
+  MigrateLogMeta,
+} from "./logger";
