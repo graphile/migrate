@@ -1,0 +1,97 @@
+import "./helpers"; // Has side-effects; must come first
+
+import * as mockFs from "mock-fs";
+
+import { migrate } from "../src";
+import { withClient } from "../src/pg";
+import { parseSettings } from "../src/settings";
+import { makeMigrations, resetDb, settings } from "./helpers";
+
+beforeEach(resetDb);
+beforeEach(async () => {
+  mockFs({ migrations: mockFs.directory() });
+});
+afterEach(() => {
+  mockFs.restore();
+});
+const {
+  MIGRATION_1_TEXT,
+  MIGRATION_1_COMMITTED,
+  MIGRATION_ENUM_COMMITTED,
+  MIGRATION_NOTRX_TEXT,
+} = makeMigrations();
+
+it("runs migrations", async () => {
+  mockFs({
+    "migrations/current.sql": MIGRATION_1_TEXT,
+  });
+
+  await migrate(settings);
+
+  const parsedSettings = await parseSettings(settings);
+
+  {
+    const { migrations, tables } = await withClient(
+      parsedSettings.connectionString,
+      parsedSettings,
+      async (pgClient, _context) => {
+        const { rows: migrations } = await pgClient.query(
+          "select * from graphile_migrate.migrations",
+        );
+        const { rows: tables } = await pgClient.query(
+          "select * from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r'",
+        );
+        return { migrations, tables };
+      },
+    );
+
+    expect(migrations).toHaveLength(0);
+    expect(tables).toHaveLength(0);
+  }
+
+  mockFs({
+    [`migrations/committed/000001.sql`]: MIGRATION_1_COMMITTED,
+    [`migrations/committed/000002.sql`]: MIGRATION_ENUM_COMMITTED,
+    "migrations/current.sql": MIGRATION_NOTRX_TEXT,
+  });
+
+  await migrate(settings);
+
+  {
+    const { migrations, tables } = await withClient(
+      parsedSettings.connectionString,
+      parsedSettings,
+      async (pgClient, _context) => {
+        const { rows: migrations } = await pgClient.query(
+          "select * from graphile_migrate.migrations",
+        );
+        const { rows: tables } = await pgClient.query(
+          "select * from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r'",
+        );
+        return { migrations, tables };
+      },
+    );
+
+    expect(migrations).toHaveLength(2);
+    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "filename": "000001.sql",
+          "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
+          "previous_hash": null,
+        },
+        Object {
+          "filename": "000002.sql",
+          "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
+          "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
+        },
+      ]
+    `);
+    expect(tables).toHaveLength(1);
+    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
+      Array [
+        "foo",
+      ]
+    `);
+  }
+});
