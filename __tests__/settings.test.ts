@@ -77,6 +77,23 @@ it("throws if shadow attempted but no shadow DB", async () => {
         `);
 });
 
+it.each([[[]], [{}], ["test"]])(
+  "throws error for invalid logger",
+  async invalidLogger => {
+    await expect(
+      parseSettings({
+        connectionString: exampleConnectionString,
+        rootConnectionString: "notthesamestring1",
+        shadowConnectionString: "notthesamestring2",
+        logger: invalidLogger as any,
+      }),
+    ).rejects.toMatchInlineSnapshot(`
+          [Error: Errors occurred during settings validation:
+          - Setting 'logger': Expected 'logger' to be a @graphile/logger Logger instance]
+        `);
+  },
+);
+
 describe("makeRootDatabaseConnectionString", () => {
   it("modifies the database name", async () => {
     const parsedSettings = await parseSettings({

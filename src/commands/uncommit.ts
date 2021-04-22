@@ -51,8 +51,9 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   await fsp.unlink(lastMigrationFilepath);
   await undoMigration(parsedSettings, lastMigration);
 
-  // eslint-disable-next-line no-console
-  console.log(`graphile-migrate: migration '${lastMigrationFilepath}' undone`);
+  parsedSettings.logger.info(
+    `graphile-migrate: migration '${lastMigrationFilepath}' undone`,
+  );
 
   // Reset shadow
   await _reset(parsedSettings, true);

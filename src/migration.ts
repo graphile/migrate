@@ -472,8 +472,7 @@ export async function runCommittedMigration(
       `Hash for ${realFilename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`,
     );
   }
-  // eslint-disable-next-line no-console
-  console.log(
+  parsedSettings.logger.info(
     `graphile-migrate${logSuffix}: Running migration '${realFilename}'`,
   );
   await runStringMigration(

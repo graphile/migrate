@@ -37,6 +37,7 @@ export function clearAllPools(): void {
 }
 
 function getPoolDetailsFromConnectionString(
+  { logger }: ParsedSettings,
   connectionString: string,
 ): PoolDetails {
   let details:
@@ -48,9 +49,10 @@ function getPoolDetailsFromConnectionString(
       throw new Error("Connection string does not specify a database");
     }
     const pool = new Pool({ connectionString });
-    pool.on("error", (err: Error) => {
-      // eslint-disable-next-line no-console
-      console.error("An error occurred in the PgPool", err);
+    pool.on("error", (error: Error) => {
+      logger.error(`An error occurred in the PgPool: ${error.message}`, {
+        error,
+      });
       process.exit(1);
     });
 
@@ -98,7 +100,10 @@ export async function withClient<T = void>(
   parsedSettings: ParsedSettings,
   callback: (pgClient: PoolClient, context: Context) => Promise<T>,
 ): Promise<T> {
-  const details = getPoolDetailsFromConnectionString(connectionString);
+  const details = getPoolDetailsFromConnectionString(
+    parsedSettings,
+    connectionString,
+  );
   const { pool: pgPool, database } = details;
   try {
     const pgClient = await pgPool.connect();

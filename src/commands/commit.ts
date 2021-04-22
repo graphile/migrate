@@ -100,8 +100,7 @@ export async function _commit(
   await fsp.writeFile(newMigrationFilepath, finalBody);
   await fsp.chmod(newMigrationFilepath, "440");
 
-  // eslint-disable-next-line no-console
-  console.log(
+  parsedSettings.logger.info(
     `graphile-migrate: New migration '${newMigrationFilename}' created`,
   );
   try {
@@ -113,13 +112,12 @@ export async function _commit(
       parsedSettings.blankMigrationContent.trim() + "\n",
     );
   } catch (e) {
-    logDbError(e);
-    // eslint-disable-next-line no-console
-    console.error("ABORTING...");
+    logDbError(parsedSettings, e);
+
+    parsedSettings.logger.error("ABORTING...");
     await writeCurrentMigration(parsedSettings, currentLocation, body);
     await fsp.unlink(newMigrationFilepath);
-    // eslint-disable-next-line no-console
-    console.error("ABORTED AND ROLLED BACK");
+    parsedSettings.logger.error("ABORTED AND ROLLED BACK");
     throw e;
   }
 }

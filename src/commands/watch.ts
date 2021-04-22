@@ -32,8 +32,9 @@ export function _makeCurrentMigrationRunner(
     let migrationsAreEquivalent = false;
 
     try {
-      // eslint-disable-next-line no-console
-      console.log(`[${new Date().toISOString()}]: Running current.sql`);
+      parsedSettings.logger.info(
+        `[${new Date().toISOString()}]: Running current.sql`,
+      );
       const start = process.hrtime();
       const connectionString = shadow
         ? parsedSettings.shadowConnectionString
@@ -121,8 +122,7 @@ export function _makeCurrentMigrationRunner(
                 );
               }
             } else {
-              // eslint-disable-next-line no-console
-              console.log(
+              parsedSettings.logger.info(
                 `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`,
               );
             }
@@ -154,8 +154,7 @@ export function _makeCurrentMigrationRunner(
       }
       const interval2 = process.hrtime(start);
       const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
-      // eslint-disable-next-line no-console
-      console.log(
+      parsedSettings.logger.info(
         `[${new Date().toISOString()}]: Finished (${duration2.toFixed(0)}ms${
           duration2 - duration >= 5
             ? `; excluding actions: ${duration.toFixed(0)}ms`
@@ -163,7 +162,7 @@ export function _makeCurrentMigrationRunner(
         })`,
       );
     } catch (e) {
-      logDbError(e);
+      logDbError(parsedSettings, e);
       throw e;
     }
   }
@@ -199,10 +198,12 @@ export async function _watch(
       running = true;
 
       run()
-        .catch(e => {
-          if (!e["_gmlogged"]) {
-            // eslint-disable-next-line no-console
-            console.error(e);
+        .catch(error => {
+          if (!error["_gmlogged"]) {
+            parsedSettings.logger.error(
+              `Error occurred whilst processing migration: ${error.message}`,
+              { error },
+            );
           }
         })
         .finally(() => {

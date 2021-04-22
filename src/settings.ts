@@ -1,3 +1,4 @@
+import { Logger } from "@graphile/logger";
 import { parse } from "pg-connection-string";
 import * as querystring from "querystring";
 import { format as formatURL, parse as parseURL } from "url";
@@ -8,6 +9,7 @@ import {
   makeValidateActionCallback,
   SqlActionSpec,
 } from "./actions";
+import { defaultLogger } from "./logger";
 
 export type Actions = string | Array<string | ActionSpec>;
 
@@ -81,6 +83,7 @@ export interface Settings {
   beforeCurrent?: Actions;
   afterCurrent?: Actions;
   blankMigrationContent?: string;
+  logger?: Logger;
 }
 
 // NOTE: only override values that differ (e.g. changing non-nullability)
@@ -98,6 +101,7 @@ export interface ParsedSettings extends Settings {
   beforeCurrent: ActionSpec[];
   afterCurrent: ActionSpec[];
   blankMigrationContent: string;
+  logger: Logger;
 }
 
 export async function parseSettings(
@@ -136,6 +140,18 @@ export async function parseSettings(
         );
       }
       return rawConnectionString;
+    },
+  );
+
+  const logger = await check(
+    "logger",
+    (rawLogger = defaultLogger): Logger => {
+      if (!(rawLogger instanceof Logger)) {
+        throw new Error(
+          "Expected 'logger' to be a @graphile/logger Logger instance",
+        );
+      }
+      return rawLogger;
     },
   );
 
@@ -272,8 +288,8 @@ export async function parseSettings(
     return undefined;
   });
 
-  const validateAction = makeValidateActionCallback();
-  const rootValidateAction = makeValidateActionCallback(true);
+  const validateAction = makeValidateActionCallback(logger);
+  const rootValidateAction = makeValidateActionCallback(logger, true);
 
   const beforeReset = await check("beforeReset", rootValidateAction);
   const afterReset = await check("afterReset", rootValidateAction);
@@ -372,6 +388,7 @@ export async function parseSettings(
     shadowDatabaseName: shadowDatabaseName ? shadowDatabaseName : void 0,
     placeholders,
     blankMigrationContent,
+    logger,
   };
 }
 

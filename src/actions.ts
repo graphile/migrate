@@ -1,3 +1,4 @@
+import { Logger } from "@graphile/logger";
 import { exec as rawExec } from "child_process";
 import { promises as fsp } from "fs";
 import { parse } from "pg-connection-string";
@@ -115,18 +116,16 @@ export async function executeActions(
         maxBuffer: 50 * 1024 * 1024,
       });
       if (stdout) {
-        // eslint-disable-next-line no-console
-        console.log(stdout);
+        parsedSettings.logger.info(stdout);
       }
       if (stderr) {
-        // eslint-disable-next-line no-console
-        console.error(stderr);
+        parsedSettings.logger.error(stderr);
       }
     }
   }
 }
 
-export function makeValidateActionCallback(allowRoot = false) {
+export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
   return async (inputValue: unknown): Promise<ActionSpec[]> => {
     const specs: ActionSpec[] = [];
     if (inputValue) {
@@ -141,8 +140,7 @@ export function makeValidateActionCallback(allowRoot = false) {
           !trueRawSpec["_"] &&
           typeof trueRawSpec["command"] === "string";
         if (isV003OrBelowCommand) {
-          // eslint-disable-next-line no-console
-          console.warn(
+          logger.warn(
             "DEPRECATED: graphile-migrate now requires command action specs to have an `_: 'command'` property; we'll back-fill this for now, but please update your configuration",
           );
         }

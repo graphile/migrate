@@ -2,6 +2,7 @@ import * as chalk from "chalk";
 
 import indent from "./indent";
 import { Client } from "./pg";
+import { ParsedSettings } from "./settings";
 
 export async function runQueryWithErrorInstrumentation(
   pgClient: Client,
@@ -58,32 +59,33 @@ export async function runQueryWithErrorInstrumentation(
   }
 }
 
-export const logDbError = (e: Error): void => {
+export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
   /* eslint-disable no-console */
   e["_gmlogged"] = true;
-  console.error("");
+  const messages = [""];
   if (e["_gmMessageOverride"]) {
-    console.error(e["_gmMessageOverride"]);
+    messages.push(e["_gmMessageOverride"]);
   } else {
-    console.error(
+    messages.push(
       chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
   }
   const { severity, code, detail, hint } = e as any;
-  console.error(indent(e.stack ? e.stack : e.message, 4));
-  console.error("");
+  messages.push(indent(e.stack ? e.stack : e.message, 4));
+  messages.push("");
   if (severity) {
-    console.error(indent(`Severity:\t${severity}`, 4));
+    messages.push(indent(`Severity:\t${severity}`, 4));
   }
   if (code) {
-    console.error(indent(`Code:    \t${code}`, 4));
+    messages.push(indent(`Code:    \t${code}`, 4));
   }
   if (detail) {
-    console.error(indent(`Detail:  \t${detail}`, 4));
+    messages.push(indent(`Detail:  \t${detail}`, 4));
   }
   if (hint) {
-    console.error(indent(`Hint:    \t${hint}`, 4));
+    messages.push(indent(`Hint:    \t${hint}`, 4));
   }
-  console.error("");
+  messages.push("");
+  logger.error(messages.join("\n"), { error: e });
   /* eslint-enable */
 };

@@ -64,8 +64,7 @@ export async function _migrate(
             parsedSettings.afterAllMigrations,
           );
         }
-        // eslint-disable-next-line no-console
-        console.log(
+        parsedSettings.logger.info(
           `graphile-migrate${logSuffix}: ${
             remainingMigrations.length > 0
               ? `${remainingMigrations.length} committed migrations executed`
