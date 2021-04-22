@@ -1,6 +1,6 @@
 {
   "name": "graphile-migrate",
-  "version": "1.1.0",
+  "version": "1.2.0-0",
   "description": "Opinionated SQL-powered migration tool for PostgreSQL",
   "main": "dist/index.js",
   "scripts": {
