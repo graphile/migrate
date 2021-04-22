@@ -42,8 +42,8 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const contents = await fsp.readFile(lastMigrationFilepath, "utf8");
   const { headers, body } = parseMigrationText(lastMigrationFilepath, contents);
 
-  // Drop Hash and Previous from headers; then write out
-  const { Hash, Previous, ...otherHeaders } = headers;
+  // Drop Hash, Previous and AllowInvalidHash from headers; then write out
+  const { Hash, Previous, AllowInvalidHash, ...otherHeaders } = headers;
   const completeBody = serializeMigration(body, otherHeaders);
   await writeCurrentMigration(parsedSettings, currentLocation, completeBody);
 

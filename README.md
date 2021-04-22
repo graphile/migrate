@@ -705,6 +705,28 @@ so `--! no-transaction` migrations must contain exactly one statement. You might
 be able to work around this with a `DO $$` block? (If this works, please send a
 PR to this paragraph.)
 
+## Editing a committed migration
+
+Graphile Migrate deliberately performs cryptographic hashing to avoid/detect
+accidental editing of committed migrations and to ensure there is a strict
+linear progression in migrations. By default, Graphile Migrate will refuse to
+run a migration if its hash does not match what it declares; this is generally
+desired (and you shouldn't have to worry about it).
+
+Should you need to go back and edit a _committed_ migration you can opt out of
+Graphile Migrate's consistency checks by adding the comment
+`--! AllowInvalidHash` to the very top of the committed migration. Please note
+that editing the migration **WILL NOT** cause the migration to run again on
+yours or any other system.
+
+The need to edit a previous migration generally arises if there was a mistake in
+your migration that prevents it running on production but you don't want to
+reset your staging database, or where an update to PostgreSQL has made the
+syntax or commands in an older migration invalid and thus you must edit them to
+make the migration run against a clean database again. Most users should never
+need this functionality. If you find yourself using it more than once or twice,
+please get in touch and we can discuss how the tool can better serve your needs.
+
 ## Terminology
 
 ### The current migration
@@ -751,10 +773,6 @@ supported interface ─ we'd love to know how you're using it!
 The project as a whole is stable, but the approach is still "experimental", in
 particular:
 
-- because committed migrations are hashed you cannot edit old migrations; this
-  may cause you issues should you upgrade PostgreSQL and it drops support for a
-  syntax or feature you were previously using. We plan to fix this issue _if and
-  when_ it occurs, so if this affects you please open a detailed issue.
 - the approach of up-only and re-runnable migrations is not for the faint of
   heart ─ it requires solid SQL knowledge and if insufficient attention is paid
   it could result in your migrations and your local database state drifting

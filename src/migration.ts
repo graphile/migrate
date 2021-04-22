@@ -30,6 +30,11 @@ export interface Migration {
    * The hash of the previous migration, or null if there was no previous migration
    */
   previousHash: string | null;
+
+  /**
+   * True if we should allow the hash to be invalid; false otherwise.
+   */
+  allowInvalidHash: boolean;
 }
 
 export interface DbMigration extends Migration {
@@ -340,6 +345,9 @@ export async function getAllMigrations(
           // --! Message:
           const message = headers["Message"];
 
+          // --! AllowInvalidHash
+          const allowInvalidHash = "AllowInvalidHash" in headers;
+
           return {
             realFilename,
             filename: migrationNumberString + ".sql",
@@ -348,6 +356,7 @@ export async function getAllMigrations(
             fullPath,
             hash,
             previousHash,
+            allowInvalidHash,
             body,
             previous: null,
           };
@@ -464,16 +473,25 @@ export async function runCommittedMigration(
     filename,
     body,
     previousHash,
+    allowInvalidHash,
   } = committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
-  if (newHash !== hash) {
+  const hashIsInvalid = newHash !== hash;
+  if (hashIsInvalid && !allowInvalidHash) {
     throw new Error(
       `Hash for ${realFilename} does not match - ${newHash} !== ${hash}; has the file been tampered with?`,
     );
   }
+  if (allowInvalidHash && !hashIsInvalid) {
+    throw new Error(
+      `Invalid hash allowed for ${realFilename}; but hash matches.`,
+    );
+  }
   parsedSettings.logger.info(
-    `graphile-migrate${logSuffix}: Running migration '${realFilename}'`,
+    `graphile-migrate${logSuffix}: Running migration '${realFilename}'${
+      hashIsInvalid ? " (🚨 INVALID HASH, allowed via AllowInvalidHash 🚨)" : ""
+    }`,
   );
   await runStringMigration(
     pgClient,
