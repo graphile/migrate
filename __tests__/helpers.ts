@@ -115,13 +115,25 @@ export async function resetDb() {
   const parsedSettings = await parsedSettingsPromise;
   await withClient(TEST_DATABASE_URL, parsedSettings, async client => {
     await client.query("drop schema if exists graphile_migrate cascade;");
-    const { rows } = await client.query(
-      `select relname from pg_class where relkind = 'r' and relnamespace = (select oid from pg_namespace where nspname = 'public')`,
-    );
-    for (const row of rows) {
-      await client.query(
-        `drop table if exists ${escapeIdentifier(row.relname)} cascade;`,
+    {
+      const { rows } = await client.query(
+        `select relname from pg_class where relkind = 'r' and relnamespace = 'public'::regnamespace`,
       );
+      for (const row of rows) {
+        await client.query(
+          `drop table if exists ${escapeIdentifier(row.relname)} cascade;`,
+        );
+      }
+    }
+    {
+      const { rows } = await client.query(
+        `select typname from pg_type where typtype = 'e' and typnamespace = 'public'::regnamespace`,
+      );
+      for (const row of rows) {
+        await client.query(
+          `drop type if exists ${escapeIdentifier(row.typname)} cascade;`,
+        );
+      }
     }
   });
 }

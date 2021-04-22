@@ -39,6 +39,17 @@ Comments elsewhere in the file are ignored - we do not implement an SQL parser
 so we do not know if the comment is within a SQL string or similar. It's easiest
 just not parse that far.
 
+## `--! AllowInvalidHash`
+
+Should you need to go back and edit a _committed_ migration you can opt out of
+Graphile Migrate's consistency checks by adding this comment to the very top of
+your committed migration. Please note that editing the migration **WILL NOT**
+cause the migration to run again. This is primarily useful where there was a
+mistake in your migration that prevents it running on production but you don't
+want to reset your staging database, or where an update to PostgreSQL has made
+the syntax or commands in an older migration invalid and thus you must edit them
+to make the migration run against a clean database again.
+
 ## `--! no-transaction`
 
 This is treated as a body comment for backwards compatibility reasons. This

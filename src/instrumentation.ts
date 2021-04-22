@@ -60,7 +60,6 @@ export async function runQueryWithErrorInstrumentation(
 }
 
 export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
-  /* eslint-disable no-console */
   e["_gmlogged"] = true;
   const messages = [""];
   if (e["_gmMessageOverride"]) {

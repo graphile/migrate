@@ -87,6 +87,7 @@ it("calls beforeAllMigrations and afterAllMigrations action (only) if we did som
           previous: null,
           message: "TEST MESSAGE",
           messageSlug: "test-message",
+          allowInvalidHash: false,
         },
       ];
     },
