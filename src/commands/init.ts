@@ -184,7 +184,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
    */
   // migrationsFolder: "./migrations",
 
-  "//generatedWith": "${version}"
+  // "generatedWith": "${version}"
 }`;
 
   const fileContent = gmrcPath.endsWith(".js")
