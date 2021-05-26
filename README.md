@@ -659,34 +659,8 @@ on in parallel no additional `rollback` step is required. When you
 indexes, etc) once the dropped entity has been replaced. Reviewing the database
 schema diff can help you spot these issues.
 
-More examples of idempotent operations:
+More [examples](./docs/idempotent-examples.md) of idempotent operations:
 
-```sql
--- Create a schema
-DROP SCHEMA IF EXISTS app CASCADE;
-CREATE SCHEMA app;
-
--- Create a table
-DROP TABLE IF EXISTS foo CASCADE;
-CREATE TABLE foo ...;
-
--- Add a column to the end of the table
-ALTER TABLE foo DROP COLUMN IF EXISTS bar CASCADE;
-ALTER TABLE foo ADD COLUMN foo ...;
-
--- Make a column NOT NULL
-ALTER TABLE foo ALTER COLUMN foo SET NOT NULL;
-
--- Alter a column type
-ALTER TABLE foo ALTER COLUMN foo TYPE int USING foo::int;
-
--- Change the body or flags of a function
-CREATE OR REPLACE FUNCTION ...;
-
--- Change a function signature (arguments, return type, etc)
-DROP FUNCTION IF EXISTS ... CASCADE;
-CREATE OR REPLACE FUNCTION ...
-```
 
 ## Disable Transaction
 
