@@ -1,4 +1,8 @@
-Often, we can make our commands idempotent with ease:
+# Idempotent Examples
+
+Idempotency is an important concept in Graphile Migrate, if a migration is idempotent it means that you can run the migration multiple times and the end state of the database structure will always be the same. (NOTE: though the structure may be the same, some idempotent commands may result in deleting/dropping data, so extreme care must be exercised.)
+
+Many of PostgreSQL's commands have built in support for idempotency; you will see this commonly with `IF EXISTS` or `IF NOT EXISTS` clauses, `CREATE OR REPLACE`, and similar constructs:
 
 ```sql
 -- Create a schema
@@ -37,9 +41,10 @@ do $$
 begin
     /* if column `username` exists on users table */
     if exists(
-        select table_name, column_name 
+        select 1
             from information_schema.columns 
-            where table_name = 'users' 
+            where table_schema = 'public'
+            and table_name = 'users' 
             and column_name = 'username'
     ) then
         /* rename the column to `name` */

@@ -659,7 +659,7 @@ on in parallel no additional `rollback` step is required. When you
 indexes, etc) once the dropped entity has been replaced. Reviewing the database
 schema diff can help you spot these issues.
 
-More [examples](./docs/idempotent-examples.md) of idempotent operations:
+More examples of idempotent operations can be found in [docs/idempotent-examples.md](./docs/idempotent-examples.md).
 
 
 ## Disable Transaction
