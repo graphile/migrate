@@ -59,3 +59,24 @@ begin
     end if;
 end$$;
 ```
+
+The structure changes a little if we want to rename an enum value, but the idea is the same:
+```sql
+do $$
+begin
+    /* if `PENDING` exists in purchase_status enum */
+    if exists(
+        select 1
+            from pg_catalog.pg_enum as enum_value
+        inner join pg_catalog.pg_type as custom_type
+            on custom_type.oid = enum_value.enumtypid
+        where typname = 'purchase_status'
+            and enumlabel = 'PENDING'
+    ) then
+        /* rename the enum value to `PURCHASE_PENDING` */
+        alter type app_public.purchase_status rename value 'PENDING' to 'PURCHASE_PENDING';
+    end if;
+end$$;
+
+```
+Because of its compliance with the SQL standard, the `information_schema` does not contain Postgres-only objects, like enums.
