@@ -72,7 +72,7 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     const relativePath = resolve(process.cwd(), path);
 
     try {
-      return relativePath.endsWith(".mjs") ? import(relativePath) : require(relativePath);
+      return relativePath.endsWith(".mjs") ? await import(relativePath) : require(relativePath);
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
