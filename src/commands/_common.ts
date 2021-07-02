@@ -8,6 +8,7 @@ import { Settings } from "../settings";
 export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
 export const DEFAULT_GMRCCJS_PATH = `${DEFAULT_GMRC_PATH}.cjs`;
+export const DEFAULT_GMRCMJS_PATH = `${DEFAULT_GMRC_PATH}.mjs`;
 
 /**
  * Represents the option flags that are valid for all commands (see
@@ -71,7 +72,7 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     const relativePath = resolve(process.cwd(), path);
 
     try {
-      return require(relativePath);
+      return relativePath.endsWith(".mjs") ? import(relativePath) : require(relativePath);
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
@@ -87,7 +88,7 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       throw new Error(`Failed to import '${configFile}': file not found`);
     }
 
-    if (configFile.endsWith(".js") || configFile.endsWith(".cjs")) {
+    if (configFile.endsWith(".js") || configFile.endsWith(".cjs") || configFile.endsWith(".mjs")) {
       return tryRequire(configFile);
     } else {
       return await getSettingsFromJSON(configFile);
@@ -98,6 +99,8 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     return tryRequire(DEFAULT_GMRCJS_PATH);
   } else if (await exists(DEFAULT_GMRCCJS_PATH)) {
     return tryRequire(DEFAULT_GMRCCJS_PATH);
+  } else if (await exists(DEFAULT_GMRCMJS_PATH)) {
+    return tryRequire(DEFAULT_GMRCMJS_PATH);
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
