@@ -142,6 +142,9 @@ these environmental variables to a file so you can easily source them (with the
 graphile-migrate watch
 ```
 
+If you already have a database schema, see [Using Migrate with an existing
+database](#using-migrate-with-an-existing-database) for some tips.
+
 ## Usage
 
 ### Committed and current migrations
@@ -843,6 +846,34 @@ create function get_random_number() returns int as $$
   select 4;
 $$ language sql stable;
 ```
+
+## Using Migrate with an existing database
+
+It's possible to use Graphile Migrate with an existing production system. In
+this case you'll already have one or several production database instances with
+an existing schema (let's call it `initial_schema.sql`).
+
+We can't manage `initial_schema.sql` as the first migration because this would
+reset the state of the production database. Instead, we want the first
+migration to be applied *on top* of `initial_schema.sql`.
+
+However, we also want:
+* The shadow database to be initialized with `initial_schema.sql`
+* New development and production databases to be initialized with `initial_schema.sql`
+
+To get the shadow database initialized, you can add the initial schema in an
+`afterReset` hook such as `"afterReset": [ "initial_schema.sql" ]`. `afterReset`
+is only used when a DB is reset (i.e. when you have Graphile Migrate create it)
+and thus it won't be a concern for production since you never run reset there.
+
+To initialize new development and production databases you could then run
+`graphile-migrate reset` as part of initializing the new database instance.
+However in some deployment environments (eg, deploying a new application to an
+existing database server) it may be best to check whether the target database
+schema is empty first or avoid `reset` entirely by using an external mechanism
+to apply `initial_schema.sql`. For example, the [official postgres docker
+container](https://hub.docker.com/_/postgres) has the
+`/docker-entrypoint-initdb.d/` directory for initialization scripts.
 
 ## TODO:
 
