@@ -912,6 +912,13 @@ however, ensure that your action only applies to the shadow database by setting
 the `"shadow": true` property, leaving you free to manage how your more
 permanent databases are initialized.
 
+
+## Examples
+
+- [Running Graphile Migrate in a Docker container](docs/docker/README.md)
+- [Examples of idempotent migration files including edge cases](docs/idempotent-examples.md)
+
+
 ## TODO:
 
 - [ ] Store pgSettings with committed transactions to protect against user edits
