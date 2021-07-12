@@ -97,6 +97,11 @@ unaffected by the iteration you've been applying to your development database
 
 ### Getting started
 
+> These instructions are for starting a new database project with Graphile
+> Migrate; if you already have a database schema, see
+> [Using Migrate with an existing database](#using-migrate-with-an-existing-database)
+> for some tips.
+
 Create your database role (if desired), database and shadow database:
 
 ```bash
@@ -659,8 +664,8 @@ on in parallel no additional `rollback` step is required. When you
 indexes, etc) once the dropped entity has been replaced. Reviewing the database
 schema diff can help you spot these issues.
 
-More examples of idempotent operations can be found in [docs/idempotent-examples.md](./docs/idempotent-examples.md).
-
+More examples of idempotent operations can be found in
+[docs/idempotent-examples.md](./docs/idempotent-examples.md).
 
 ## Disable Transaction
 
@@ -844,6 +849,69 @@ create function get_random_number() returns int as $$
 $$ language sql stable;
 ```
 
+## Using Migrate with an existing database
+
+You can use Graphile Migrate to manage the migrations for your existing system,
+but the process is slightly different.
+
+Because Graphile Migrate tracks which migrations it has ran and runs remaining
+migrations, you must not put your existing database schema as the first
+migration otherwise you production database might be wiped (or it just won't
+work) when Graphile Migrate attempts to apply it. Instead you must ensure all
+databases (development, staging, production, etc.) are at the same state before
+running any migrations, and then the Graphile Migrate migrations will be applied
+_on top_ of this initial state.
+
+### Storing the initial state
+
+Though you could hand-roll the initial state if you prefer, we generally advise
+that you take a schema-only dump of your existing (production) database schema
+and store it to `migrations/initial_schema.sql` with a command such as:
+
+```
+pg_dump --schema-only --no-owner --file=migrations/initial_schema.sql "postgres://..."
+```
+
+If you manage some of the data in your initial database schema using your
+existing migration system then you should add that data to your
+`initial_schema.sql` file too.
+
+### New databases must apply the initial state
+
+When creating new databases (e.g. test databases, new development databases for
+new developers, when resetting your development database, whenever Graphile
+Migrate recreates the shadow database, etc.) it's imperative that these new
+databases also have `initial_schema.sql` applied to them.
+
+#### Applying the initial schema with Actions
+
+One way to apply the initial schema is to use [Actions](#actions), specifically
+the `afterReset` action, to apply the initial schema immediately after the
+database is reset/created and before any committed migrations are applied. Add
+something like `"afterReset": [ "initial_schema.sql" ]` to your `.gmrc` and
+whenever Graphile Migrate's `reset` command runs (including against the shadow
+database when committing a migration) this initial schema will be applied. Note
+this is only used when a DB is reset (i.e. when you have Graphile Migrate create
+it) and thus it won't be a concern for production since you never run `reset`
+there.
+
+#### Applying the initial schema in other ways
+
+You can take care of applying the initial schema using your own tooling should
+you want or need to do so.
+
+The [official PostgreSQL Docker container](https://hub.docker.com/_/postgres)
+has the `/docker-entrypoint-initdb.d/` directory for initialization scripts, and
+this might be a good location for your `initial_schema.sql` file if you're using
+this image.
+
+**Important note**: in development the shadow database must be able to be
+destroyed and recreated by Graphile Migrate at will, so applying the initial
+schema _to the shadow database_ must be done via an Action (see above). You can,
+however, ensure that your action only applies to the shadow database by setting
+the `"shadow": true` property, leaving you free to manage how your more
+permanent databases are initialized.
+
 ## TODO:
 
 - [ ] Store pgSettings with committed transactions to protect against user edits
@@ -855,5 +923,5 @@ $$ language sql stable;
 
 - [ ] Add `graphile-migrate import` command: used after init but before running
       any other commands, imports the existing database as if it were the first
-      migration. (For now just pg_dump, and put the schema in
-      migrations/schema.sql.)
+      migration. (For now, see
+      [Using Migrate with an existing database](#using-migrate-with-an-existing-database).)
