@@ -7,8 +7,8 @@
 # * --user     to allow the current user to own any committed migrations
 # * mount teamapp/dbconf for access to graphile-migrate working files
 
-# The following may be added if you run a postgres container on an internal
-# docker network which isn't accessible from the host where this script runs.
+# The following may be added if you run a Postgres container on an internal
+# Docker network which isn't accessible from the host where this script runs.
 if [[ ${DATABASE_DOCKER_NETWORK} != "" ]] ; then
     DOCKER_EXTRA_OPTS="${DOCKER_EXTRA_OPTS} --network ${DATABASE_DOCKER_NETWORK}"
 fi
