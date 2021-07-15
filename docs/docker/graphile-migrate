@@ -5,7 +5,7 @@
 # Use
 # * -ti --init to allow for CTRL-C to work with `graphile-migrate watch`
 # * --user     to allow the current user to own any committed migrations
-# * mount teamapp/dbconf for access to graphile-migrate working files
+# * Mount $PWD as /migrate for access to graphile-migrate working files
 
 # The following may be added if you run a Postgres container on an internal
 # Docker network which isn't accessible from the host where this script runs.
