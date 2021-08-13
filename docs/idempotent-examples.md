@@ -21,13 +21,13 @@ CREATE TABLE foo ...;
 
 -- Add a column to the end of the table
 ALTER TABLE foo DROP COLUMN IF EXISTS bar CASCADE;
-ALTER TABLE foo ADD COLUMN foo ...;
+ALTER TABLE foo ADD COLUMN bar ...;
 
 -- Make a column NOT NULL
-ALTER TABLE foo ALTER COLUMN foo SET NOT NULL;
+ALTER TABLE foo ALTER COLUMN bar SET NOT NULL;
 
 -- Alter a column type
-ALTER TABLE foo ALTER COLUMN foo TYPE int USING foo::int;
+ALTER TABLE foo ALTER COLUMN bar TYPE int USING bar::int;
 
 -- Change the body or flags of a function
 CREATE OR REPLACE FUNCTION ...;
