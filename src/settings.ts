@@ -417,7 +417,7 @@ export function makeRootDatabaseConnectionString(
       return `socket:${parsed.pathname}?${query}`;
     }
   } else {
-    parsed.pathname = `/${databaseName}`;
+    parsed.pathname = databaseName;
     return formatURL(parsed);
   }
 }
