@@ -48,9 +48,9 @@ begin
     /* if column `username` exists on users table */
     if exists(
         select 1
-            from information_schema.columns 
+            from information_schema.columns
             where table_schema = 'public'
-            and table_name = 'users' 
+            and table_name = 'users'
             and column_name = 'username'
     ) then
         /* rename the column to `name` */
@@ -60,7 +60,9 @@ begin
 end$$;
 ```
 
-The structure changes a little if we want to rename an enum value, but the idea is the same:
+The structure changes a little if we want to rename an enum value, but the idea
+is the same:
+
 ```sql
 do $$
 begin
@@ -79,4 +81,6 @@ begin
 end$$;
 
 ```
-Because of its compliance with the SQL standard, the `information_schema` does not contain Postgres-only objects, like enums.
+
+Because of its compliance with the SQL standard, the `information_schema` does
+not contain Postgres-only objects, like enums.
