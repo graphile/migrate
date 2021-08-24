@@ -1,0 +1,22 @@
+name: Linting
+
+on: [push, pull_request]
+
+env:
+  CI: true
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: yarn --frozen-lockfile
+      - run: yarn clean
+      - run: yarn prepack
+      - run: yarn lint
+      - run: yarn lint:deps
