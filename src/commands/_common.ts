@@ -63,14 +63,18 @@ interface Options {
  */
 export async function getSettings(options: Options = {}): Promise<Settings> {
   const { configFile } = options;
-  const tryRequire = (path: string): Settings => {
+  const tryRequire = async (path: string): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
     // path.
     const relativePath = resolve(process.cwd(), path);
 
     try {
-      return require(relativePath);
+      try {
+        return (await import(relativePath)).default;
+      } catch (e) {
+        return require(relativePath);
+      }
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
