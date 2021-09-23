@@ -63,18 +63,14 @@ interface Options {
  */
 export async function getSettings(options: Options = {}): Promise<Settings> {
   const { configFile } = options;
-  const tryRequire = async (path: string): Promise<Settings> => {
+  const tryImport = async (path: string): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
     // path.
     const relativePath = resolve(process.cwd(), path);
 
     try {
-      try {
-        return (await import(relativePath)).default;
-      } catch (e) {
-        return require(relativePath);
-      }
+      return (await import(relativePath)).default;
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
@@ -90,15 +86,15 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       throw new Error(`Failed to import '${configFile}': file not found`);
     }
 
-    if (configFile.endsWith(".js")) {
-      return tryRequire(configFile);
+    if (configFile.endsWith(".js") || configFile.endsWith(".mjs") || configFile.endsWith(".cjs")) {
+      return tryImport(configFile);
     } else {
       return await getSettingsFromJSON(configFile);
     }
   } else if (await exists(DEFAULT_GMRC_PATH)) {
     return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
   } else if (await exists(DEFAULT_GMRCJS_PATH)) {
-    return tryRequire(DEFAULT_GMRCJS_PATH);
+    return tryImport(DEFAULT_GMRCJS_PATH);
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
