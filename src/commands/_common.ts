@@ -86,7 +86,11 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       throw new Error(`Failed to import '${configFile}': file not found`);
     }
 
-    if (configFile.endsWith(".js") || configFile.endsWith(".mjs") || configFile.endsWith(".cjs")) {
+    if (
+      configFile.endsWith(".js") ||
+      configFile.endsWith(".mjs") ||
+      configFile.endsWith(".cjs")
+    ) {
       return tryImport(configFile);
     } else {
       return await getSettingsFromJSON(configFile);
