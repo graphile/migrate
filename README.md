@@ -765,6 +765,7 @@ diverse) projects:
 - [db-migrate](https://db-migrate.readthedocs.io/en/latest/Getting%20Started/commands/)
 - [sqitch](https://sqitch.org/)
 - [Flyway](https://flywaydb.org/)
+- [Rumba](https://www.dbinvent.com/)
 - [migra](https://github.com/djrobstep/migra)
 
 ## Node.js versioning policy
