@@ -19,14 +19,12 @@ import { CommonArgv, getSettings } from "./_common";
 interface WatchArgv extends CommonArgv {
   once: boolean;
   shadow: boolean;
-  forceActions: boolean;
 }
 
 export function _makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
   _once = false,
   shadow = false,
-  forceActions = false,
 ): () => Promise<void> {
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -87,7 +85,7 @@ export function _makeCurrentMigrationRunner(
               currentBodyMinified === previousBodyMinified;
 
             // 4: if different
-            if (forceActions || !migrationsAreEquivalent) {
+            if (!migrationsAreEquivalent) {
               await executeActions(
                 parsedSettings,
                 shadow,
@@ -175,7 +173,6 @@ export async function _watch(
   parsedSettings: ParsedSettings,
   once = false,
   shadow = false,
-  forceActions = false,
 ): Promise<void> {
   await _migrate(parsedSettings, shadow);
 
@@ -188,12 +185,7 @@ export async function _watch(
     );
   }
 
-  const run = _makeCurrentMigrationRunner(
-    parsedSettings,
-    once,
-    shadow,
-    forceActions,
-  );
+  const run = _makeCurrentMigrationRunner(parsedSettings, once, shadow);
   if (once) {
     return run();
   } else {
@@ -257,10 +249,9 @@ export async function watch(
   settings: Settings,
   once = false,
   shadow = false,
-  forceActions = false,
 ): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
-  return _watch(parsedSettings, once, shadow, forceActions);
+  return _watch(parsedSettings, once, shadow);
 }
 
 export const watchCommand: CommandModule<never, WatchArgv> = {
@@ -278,12 +269,6 @@ export const watchCommand: CommandModule<never, WatchArgv> = {
       type: "boolean",
       default: false,
       description: "Applies changes to shadow DB.",
-    },
-    forceActions: {
-      type: "boolean",
-      default: false,
-      description:
-        "Run beforeAllMigrations and afterAllMigrations actions even if no migration was necessary.",
     },
   },
   handler: async argv => {
