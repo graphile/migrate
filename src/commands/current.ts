@@ -1,23 +1,10 @@
 import { CommandModule } from "yargs";
 
-import { executeActions } from "../actions";
-import {
-  getLastMigration,
-  getMigrationsAfter,
-  runCommittedMigration,
-} from "../migration";
-import { _migrate } from "./migrate";
-import { _makeCurrentMigrationRunner } from "./watch";
-import {
-  getCurrentMigrationLocation,
-  readCurrentMigration,
-  writeCurrentMigration,
-} from "../current";
-
-import { withClient } from "../pg";
-import { withAdvisoryLock } from "../pgReal";
+import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
+import { _migrate } from "./migrate";
+import { _makeCurrentMigrationRunner } from "./watch";
 
 interface CurrentArgv extends CommonArgv {
   shadow: boolean;
