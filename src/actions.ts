@@ -152,7 +152,7 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
           const sqlSpec: SqlActionSpec = rawSpec.startsWith("!")
             ? {
                 _: "sql",
-                file: rawSpec.substr(1),
+                file: rawSpec.substring(1),
                 root: true,
               }
             : {

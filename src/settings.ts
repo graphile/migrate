@@ -271,7 +271,7 @@ export async function parseSettings(
           [key, value],
         ): { [key: string]: string } => {
           if (value === "!ENV") {
-            const envvarKey = key.substr(1);
+            const envvarKey = key.substring(1);
             const envvar = process.env[envvarKey];
             if (!envvar) {
               throw new Error(

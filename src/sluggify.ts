@@ -4,5 +4,5 @@ export function sluggify(text: string): string {
     .replace(/[^a-z0-9_]+/g, "-")
     .replace(/--+/g, "-")
     .replace(/(^-+|-+$)/g, "")
-    .substr(0, 60);
+    .substring(0, 60);
 }

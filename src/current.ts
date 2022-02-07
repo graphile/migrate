@@ -283,7 +283,7 @@ export async function writeCurrentMigration(
 
     if (writePromises.length === 0) {
       // Body must have been empty, so no files were written.
-      assert.equal(body.length, 0);
+      assert.strictEqual(body.length, 0);
 
       // Lets write out just the one empty file.
       const filename = `001.sql`;
