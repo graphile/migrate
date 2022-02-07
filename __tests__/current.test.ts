@@ -2,7 +2,7 @@ import "./helpers"; // Has side-effects; must come first
 
 import * as mockFs from "mock-fs";
 
-import { migrate } from "../src";
+import { current } from "../src";
 import { withClient } from "../src/pg";
 import { ParsedSettings, parseSettings } from "../src/settings";
 import { makeMigrations, resetDb, settings } from "./helpers";
@@ -41,6 +41,11 @@ function getStuff(parsedSettings: ParsedSettings) {
 }
 
 it("runs migrations", async () => {
+  mockFs({
+    "migrations/current.sql": "",
+  });
+
+  await current(settings);
   const parsedSettings = await parseSettings(settings);
 
   {
@@ -56,12 +61,12 @@ it("runs migrations", async () => {
     "migrations/current.sql": MIGRATION_NOTRX_TEXT,
   });
 
-  await migrate(settings);
+  await current(settings);
 
   {
     const { migrations, tables, enums } = await getStuff(parsedSettings);
 
-    expect(migrations).toHaveLength(3);
+    expect(migrations).toHaveLength(2);
     expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -100,7 +105,7 @@ Array [
     "migrations/current.sql": "",
   });
 
-  await migrate(settings);
+  await current(settings);
 
   {
     const { migrations, tables, enums } = await getStuff(parsedSettings);
