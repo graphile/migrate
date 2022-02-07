@@ -6,6 +6,7 @@ import * as yargs from "yargs";
 import { version } from "../package.json";
 import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
+import { currentCommand } from "./commands/current";
 import { initCommand } from "./commands/init";
 import { migrateCommand } from "./commands/migrate";
 import { resetCommand } from "./commands/reset";
@@ -76,6 +77,7 @@ yargs
   .command(wrapHandler(statusCommand))
   .command(wrapHandler(resetCommand))
   .command(wrapHandler(compileCommand))
+  .command(wrapHandler(currentCommand))
   .command(wrapHandler(runCommand))
 
   // Make sure options added here are represented in CommonArgv
