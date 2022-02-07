@@ -1,0 +1,12 @@
+version: '3.2'
+services:
+  db:
+    image: maxkorp/postgis:11.4-2.5.2
+    container_name: migrate-db
+    restart: on-failure
+    env_file:
+      - .env
+    expose:
+      - 5432
+    ports:
+      - 5432:5432

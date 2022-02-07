@@ -18,7 +18,7 @@ interface RunArgv extends CommonArgv {
   rootDatabase?: boolean;
 }
 
-export async function run(
+export async function run<T = void>(
   settings: Settings,
   content: string,
   filename: string,
@@ -31,7 +31,7 @@ export async function run(
     root?: boolean;
     rootDatabase?: boolean;
   } = {},
-): Promise<any[] | undefined> {
+): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
   const sql = compilePlaceholders(parsedSettings, content, shadow);
   const baseConnectionString = rootDatabase

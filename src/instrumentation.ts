@@ -4,11 +4,18 @@ import indent from "./indent";
 import { Client } from "./pg";
 import { ParsedSettings } from "./settings";
 
-export async function runQueryWithErrorInstrumentation(
+interface InstrumentationError extends Error {
+  severity: string;
+  code: string;
+  detail: string;
+  hint: string;
+}
+
+export async function runQueryWithErrorInstrumentation<T = void>(
   pgClient: Client,
   body: string,
   filename: string,
-): Promise<any[] | undefined> {
+): Promise<T[] | undefined> {
   try {
     const { rows } = await pgClient.query({
       text: body,
@@ -69,7 +76,7 @@ export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
       chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
   }
-  const { severity, code, detail, hint } = e as any;
+  const { severity, code, detail, hint } = e as InstrumentationError;
   messages.push(indent(e.stack ? e.stack : e.message, 4));
   messages.push("");
   if (severity) {
