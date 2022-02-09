@@ -5,10 +5,12 @@ import { Client } from "./pg";
 import { ParsedSettings } from "./settings";
 
 interface InstrumentationError extends Error {
-  severity: string;
-  code: string;
-  detail: string;
-  hint: string;
+  severity?: string;
+  code?: string;
+  detail?: string;
+  hint?: string;
+  _gmlogged?: boolean;
+  _gmMessageOverride?: string;
 }
 
 export async function runQueryWithErrorInstrumentation<T = void>(
@@ -66,8 +68,9 @@ export async function runQueryWithErrorInstrumentation<T = void>(
   }
 }
 
-export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
-  e["_gmlogged"] = true;
+export const logDbError = ({ logger }: ParsedSettings, error: Error): void => {
+  const e = error as InstrumentationError;
+  e._gmlogged = true;
   const messages = [""];
   if (e["_gmMessageOverride"]) {
     messages.push(e["_gmMessageOverride"]);
@@ -76,7 +79,7 @@ export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
       chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
   }
-  const { severity, code, detail, hint } = e as InstrumentationError;
+  const { severity, code, detail, hint } = e;
   messages.push(indent(e.stack ? e.stack : e.message, 4));
   messages.push("");
   if (severity) {
