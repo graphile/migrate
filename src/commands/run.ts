@@ -18,7 +18,8 @@ interface RunArgv extends CommonArgv {
   rootDatabase?: boolean;
 }
 
-export async function run<T = void>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function run<T = any>(
   settings: Settings,
   content: string,
   filename: string,

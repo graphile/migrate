@@ -13,7 +13,8 @@ interface InstrumentationError extends Error {
   _gmMessageOverride?: string;
 }
 
-export async function runQueryWithErrorInstrumentation<T = void>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function runQueryWithErrorInstrumentation<T = any>(
   pgClient: Client,
   body: string,
   filename: string,
