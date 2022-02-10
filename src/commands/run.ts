@@ -53,7 +53,7 @@ export async function run<T = any>(
       : baseConnectionString;
 
   return withClient(connectionString, parsedSettings, pgClient =>
-    runQueryWithErrorInstrumentation(pgClient, sql, filename),
+    runQueryWithErrorInstrumentation<T>(pgClient, sql, filename),
   );
 }
 
