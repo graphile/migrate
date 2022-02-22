@@ -1,8 +1,7 @@
 import { Logger } from "@graphile/logger";
-import { exec as rawExec } from "child_process";
+import { ChildProcess, spawn as rawSpawn, SpawnOptions } from "child_process";
 import { promises as fsp } from "fs";
 import { parse } from "pg-connection-string";
-import { promisify } from "util";
 
 import { mergeWithoutClobbering } from "./lib";
 import { generatePlaceholderReplacement } from "./migration";
@@ -42,7 +41,22 @@ export interface CommandActionSpec extends ActionSpecBase {
 
 export type ActionSpec = SqlActionSpec | CommandActionSpec;
 
-const exec = promisify(rawExec);
+async function spawn(
+  command: string,
+  options: SpawnOptions,
+): Promise<ChildProcess> {
+  return new Promise((resolve, reject) => {
+    const child = rawSpawn(command, [], options);
+
+    child.on("close", code => {
+      if (code === 0) {
+        resolve(child);
+      } else {
+        reject(new Error(`Command failed with code ${code}`));
+      }
+    });
+  });
+}
 
 export async function executeActions(
   parsedSettings: ParsedSettings,
@@ -93,7 +107,7 @@ export async function executeActions(
       );
     } else if (actionSpec._ === "command") {
       // Run the command
-      const { stdout, stderr } = await exec(actionSpec.command, {
+      await spawn(actionSpec.command, {
         env: mergeWithoutClobbering(
           {
             ...process.env,
@@ -116,16 +130,9 @@ export async function executeActions(
           },
           "please ensure this environmental variable is not set because graphile-migrate sets it dynamically for children.",
         ),
-        encoding: "utf8",
-        // 50MB of log data should be enough for any reasonable migration... right?
-        maxBuffer: 50 * 1024 * 1024,
+        shell: true,
+        stdio: "inherit",
       });
-      if (stdout) {
-        parsedSettings.logger.info(stdout);
-      }
-      if (stderr) {
-        parsedSettings.logger.error(stderr);
-      }
     }
   }
 }
