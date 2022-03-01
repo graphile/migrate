@@ -180,7 +180,7 @@ describe("makeRootDatabaseConnectionString", () => {
     );
   });
 
-  it("handles a standalone DB namee", async () => {
+  it("handles a standalone DB name", async () => {
     mockFs.restore();
     const parsedSettings = await parseSettings({
       connectionString: exampleConnectionString,

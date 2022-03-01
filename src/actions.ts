@@ -101,7 +101,12 @@ export async function executeActions(
           },
           {
             GM_DBNAME: databaseName,
-            GM_DBUSER: actionSpec.root ? undefined : databaseUser,
+            // When `root: true`, GM_DBUSER may be perceived as ambiguous, so we must not set it.
+            ...(actionSpec.root
+              ? null
+              : {
+                  GM_DBUSER: databaseUser,
+                }),
             GM_DBURL: hookConnectionString,
             ...(shadow
               ? {

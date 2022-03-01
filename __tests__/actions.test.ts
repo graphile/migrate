@@ -6,6 +6,7 @@ import "./helpers"; // Has side-effects; must come first
 
 import { exec } from "child_process";
 import * as mockFs from "mock-fs";
+import { parse } from "pg-connection-string";
 
 import { executeActions } from "../src/actions";
 import { _migrate } from "../src/commands/migrate";
@@ -13,6 +14,7 @@ import { withClient } from "../src/pg";
 import { parseSettings } from "../src/settings";
 import {
   mockPgClient,
+  TEST_DATABASE_NAME,
   TEST_DATABASE_URL,
   TEST_ROOT_DATABASE_URL,
 } from "./helpers";
@@ -91,7 +93,7 @@ it("runs sql afterReset action with correct connection string when root", async 
   mockedWithClient.mockClear();
   await executeActions(parsedSettings, false, parsedSettings.afterReset);
   expect(mockedWithClient).toHaveBeenCalledTimes(1);
-  expect(mockedWithClient.mock.calls[0][0]).toBe("graphile_migrate_test");
+  expect(mockedWithClient.mock.calls[0][0]).toBe(TEST_DATABASE_NAME);
 });
 
 it("runs command afterReset action with correct env vars when root", async () => {
@@ -109,10 +111,16 @@ it("runs command afterReset action with correct env vars when root", async () =>
   );
 
   await executeActions(parsedSettings, false, parsedSettings.afterReset);
+  // When `root: true`, GM_DBUSER may be perceived as ambiguous, so we must not set it.
   expect(mockedExec.mock.calls[0][1].env.GM_DBUSER).toBe(undefined);
-  expect(mockedExec.mock.calls[0][1].env.GM_DBURL).toBe(
-    "graphile_migrate_test",
-  );
+  const connectionStringParts = parse(TEST_DATABASE_URL);
+  const rootConnectionStringParts = parse(TEST_ROOT_DATABASE_URL);
+  const execUrlParts = parse(mockedExec.mock.calls[0][1].env.GM_DBURL);
+  expect(execUrlParts.host).toBe(rootConnectionStringParts.host);
+  expect(execUrlParts.port).toBe(rootConnectionStringParts.port);
+  expect(execUrlParts.user).toBe(rootConnectionStringParts.user);
+  expect(execUrlParts.password).toBe(rootConnectionStringParts.password);
+  expect(execUrlParts.database).toBe(connectionStringParts.database);
 });
 
 it("run normal and non-shadow actions in non-shadow mode", async () => {
