@@ -4,11 +4,21 @@ import indent from "./indent";
 import { Client } from "./pg";
 import { ParsedSettings } from "./settings";
 
-export async function runQueryWithErrorInstrumentation(
+interface InstrumentationError extends Error {
+  severity?: string;
+  code?: string;
+  detail?: string;
+  hint?: string;
+  _gmlogged?: boolean;
+  _gmMessageOverride?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function runQueryWithErrorInstrumentation<T = any>(
   pgClient: Client,
   body: string,
   filename: string,
-): Promise<any[] | undefined> {
+): Promise<T[] | undefined> {
   try {
     const { rows } = await pgClient.query({
       text: body,
@@ -59,8 +69,9 @@ export async function runQueryWithErrorInstrumentation(
   }
 }
 
-export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
-  e["_gmlogged"] = true;
+export const logDbError = ({ logger }: ParsedSettings, error: Error): void => {
+  const e = error as InstrumentationError;
+  e._gmlogged = true;
   const messages = [""];
   if (e["_gmMessageOverride"]) {
     messages.push(e["_gmMessageOverride"]);
@@ -69,7 +80,7 @@ export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
       chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
   }
-  const { severity, code, detail, hint } = e as any;
+  const { severity, code, detail, hint } = e;
   messages.push(indent(e.stack ? e.stack : e.message, 4));
   messages.push("");
   if (severity) {

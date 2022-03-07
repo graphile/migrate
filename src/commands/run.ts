@@ -18,7 +18,8 @@ interface RunArgv extends CommonArgv {
   rootDatabase?: boolean;
 }
 
-export async function run(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function run<T = any>(
   settings: Settings,
   content: string,
   filename: string,
@@ -31,7 +32,7 @@ export async function run(
     root?: boolean;
     rootDatabase?: boolean;
   } = {},
-): Promise<any[] | undefined> {
+): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
   const sql = compilePlaceholders(parsedSettings, content, shadow);
   const baseConnectionString = rootDatabase
@@ -52,7 +53,7 @@ export async function run(
       : baseConnectionString;
 
   return withClient(connectionString, parsedSettings, pgClient =>
-    runQueryWithErrorInstrumentation(pgClient, sql, filename),
+    runQueryWithErrorInstrumentation<T>(pgClient, sql, filename),
   );
 }
 
