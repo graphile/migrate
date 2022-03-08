@@ -116,7 +116,7 @@ it("runs command afterReset action with correct env vars when root", async () =>
   const connectionStringParts = parse(TEST_DATABASE_URL);
   const rootConnectionStringParts = parse(TEST_ROOT_DATABASE_URL);
   expect(rootConnectionStringParts.database).not.toBe(
-    connectionStringParts.database
+    connectionStringParts.database,
   );
   const execUrlParts = parse(mockedExec.mock.calls[0][1].env.GM_DBURL);
   expect(execUrlParts.host).toBe(rootConnectionStringParts.host);
