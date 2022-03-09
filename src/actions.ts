@@ -18,13 +18,6 @@ import {
 interface ActionSpecBase {
   _: string;
   shadow?: boolean;
-}
-
-export const DO_NOT_USE_DATABASE_URL = "postgres://PLEASE:USE@GM_DBURL/INSTEAD";
-
-export interface SqlActionSpec extends ActionSpecBase {
-  _: "sql";
-  file: string;
 
   /**
    * USE THIS WITH CARE! Currently only supported by the afterReset hook, all
@@ -33,6 +26,13 @@ export interface SqlActionSpec extends ActionSpecBase {
    * connectionString), useful for creating extensions.
    */
   root?: boolean;
+}
+
+export const DO_NOT_USE_DATABASE_URL = "postgres://PLEASE:USE@GM_DBURL/INSTEAD";
+
+export interface SqlActionSpec extends ActionSpecBase {
+  _: "sql";
+  file: string;
 }
 
 export interface CommandActionSpec extends ActionSpecBase {
@@ -70,14 +70,14 @@ export async function executeActions(
     if (actionSpec.shadow !== undefined && actionSpec.shadow !== shadow) {
       continue;
     }
+    const hookConnectionString = actionSpec.root
+      ? makeRootDatabaseConnectionString(parsedSettings, databaseName)
+      : connectionString;
     if (actionSpec._ === "sql") {
       const body = await fsp.readFile(
         `${parsedSettings.migrationsFolder}/${actionSpec.file}`,
         "utf8",
       );
-      const hookConnectionString = actionSpec.root
-        ? makeRootDatabaseConnectionString(parsedSettings, databaseName)
-        : connectionString;
       await withClient(
         hookConnectionString,
         parsedSettings,
@@ -101,8 +101,13 @@ export async function executeActions(
           },
           {
             GM_DBNAME: databaseName,
-            GM_DBUSER: databaseUser,
-            GM_DBURL: connectionString,
+            // When `root: true`, GM_DBUSER may be perceived as ambiguous, so we must not set it.
+            ...(actionSpec.root
+              ? null
+              : {
+                  GM_DBUSER: databaseUser,
+                }),
+            GM_DBURL: hookConnectionString,
             ...(shadow
               ? {
                   GM_SHADOW: "1",

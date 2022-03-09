@@ -407,6 +407,7 @@ export function makeRootDatabaseConnectionString(
     );
   }
   const parsed = parseURL(rootConnectionString, true);
+  const isJustADatabaseName = !parsed.protocol;
   if (parsed.protocol === "socket:") {
     parsed.query.db = databaseName;
     const query = querystring.stringify(parsed.query);
@@ -416,6 +417,8 @@ export function makeRootDatabaseConnectionString(
     } else {
       return `socket:${parsed.pathname}?${query}`;
     }
+  } else if (isJustADatabaseName) {
+    return databaseName;
   } else {
     parsed.pathname = `/${databaseName}`;
     return formatURL(parsed);

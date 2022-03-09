@@ -27,7 +27,7 @@ if (!/^[a-zA-Z0-9_-]+$/.test(TEST_DATABASE_NAME)) {
   throw new Error("Invalid database name " + TEST_DATABASE_NAME);
 }
 
-const TEST_ROOT_DATABASE_URL: string =
+export const TEST_ROOT_DATABASE_URL: string =
   process.env.TEST_ROOT_DATABASE_URL || "postgres";
 
 export const settings: Settings = {

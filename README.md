@@ -601,16 +601,20 @@ When the command is invoked it will have access to the following envvars:
 
 - `GM_DBURL` - the relevant database URL (e.g. the one that was just
   reset/migrated)
-- `GM_DBNAME` - the database name in `GM_DBURL`; you might use this if you need
-  to use separate superuser credentials to install extensions against the
-  database
-- `GM_DBUSER` - the database user in `GM_DBURL`
+- `GM_DBNAME` - the database name in `GM_DBURL`
+- `GM_DBUSER` - the database user in `GM_DBURL` if `root` is `false`.
 - `GM_SHADOW` - set to `1` if we're dealing with the shadow DB, unset otherwise
 
 **IMPORTANT NOTE** the `DATABASE_URL` envvar will be set to the nonsense value
 `postgres://PLEASE:USE@GM_DBURL/INSTEAD` to avoid ambiguity - you almost
 certainly mean to use `GM_DBURL` in your scripts since they will want to change
 whichever database was just reset/migrated/etc (which could be the shadow DB).
+
+The `root` property applies to `command` actions with the similar effects as
+`sql` actions (see above). When `true`, the command will be run with GM_DBURL
+envvar set using the superuser role (i.e. the one defined in
+`rootConnectionString`) but with the database name from `connectionString`. When
+`root` is true, `GM_DBUSER` is not set.
 
 ## Collaboration
 

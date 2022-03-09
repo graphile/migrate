@@ -179,6 +179,19 @@ describe("makeRootDatabaseConnectionString", () => {
       "postgres://root:pass@localhost:5432/modified?ssl=true&sslrootcert=./__tests__/data/amazon-rds-ca-cert.pem",
     );
   });
+
+  it("handles a standalone DB name that is not a valid URL", async () => {
+    mockFs.restore();
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "just_a_db",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe("modified");
+  });
 });
 
 describe("actions", () => {
