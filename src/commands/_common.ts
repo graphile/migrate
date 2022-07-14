@@ -63,14 +63,36 @@ interface Options {
  */
 export async function getSettings(options: Options = {}): Promise<Settings> {
   const { configFile } = options;
-  const tryRequire = (path: string): Settings => {
+  const tryImport = async (
+    path: string,
+    mode: "cjs" | "mjs" | "js",
+  ): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
     // path.
     const relativePath = resolve(process.cwd(), path);
 
     try {
-      return require(relativePath);
+      if (mode === "cjs") {
+        return require(relativePath);
+      } else if (mode === "mjs") {
+        return (await import(relativePath)).default;
+      } else {
+        // try and require(CJS); but on ESM error, retry with import
+        try {
+          return require(relativePath);
+        } catch (e) {
+          if (
+            e.code === "ERR_REQUIRE_ESM" ||
+            (e.constructor.name === "SyntaxError" &&
+              e.message.includes(" token 'export'"))
+          ) {
+            return tryImport(relativePath, "mjs");
+          } else {
+            throw e;
+          }
+        }
+      }
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
@@ -87,14 +109,18 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     }
 
     if (configFile.endsWith(".js")) {
-      return tryRequire(configFile);
+      return tryImport(configFile, "js");
+    } else if (configFile.endsWith(".mjs")) {
+      return tryImport(configFile, "mjs");
+    } else if (configFile.endsWith(".cjs")) {
+      return tryImport(configFile, "cjs");
     } else {
       return await getSettingsFromJSON(configFile);
     }
   } else if (await exists(DEFAULT_GMRC_PATH)) {
     return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
   } else if (await exists(DEFAULT_GMRCJS_PATH)) {
-    return tryRequire(DEFAULT_GMRCJS_PATH);
+    return tryImport(DEFAULT_GMRCJS_PATH, "js");
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
