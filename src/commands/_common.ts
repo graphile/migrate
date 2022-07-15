@@ -7,6 +7,7 @@ import { Settings } from "../settings";
 
 export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
+export const DEFAULT_GMRC_COMMONJS_PATH = `${DEFAULT_GMRC_PATH}.cjs`;
 
 /**
  * Represents the option flags that are valid for all commands (see
@@ -86,7 +87,11 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       throw new Error(`Failed to import '${configFile}': file not found`);
     }
 
-    if (configFile.endsWith(".js")) {
+    if(configFile.endsWith('.mjs')){
+      throw new Error(`ES module imports aren't currently supported, change your config extension to .cjs.`);
+    }
+
+    if (configFile.endsWith(".js") || configFile.endsWith('.cjs')) {
       return tryRequire(configFile);
     } else {
       return await getSettingsFromJSON(configFile);
@@ -95,6 +100,8 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
   } else if (await exists(DEFAULT_GMRCJS_PATH)) {
     return tryRequire(DEFAULT_GMRCJS_PATH);
+  } else if (await exists(DEFAULT_GMRC_COMMONJS_PATH)) {
+    return tryRequire(DEFAULT_GMRC_COMMONJS_PATH);
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
