@@ -87,11 +87,13 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       throw new Error(`Failed to import '${configFile}': file not found`);
     }
 
-    if(configFile.endsWith('.mjs')){
-      throw new Error(`ES module imports aren't currently supported, change your config extension to .cjs.`);
+    if (configFile.endsWith(".mjs")) {
+      throw new Error(
+        `ES module imports aren't currently supported, change your config extension to .cjs.`,
+      );
     }
 
-    if (configFile.endsWith(".js") || configFile.endsWith('.cjs')) {
+    if (configFile.endsWith(".js") || configFile.endsWith(".cjs")) {
       return tryRequire(configFile);
     } else {
       return await getSettingsFromJSON(configFile);
