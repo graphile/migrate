@@ -83,7 +83,7 @@ yargs
     alias: "c",
     type: "string",
     description: "Optional path to gmrc file",
-    defaultDescription: ".gmrc[.js]",
+    defaultDescription: ".gmrc[.js|.cjs]",
   })
 
   .completion("completion", "Generate shell completion script.")
