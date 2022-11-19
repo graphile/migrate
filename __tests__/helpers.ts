@@ -2,8 +2,9 @@ jest.unmock("pg");
 
 import "mock-fs"; // MUST BE BEFORE EVERYTHING
 
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import { createHash } from "crypto";
+import { EventEmitter } from "events";
 import * as mockFs from "mock-fs";
 import { Pool } from "pg";
 import { parse } from "pg-connection-string";
@@ -151,13 +152,14 @@ interface ActionSpies {
   >;
 }
 export function makeActionSpies(shadow = false): ActionSpies {
-  const mockedExec = (exec as unknown) as jest.Mock<typeof exec>;
-  if (!mockedExec.mock) {
+  const mockedSpawn = (spawn as unknown) as jest.Mock<typeof spawn>;
+  if (!mockedSpawn.mock) {
     throw new Error("Must mock child_process");
   }
-  mockedExec.mockReset();
+  mockedSpawn.mockReset();
   const calls: string[] = [];
-  mockedExec.mockImplementation((_cmd, _opts, cb): any => {
+
+  mockedSpawn.mockImplementation((_cmd, _args, _opts): any => {
     expect(_opts.env.PATH).toBe(process.env.PATH);
     expect(typeof _opts.env.GM_DBURL).toBe("string");
     if (shadow) {
@@ -166,11 +168,14 @@ export function makeActionSpies(shadow = false): ActionSpies {
       expect(typeof _opts.env.GM_SHADOW).toBe("undefined");
     }
     calls.push(_cmd.replace(/^touch /, ""));
-    cb(null, {
-      error: null,
-      stdout: "",
-      stderr: "",
+
+    const child = new EventEmitter();
+
+    setImmediate(() => {
+      child.emit("close", 0);
     });
+
+    return child;
   });
   function getActionCalls() {
     return calls;

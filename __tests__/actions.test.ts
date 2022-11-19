@@ -4,12 +4,12 @@ jest.mock("../src/migration");
 
 import "./helpers"; // Has side-effects; must come first
 
-import { exec } from "child_process";
+import { spawn } from "child_process";
+import { EventEmitter } from "events";
 import * as mockFs from "mock-fs";
 import { parse } from "pg-connection-string";
 
 import { executeActions } from "../src/actions";
-import { _migrate } from "../src/commands/migrate";
 import { withClient } from "../src/pg";
 import { parseSettings } from "../src/settings";
 import {
@@ -38,15 +38,15 @@ it("runs SQL actions", async () => {
     connectionString: TEST_DATABASE_URL,
     afterAllMigrations: ["sqlfile1.sql", { _: "sql", file: "sqlfile2.sql" }],
   });
-  const mockedExec: jest.Mock<typeof exec> = exec as any;
-  mockedExec.mockClear();
+  const mockedSpawn: jest.Mock<typeof spawn> = spawn as any;
+  mockedSpawn.mockClear();
   mockPgClient.query.mockClear();
   await executeActions(
     parsedSettings,
     false,
     parsedSettings.afterAllMigrations,
   );
-  expect(mockedExec).toHaveBeenCalledTimes(0);
+  expect(mockedSpawn).toHaveBeenCalledTimes(0);
   expect(mockPgClient.query).toHaveBeenCalledTimes(2);
   expect(mockPgClient.query).toHaveBeenNthCalledWith(1, {
     text: `[CONTENT:migrations/sqlfile1.sql]`,
@@ -61,24 +61,33 @@ it("runs command actions", async () => {
     connectionString: TEST_DATABASE_URL,
     afterAllMigrations: [{ _: "command", command: "touch testCommandAction" }],
   });
-  const mockedExec: jest.Mock<typeof exec> = exec as any;
-  mockedExec.mockClear();
-  mockedExec.mockImplementationOnce((_cmd, _options, callback) =>
-    callback(null, { stdout: "", stderr: "" }),
-  );
+  const mockedSpawn: jest.Mock<typeof spawn> = spawn as any;
+  mockedSpawn.mockClear();
+  mockedSpawn.mockImplementationOnce((_cmd, _args, _opts): any => {
+    const child = new EventEmitter();
+
+    setImmediate(() => {
+      child.emit("close", 0);
+    });
+
+    return child;
+  });
 
   mockPgClient.query.mockClear();
-  await executeActions(
+  const promise = executeActions(
     parsedSettings,
     false,
     parsedSettings.afterAllMigrations,
   );
+
+  await promise;
+
   expect(mockPgClient.query).toHaveBeenCalledTimes(0);
-  expect(mockedExec).toHaveBeenCalledTimes(1);
-  expect(mockedExec.mock.calls[0][0]).toBe("touch testCommandAction");
-  expect(mockedExec.mock.calls[0][1].env.PATH).toBe(process.env.PATH);
-  expect(mockedExec.mock.calls[0][1].env.GM_SHADOW).toBe(undefined);
-  expect(typeof mockedExec.mock.calls[0][1].env.GM_DBURL).toBe("string");
+  expect(mockedSpawn).toHaveBeenCalledTimes(1);
+  expect(mockedSpawn.mock.calls[0][0]).toBe("touch testCommandAction");
+  expect(mockedSpawn.mock.calls[0][2].env.PATH).toBe(process.env.PATH);
+  expect(mockedSpawn.mock.calls[0][2].env.GM_SHADOW).toBe(undefined);
+  expect(typeof mockedSpawn.mock.calls[0][2].env.GM_DBURL).toBe("string");
 });
 
 it("runs sql afterReset action with correct connection string when root", async () => {
@@ -104,21 +113,27 @@ it("runs command afterReset action with correct env vars when root", async () =>
       { _: "command", command: "touch testCommandAction", root: true },
     ],
   });
-  const mockedExec: jest.Mock<typeof exec> = exec as any;
-  mockedExec.mockClear();
-  mockedExec.mockImplementationOnce((_cmd, _options, callback) =>
-    callback(null, { stdout: "", stderr: "" }),
-  );
+  const mockedSpawn: jest.Mock<typeof spawn> = spawn as any;
+  mockedSpawn.mockClear();
+  mockedSpawn.mockImplementationOnce((_cmd, _args, _opts): any => {
+    const child = new EventEmitter();
+
+    setImmediate(() => {
+      child.emit("close", 0);
+    });
+
+    return child;
+  });
 
   await executeActions(parsedSettings, false, parsedSettings.afterReset);
   // When `root: true`, GM_DBUSER may be perceived as ambiguous, so we must not set it.
-  expect(mockedExec.mock.calls[0][1].env.GM_DBUSER).toBe(undefined);
+  expect(mockedSpawn.mock.calls[0][2].env.GM_DBUSER).toBe(undefined);
   const connectionStringParts = parse(TEST_DATABASE_URL);
   const rootConnectionStringParts = parse(TEST_ROOT_DATABASE_URL);
   expect(rootConnectionStringParts.database).not.toBe(
     connectionStringParts.database,
   );
-  const execUrlParts = parse(mockedExec.mock.calls[0][1].env.GM_DBURL);
+  const execUrlParts = parse(mockedSpawn.mock.calls[0][2].env.GM_DBURL);
   expect(execUrlParts.host).toBe(rootConnectionStringParts.host);
   expect(execUrlParts.port).toBe(rootConnectionStringParts.port);
   expect(execUrlParts.user).toBe(rootConnectionStringParts.user);
@@ -140,15 +155,15 @@ it("run normal and non-shadow actions in non-shadow mode", async () => {
       { _: "sql", file: "everywhere.sql" },
     ],
   });
-  const mockedExec: jest.Mock<typeof exec> = exec as any;
-  mockedExec.mockClear();
+  const mockedSpawn: jest.Mock<typeof spawn> = spawn as any;
+  mockedSpawn.mockClear();
   mockPgClient.query.mockClear();
   await executeActions(
     parsedSettings,
     false,
     parsedSettings.afterAllMigrations,
   );
-  expect(mockedExec).toHaveBeenCalledTimes(0);
+  expect(mockedSpawn).toHaveBeenCalledTimes(0);
   expect(mockPgClient.query).toHaveBeenCalledTimes(2);
   expect(mockPgClient.query).toHaveBeenNthCalledWith(1, {
     text: `[CONTENT:migrations/non-shadow-only.sql]`,
@@ -171,11 +186,11 @@ it("run normal and shadow actions in shadow mode", async () => {
     },
     true,
   );
-  const mockedExec: jest.Mock<typeof exec> = exec as any;
-  mockedExec.mockClear();
+  const mockedSpawn: jest.Mock<typeof spawn> = spawn as any;
+  mockedSpawn.mockClear();
   mockPgClient.query.mockClear();
   await executeActions(parsedSettings, true, parsedSettings.afterAllMigrations);
-  expect(mockedExec).toHaveBeenCalledTimes(0);
+  expect(mockedSpawn).toHaveBeenCalledTimes(0);
   expect(mockPgClient.query).toHaveBeenCalledTimes(2);
   expect(mockPgClient.query).toHaveBeenNthCalledWith(1, {
     text: `[CONTENT:migrations/shadow-only.sql]`,
