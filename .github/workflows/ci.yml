@@ -8,8 +8,8 @@ env:
   PGPASSWORD: postgres
   PGHOST: "127.0.0.1"
   PGPORT: 5432
-  TEST_ROOT_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
-  TEST_DATABASE_URL: postgres://someone:something@localhost:5432/graphile_migrate_test
+  TEST_ROOT_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+  TEST_DATABASE_URL: postgres://someone:something@127.0.0.1:5432/graphile_migrate_test
   PGVERSION: 10
 
 jobs:
