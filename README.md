@@ -781,8 +781,9 @@ diverse) projects:
 
 We only support LTS versions of Node.js; the currently supported versions are:
 
-- Node v12.x
 - Node v14.x
+- Node v16.x
+- Node v18.x
 
 Other versions of Node may work, but are not officially supported.
 
