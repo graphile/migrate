@@ -93,7 +93,7 @@ export async function executeActions(
       );
     } else if (actionSpec._ === "command") {
       // Run the command
-      const { stdout, stderr } = await exec(actionSpec.command, {
+      const promise = exec(actionSpec.command, {
         env: mergeWithoutClobbering(
           {
             ...process.env,
@@ -120,11 +120,23 @@ export async function executeActions(
         // 50MB of log data should be enough for any reasonable migration... right?
         maxBuffer: 50 * 1024 * 1024,
       });
-      if (stdout) {
-        parsedSettings.logger.info(stdout);
-      }
-      if (stderr) {
-        parsedSettings.logger.error(stderr);
+      try {
+        const { stdout, stderr } = await promise;
+        if (stdout) {
+          parsedSettings.logger.info(stdout);
+        }
+        if (stderr) {
+          parsedSettings.logger.error(stderr);
+        }
+      } catch (e) {
+        const { stdout, stderr } = e;
+        if (stdout) {
+          parsedSettings.logger.info(stdout);
+        }
+        if (stderr) {
+          parsedSettings.logger.error(stderr);
+        }
+        throw e;
       }
     }
   }
