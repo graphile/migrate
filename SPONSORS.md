@@ -6,39 +6,41 @@ Graphile ecosystem. Find out
 
 ## Featured
 
-- Surge
 - The Guild
 - Dovetail
 - Qwick
 - Netflix
 - Chad Furman
-- Enzuzo
 - Stellate
+- Accenture
 
 ## Leaders
 
 - Politics Rewired
 - Joe Dennis
 - Robert Claypool
-- domonda
 - DocIQ
 - nigelrmtaylor
+- Principia Mentis
 - Luxor Labs
 - Ian Stewart
-- HR-ON
 - Axinom
 - PostHog
 - Nathanael Beisiegel
 - Notably
 - Taiste
 - latch.bio
-- Ayog Healthcare
 - Severin Ibarluzea
 - BairesDev
+- FOLX Health
+- Two Bit Solutions
+- Beacon
+- Ndustrial
+- dimply
 
 ## Supporters
 
-- Postlight
+- HR-ON
 - stlbucket
 - Sam Levin
 - Matt Bretl
@@ -49,7 +51,6 @@ Graphile ecosystem. Find out
 - CJ Lazell
 - Daniel Einspanjer
 - Mansoor Razzaq
-- Mark
 - Alvin Ali Khaled
 - Keith Layne
 - Paul Melnikow
@@ -66,4 +67,13 @@ Graphile ecosystem. Find out
 - JYC
 - Ben Periton
 - SpaceFill
+- Vizcom
 - Nate Smith
+- The Outbound Collective
+- Charlie Hadden
+- Kiron Open Higher Education
+- Antonio Angelino
+- urtho
+- Andrew Joseph
+- Old Grammar
+- Spear AI
