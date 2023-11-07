@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "lint": "yarn prettier:check && eslint --ext .js,.jsx,.ts,.tsx,.graphql .",
-    "lint:deps": "depcheck --ignores @types/jest,eslint_d,tslib ",
+    "lint:deps": "depcheck --ignores @types/jest,@types/json5,@types/node,@types/mock-fs,@types/pg,@types/yargs,eslint_d,mock-fs,tslib",
     "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx,.graphql . --fix; prettier --ignore-path .eslintignore --write '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
     "prettier:check": "prettier --ignore-path .eslintignore --check '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
     "prepack": "tsc && chmod +x dist/cli.js",
