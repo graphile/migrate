@@ -30,6 +30,7 @@ it("doesn't run current.sql if it's already up to date", async () => {
     parsedSettings,
     false,
     false,
+    false,
   );
 
   expect(getActionCalls()).toEqual([]);
@@ -79,6 +80,7 @@ it("watches symlinked files", async () => {
   await setup(parsedSettings);
   const migrationRunner = _makeCurrentMigrationRunner(
     parsedSettings,
+    false,
     false,
     false,
   );

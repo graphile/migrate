@@ -182,6 +182,9 @@ Commands:
   graphile-migrate watch           Runs any un-executed committed migrations and
                                    then runs and watches the current migration,
                                    re-running it on any change. For development.
+  graphile-migrate current         Runs any un-executed committed migrations and
+                                   then runs the current migration. For
+                                   development.
   graphile-migrate commit          Commits the current migration into the
                                    `committed/` folder, resetting the current
                                    migration. Resets the shadow database.
@@ -286,6 +289,24 @@ Options:
   --once        Runs the current migration and then exits.
                                                       [boolean] [default: false]
   --shadow      Applies changes to shadow DB.         [boolean] [default: false]
+```
+
+
+## graphile-migrate current
+
+```
+graphile-migrate current
+
+Runs any un-executed committed migrations and then runs the current migration.
+For development.
+
+Options:
+  --help          Show help                                            [boolean]
+  --config, -c    Optional path to gmrc file       string] [default: .gmrc[.js]]
+  --shadow        Applies changes to shadow DB.       [boolean] [default: false]
+  --forceActions  Run beforeAllMigrations, afterAllMigrations, beforeCurrent,
+                  and afterCurrent actions even if no migration was necessary.
+                                                      [boolean] [default: false]
 ```
 
 
