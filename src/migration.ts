@@ -118,6 +118,18 @@ export function compilePlaceholders(
   )(content);
 }
 
+export async function compileIncludes(content: string): Promise<string> {
+  const regex = /--!include (.*.sql)/g;
+  let compiledContent = content;
+  let match = regex.exec(content);
+  while (match != null) {
+    const fileContents = await fsp.readFile(match[1], "utf8");
+    compiledContent = compiledContent.replace(match[0], fileContents);
+    match = regex.exec(content);
+  }
+  return compiledContent;
+}
+
 const TABLE_CHECKS = {
   migrations: {
     columnCount: 4,

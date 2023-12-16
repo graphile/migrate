@@ -4,7 +4,7 @@ import { CommandModule } from "yargs";
 
 import { DO_NOT_USE_DATABASE_URL } from "../actions";
 import { runQueryWithErrorInstrumentation } from "../instrumentation";
-import { compilePlaceholders } from "../migration";
+import { compileIncludes, compilePlaceholders } from "../migration";
 import { withClient } from "../pgReal";
 import {
   makeRootDatabaseConnectionString,
@@ -35,7 +35,9 @@ export async function run<T extends QueryResultRow = QueryResultRow>(
   } = {},
 ): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
-  const sql = compilePlaceholders(parsedSettings, content, shadow);
+  const sql = await compileIncludes(
+    compilePlaceholders(parsedSettings, content, shadow),
+  );
   const baseConnectionString = rootDatabase
     ? parsedSettings.rootConnectionString
     : shadow

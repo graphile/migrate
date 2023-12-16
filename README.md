@@ -724,6 +724,47 @@ by `graphile-migrate watch` is defined. By default this is in the
 `migrations/current.sql` file, but it might be `migrations/current/*.sql` if
 you're using folder mode.
 
+#### Including external files in the current migration
+You can include external files in your `current.sql` to better assist in source
+control. These includes are always relative to the root of where graphile-migrate
+is running.
+
+For example. Given the following directory structure:
+```
+/- migrate
+ - migrations
+   |
+   - current.sql
+ - fixtures
+   |
+   - functions
+     |
+     - myfunction.sql
+```
+
+and the contents of `myfunction.sql`:
+```
+select 'not really a function';
+```
+
+If you want to make changes to `myFunction.sql` without having to copy the contents
+into `current.sql` (the old way), simply use the `--! include <file>` annotation
+in `current.sql`:
+
+```
+--!include fixtures/functions/myfunction.sql
+select * from tables;
+select 'more migration stuff';
+
+```
+and the resulting file that is compiled would look like:
+```
+select 'not really a function';
+select * from tables;
+select 'more migration stuff';
+```
+with the contents of `myfunction.sql` replacing the include line.
+
 ### Committed migration(s)
 
 The files for migrations that you've committed with `graphile-migrate commit`
