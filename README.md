@@ -735,11 +735,11 @@ For example. Given the following directory structure:
  - migrations
    |
    - current.sql
- - fixtures
-   |
-   - functions
+   - fixtures
      |
-     - myfunction.sql
+     - functions
+       |
+       - myfunction.sql
 ```
 
 and the contents of `myfunction.sql`:
