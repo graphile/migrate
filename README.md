@@ -761,13 +761,17 @@ wherever it is will be replaced by the content of
 drop policy if exists access_by_numbers on mytable;
 create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```
-and the resulting file that is compiled would look like:
+and when the migration is committed or watched, the contents of `myfunction.sql`
+will be included in the result, such that the following SQL is executed:
+
+```sql
+create or replace function myfunction(a int, b int)
+returns int as $$
+  select a + b;
+$$ language sql stable;
+drop policy if exists access_by_numbers on mytable;
+create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```
-select 'not really a function';
-select * from tables;
-select 'more migration stuff';
-```
-with the contents of `myfunction.sql` replacing the include line.
 
 ### Committed migration(s)
 
