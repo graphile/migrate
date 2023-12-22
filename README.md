@@ -756,11 +756,10 @@ by adding `--! include functions/myfunction.sql` to your `current.sql` (or any
 wherever it is will be replaced by the content of
 `migrations/fixtures/functions/myfunction.sql` when the migration is committed.
 
-```
+```sql
 --!include fixtures/functions/myfunction.sql
-select * from tables;
-select 'more migration stuff';
-
+drop policy if exists access_by_numbers on mytable;
+create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```
 and the resulting file that is compiled would look like:
 ```
