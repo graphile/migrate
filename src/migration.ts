@@ -118,16 +118,30 @@ export function compilePlaceholders(
   )(content);
 }
 
-export async function compileIncludes(content: string): Promise<string> {
+export async function compileIncludes(parsedSettings: ParsedSettings, content: string, processedFiles: Array<string> = []): Promise<string> {
   const regex = /--!include (.*.sql)/g;
   let compiledContent = content;
   let match = regex.exec(content);
-  while (match != null) {
-    const fileContents = await fsp.readFile(match[1], "utf8");
-    compiledContent = compiledContent.replace(match[0], fileContents);
-    match = regex.exec(content);
+  const includePath = `${parsedSettings.migrationsFolder}/fixtures/`
+  if(match) {
+    while (match != null) {
+      //If we've already processed this file, skip it (prevents infinite chains)
+      if(!processedFiles.includes(`${includePath}${match[1]}`)){
+        processedFiles.push(`${includePath}${match[1]}`);
+        const fileContents = await fsp.readFile(`${includePath}${match[1]}`, "utf8");
+        compiledContent = compiledContent.replace(match[0], fileContents)
+        match = regex.exec(content);
+      } else {
+        //remove recursive include and continue
+        compiledContent = compiledContent.replace(match[0], '');
+        match = regex.exec(content);
+      }
+    }
+    //recursively call compileIncludes to catch includes in the included files.
+    return await compileIncludes(parsedSettings, compiledContent, processedFiles);
+  } else {
+    return compiledContent;
   }
-  return compiledContent;
 }
 
 const TABLE_CHECKS = {

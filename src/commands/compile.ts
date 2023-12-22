@@ -1,7 +1,7 @@
 import { promises as fsp } from "fs";
 import { CommandModule } from "yargs";
 
-import { compileIncludes, compilePlaceholders } from "../migration";
+import { compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
 import { CommonArgv, getSettings, readStdin } from "./_common";
 
@@ -15,9 +15,7 @@ export async function compile(
   shadow = false,
 ): Promise<string> {
   const parsedSettings = await parseSettings(settings, shadow);
-  return await compileIncludes(
-    compilePlaceholders(parsedSettings, content, shadow),
-  );
+  return compilePlaceholders(parsedSettings, content, shadow);
 }
 
 export const compileCommand: CommandModule<
