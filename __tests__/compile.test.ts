@@ -99,6 +99,6 @@ it("compiles multiple included files", async () => {
   ).toEqual(`\
 select * from foo;
 select * from bar;
-select * from baz;
+select * from qux;
 `);
 });
