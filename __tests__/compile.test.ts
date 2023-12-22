@@ -91,9 +91,9 @@ it("compiles multiple included files", async () => {
         },
       },
       `\
---!include foo.sql
---!include bar.sql
---!include baz.sql
+--!include dir1/foo.sql
+--!include dir2/bar.sql
+--!include dir3/baz.sql
 `,
     ),
   ).toEqual(`\
