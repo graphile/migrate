@@ -77,9 +77,10 @@ select * from foo;
 
 it("compiles multiple included files", async () => {
   mockFs({
-    "foo.sql": "select * from foo;",
-    "bar.sql": "select * from bar;",
-    "baz.sql": "select * from baz;",
+    "migrations/fixtures/dir1/foo.sql": "select * from foo;",
+    "migrations/fixtures/dir2/bar.sql": "select * from bar;",
+    "migrations/fixtures/dir3/baz.sql": "--! include dir4/qux.sql",
+    "migrations/fixtures/dir4/qux.sql": "select * from qux;",
   });
   expect(
     await compile(
