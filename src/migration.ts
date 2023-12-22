@@ -123,12 +123,20 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
   let compiledContent = content;
   let match = regex.exec(content);
   const includePath = `${parsedSettings.migrationsFolder}/fixtures/`
+  const realPath = await fsp.realpath(includePath);
   if(match) {
     while (match != null) {
+      //make sure the include path starts with the real path of the fixtures folder.
+      const includeRegex = new RegExp(`^${realPath}`);
+      const includeRealPath = await fsp.realpath(`${includePath}${match[1]}`);
+      if(includeRegex.exec(includeRealPath) === null) {
+        throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);
+      }
+
       //If we've already processed this file, skip it (prevents infinite chains)
-      if(!processedFiles.includes(`${includePath}${match[1]}`)){
-        processedFiles.push(`${includePath}${match[1]}`);
-        const fileContents = await fsp.readFile(`${includePath}${match[1]}`, "utf8");
+      if(!processedFiles.includes(includeRealPath)){
+        processedFiles.push(includeRealPath);
+        const fileContents = await fsp.readFile(includeRealPath, "utf8");
         compiledContent = compiledContent.replace(match[0], fileContents)
         match = regex.exec(content);
       } else {
@@ -137,6 +145,7 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
         match = regex.exec(content);
       }
     }
+
     //recursively call compileIncludes to catch includes in the included files.
     return await compileIncludes(parsedSettings, compiledContent, processedFiles);
   } else {

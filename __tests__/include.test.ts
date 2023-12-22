@@ -81,3 +81,18 @@ it("compiles an included file, and won't get stuck in an infinite include loop",
 select * from foo;
 `);
 });
+
+/*it("disallows calling files outside of the migrations/fixtures folder", async () => {
+  mockFs({
+    "migrations/fixtures/bar.sql": "",
+    "outsideFolder/foo.sql": "select * from foo;",
+  });
+  expect(() => {
+    compileIncludes(
+      settings,
+      `\
+--!include ../../outsideFolder/foo.sql
+`,
+    )},
+  ).toThrow();
+});*/
