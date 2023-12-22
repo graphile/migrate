@@ -743,8 +743,11 @@ For example. Given the following directory structure:
 ```
 
 and the contents of `myfunction.sql`:
-```
-select 'not really a function';
+```sql
+create or replace function myfunction(a int, b int)
+returns int as $$
+  select a + b;
+$$ language sql stable;
 ```
 
 If you want to make changes to `myFunction.sql` without having to copy the contents
