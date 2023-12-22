@@ -726,8 +726,8 @@ you're using folder mode.
 
 #### Including external files in the current migration
 You can include external files in your `current.sql` to better assist in source
-control. These includes are always relative to the root of where graphile-migrate
-is running.
+control. These includes are identified by paths within the `migrations/fixtures`
+folder.
 
 For example. Given the following directory structure:
 ```
