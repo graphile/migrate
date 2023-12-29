@@ -82,17 +82,17 @@ select * from foo;
 `);
 });
 
-/*it("disallows calling files outside of the migrations/fixtures folder", async () => {
+it("disallows calling files outside of the migrations/fixtures folder", async () => {
   mockFs({
     "migrations/fixtures/bar.sql": "",
     "outsideFolder/foo.sql": "select * from foo;",
   });
-  expect(() => {
-    compileIncludes(
+
+  await expect(compileIncludes(
       settings,
       `\
 --!include ../../outsideFolder/foo.sql
 `,
-    )},
-  ).toThrow();
-});*/
+    )
+  ).rejects.toThrow();
+});

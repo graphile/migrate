@@ -127,8 +127,17 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
   if(match) {
     while (match != null) {
       //make sure the include path starts with the real path of the fixtures folder.
-      const includeRegex = new RegExp(`^${realPath}`);
-      const includeRealPath = await fsp.realpath(`${includePath}${match[1]}`);
+      let includeRegex;
+      let includeRealPath;
+
+      try {
+        includeRegex = new RegExp(`^${realPath}`);
+        includeRealPath = await fsp.realpath(`${includePath}${match[1]}`);
+      } catch (e) {
+        throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);
+      }
+
+
       if(includeRegex.exec(includeRealPath) === null) {
         throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);
       }
