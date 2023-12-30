@@ -123,7 +123,18 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
   let compiledContent = content;
   let match = regex.exec(content);
   const includePath = `${parsedSettings.migrationsFolder}/fixtures/`
-  const realPath = await fsp.realpath(includePath);
+  let realPath;
+
+  //if the fixtures folder isn't defined, catch the error and return the original content.
+  try {
+    realPath = await fsp.realpath(includePath);
+  } catch (e) {
+    if (!realPath) {
+      parsedSettings.logger.warn(`Warning: ${includePath} is not defined.`)
+      return content;
+    }
+  }
+
   if(match) {
     while (match != null) {
       //make sure the include path starts with the real path of the fixtures folder.
@@ -136,7 +147,6 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
       } catch (e) {
         throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);
       }
-
 
       if(includeRegex.exec(includeRealPath) === null) {
         throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);

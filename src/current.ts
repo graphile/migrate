@@ -3,7 +3,11 @@ import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
 import { errorCode } from "./lib";
-import { parseMigrationText, serializeHeader } from "./migration";
+import {
+  compileIncludes,
+  parseMigrationText,
+  serializeHeader,
+} from "./migration";
 import { ParsedSettings } from "./settings";
 
 export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
@@ -106,7 +110,7 @@ export async function readCurrentMigration(
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return content || "";
+    return await compileIncludes(_parsedSettings, content || "");
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
@@ -181,7 +185,8 @@ export async function readCurrentMigration(
     if (headerLines.length) {
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
-    return wholeBody;
+
+    return await compileIncludes(_parsedSettings, wholeBody);
   }
 }
 
