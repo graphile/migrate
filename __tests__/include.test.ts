@@ -15,7 +15,7 @@ beforeAll(async () => {
     placeholders: {
       ":DATABASE_AUTHENTICATOR": "!ENV",
     },
-    migrationsFolder: 'migrations'
+    migrationsFolder: "migrations",
   });
 });
 afterAll(() => {
@@ -25,7 +25,6 @@ afterAll(() => {
 afterEach(() => {
   mockFs.restore();
 });
-
 
 it("compiles an included file", async () => {
   mockFs({
@@ -88,11 +87,12 @@ it("disallows calling files outside of the migrations/fixtures folder", async ()
     "outsideFolder/foo.sql": "select * from foo;",
   });
 
-  await expect(compileIncludes(
+  await expect(
+    compileIncludes(
       settings,
       `\
 --!include ../../outsideFolder/foo.sql
 `,
-    )
+    ),
   ).rejects.toThrow();
 });

@@ -725,11 +725,13 @@ by `graphile-migrate watch` is defined. By default this is in the
 you're using folder mode.
 
 #### Including external files in the current migration
+
 You can include external files in your `current.sql` to better assist in source
 control. These includes are identified by paths within the `migrations/fixtures`
 folder.
 
 For example. Given the following directory structure:
+
 ```
 /- migrate
  - migrations
@@ -743,6 +745,7 @@ For example. Given the following directory structure:
 ```
 
 and the contents of `myfunction.sql`:
+
 ```sql
 create or replace function myfunction(a int, b int)
 returns int as $$
@@ -761,6 +764,7 @@ wherever it is will be replaced by the content of
 drop policy if exists access_by_numbers on mytable;
 create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```
+
 and when the migration is committed or watched, the contents of `myfunction.sql`
 will be included in the result, such that the following SQL is executed:
 

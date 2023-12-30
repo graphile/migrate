@@ -118,11 +118,15 @@ export function compilePlaceholders(
   )(content);
 }
 
-export async function compileIncludes(parsedSettings: ParsedSettings, content: string, processedFiles: Array<string> = []): Promise<string> {
+export async function compileIncludes(
+  parsedSettings: ParsedSettings,
+  content: string,
+  processedFiles: Array<string> = [],
+): Promise<string> {
   const regex = /--!include (.*.sql)/g;
   let compiledContent = content;
   let match = regex.exec(content);
-  const includePath = `${parsedSettings.migrationsFolder}/fixtures/`
+  const includePath = `${parsedSettings.migrationsFolder}/fixtures/`;
   let realPath;
 
   //if the fixtures folder isn't defined, catch the error and return the original content.
@@ -130,12 +134,12 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
     realPath = await fsp.realpath(includePath);
   } catch (e) {
     if (!realPath) {
-      parsedSettings.logger.warn(`Warning: ${includePath} is not defined.`)
+      parsedSettings.logger.warn(`Warning: ${includePath} is not defined.`);
       return content;
     }
   }
 
-  if(match) {
+  if (match) {
     while (match != null) {
       //make sure the include path starts with the real path of the fixtures folder.
       let includeRegex;
@@ -145,28 +149,36 @@ export async function compileIncludes(parsedSettings: ParsedSettings, content: s
         includeRegex = new RegExp(`^${realPath}`);
         includeRealPath = await fsp.realpath(`${includePath}${match[1]}`);
       } catch (e) {
-        throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);
+        throw new Error(
+          `include path not in ${parsedSettings.migrationsFolder}/fixtures/`,
+        );
       }
 
-      if(includeRegex.exec(includeRealPath) === null) {
-        throw new Error(`include path not in ${parsedSettings.migrationsFolder}/fixtures/`);
+      if (includeRegex.exec(includeRealPath) === null) {
+        throw new Error(
+          `include path not in ${parsedSettings.migrationsFolder}/fixtures/`,
+        );
       }
 
       //If we've already processed this file, skip it (prevents infinite chains)
-      if(!processedFiles.includes(includeRealPath)){
+      if (!processedFiles.includes(includeRealPath)) {
         processedFiles.push(includeRealPath);
         const fileContents = await fsp.readFile(includeRealPath, "utf8");
-        compiledContent = compiledContent.replace(match[0], fileContents)
+        compiledContent = compiledContent.replace(match[0], fileContents);
         match = regex.exec(content);
       } else {
         //remove recursive include and continue
-        compiledContent = compiledContent.replace(match[0], '');
+        compiledContent = compiledContent.replace(match[0], "");
         match = regex.exec(content);
       }
     }
 
     //recursively call compileIncludes to catch includes in the included files.
-    return await compileIncludes(parsedSettings, compiledContent, processedFiles);
+    return await compileIncludes(
+      parsedSettings,
+      compiledContent,
+      processedFiles,
+    );
   } else {
     return compiledContent;
   }
