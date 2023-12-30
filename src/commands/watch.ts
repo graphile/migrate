@@ -217,7 +217,11 @@ export async function _watch(
           }
         });
     };
-    const watcher = chokidar.watch(currentLocation.path, {
+    const watcher = chokidar.watch(
+      [
+        currentLocation.path,
+        `${parsedSettings.migrationsFolder}/fixtures`
+      ], {
       /*
        * Without `usePolling`, on Linux, you can prevent the watching from
        * working by issuing `git stash && sleep 2 && git stash pop`. This is
