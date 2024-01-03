@@ -110,7 +110,7 @@ export async function readCurrentMigration(
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return await compileIncludes(_parsedSettings, content || "");
+    return compileIncludes(_parsedSettings, content || "");
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
