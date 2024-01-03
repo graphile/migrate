@@ -186,7 +186,7 @@ export async function readCurrentMigration(
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
 
-    return await compileIncludes(_parsedSettings, wholeBody);
+    return compileIncludes(_parsedSettings, wholeBody);
   }
 }
 
