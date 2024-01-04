@@ -96,3 +96,42 @@ it("disallows calling files outside of the migrations/fixtures folder", async ()
     ),
   ).rejects.toThrow();
 });
+
+it("compiles an included file that contains escapable things", async () => {
+  mockFs({
+    "migrations/fixtures/foo.sql": `\
+begin;
+
+create or replace function current_user_id() returns uuid as $$
+  select nullif(current_setting('user.id', true)::text, '')::uuid;
+$$ language sql stable;
+
+comment on function current_user_id is E'The ID of the current user.';
+
+grant all on function current_user_id to :DATABASE_USER;
+
+commit;
+`,
+  });
+  expect(
+    await compileIncludes(
+      settings,
+      `\
+--!include foo.sql
+`,
+    ),
+  ).toEqual(`\
+begin;
+
+create or replace function current_user_id() returns uuid as $$
+  select nullif(current_setting('user.id', true)::text, '')::uuid;
+$$ language sql stable;
+
+comment on function current_user_id is E'The ID of the current user.';
+
+grant all on function current_user_id to :DATABASE_USER;
+
+commit;
+
+`);
+});

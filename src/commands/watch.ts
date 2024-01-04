@@ -218,7 +218,10 @@ export async function _watch(
         });
     };
     const watcher = chokidar.watch(
-      [currentLocation.path, `${parsedSettings.migrationsFolder}/fixtures/**`],
+      [
+        currentLocation.path,
+        `${parsedSettings.migrationsFolder}/fixtures/**/*`,
+      ],
       {
         /*
          * Without `usePolling`, on Linux, you can prevent the watching from

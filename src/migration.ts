@@ -164,7 +164,10 @@ export async function compileIncludes(
       if (!processedFiles.includes(includeRealPath)) {
         processedFiles.push(includeRealPath);
         const fileContents = await fsp.readFile(includeRealPath, "utf8");
-        compiledContent = compiledContent.replace(match[0], fileContents);
+        compiledContent = compiledContent.replace(
+          match[0],
+          fileContents.replace(/\$/g, "$$$$"),
+        );
         match = regex.exec(content);
       } else {
         //remove recursive include and continue
