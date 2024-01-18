@@ -230,8 +230,8 @@ Commands:
   graphile-migrate completion      Generate shell completion script.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
 
 You are running graphile-migrate v1.4.1.
 ```
@@ -246,9 +246,9 @@ Initializes a graphile-migrate project by creating a `.gmrc` file and
 `migrations` folder.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-  --folder      Use a folder rather than a file for the current migration.
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --folder  Use a folder rather than a file for the current migration.
                                                       [boolean] [default: false]
 ```
 
@@ -262,12 +262,14 @@ Runs any un-executed committed migrations. Does NOT run the current migration.
 For use in production and development.
 
 Options:
-  --help          Show help                                            [boolean]
-  --config, -c    Optional path to gmrc file [string] [default: .gmrc[.js|.cjs]]
-  --shadow        Apply migrations to the shadow DB (for development).
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
-  --forceActions  Run beforeAllMigrations and afterAllMigrations actions even if
-                  no migration was necessary.         [boolean] [default: false]
+      --forceActions  Run beforeAllMigrations and afterAllMigrations actions
+                      even if no migration was necessary.
+                                                      [boolean] [default: false]
 ```
 
 
@@ -280,11 +282,11 @@ Runs any un-executed committed migrations and then runs and watches the current
 migration, re-running it on any change. For development.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-  --once        Runs the current migration and then exits.
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --once    Runs the current migration and then exits.
                                                       [boolean] [default: false]
-  --shadow      Applies changes to shadow DB.         [boolean] [default: false]
+      --shadow  Applies changes to shadow DB.         [boolean] [default: false]
 ```
 
 
@@ -297,9 +299,9 @@ Commits the current migration into the `committed/` folder, resetting the
 current migration. Resets the shadow database.
 
 Options:
-  --help         Show help                                             [boolean]
-  --config, -c   Optional path to gmrc file  [string] [default: .gmrc[.js|.cjs]]
-  --message, -m  Optional commit message to label migration, must not contain
+      --help     Show help                                             [boolean]
+  -c, --config   Optional path to gmrc file  [string] [default: .gmrc[.js|.cjs]]
+  -m, --message  Optional commit message to label migration, must not contain
                  newlines.                                              [string]
 ```
 
@@ -321,8 +323,8 @@ should result in the exact same hash. Development only, and liable to cause
 conflicts with other developers - be careful.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
 ```
 
 
@@ -335,10 +337,10 @@ Drops and re-creates the database, re-running all committed migrations from the
 start. **HIGHLY DESTRUCTIVE**.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-  --shadow      Applies migrations to shadow DB.      [boolean] [default: false]
-  --erase       This is your double opt-in to make it clear this DELETES
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --shadow  Applies migrations to shadow DB.      [boolean] [default: false]
+      --erase   This is your double opt-in to make it clear this DELETES
                 EVERYTHING.                           [boolean] [default: false]
 ```
 
@@ -359,9 +361,10 @@ are true, exit status will be 0 (success). Additional messages may also be
 output.
 
 Options:
-  --help          Show help                                            [boolean]
-  --config, -c    Optional path to gmrc file [string] [default: .gmrc[.js|.cjs]]
-  --skipDatabase  Skip checks that require a database connection.
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --skipDatabase  Skip checks that require a database connection.
                                                       [boolean] [default: false]
 ```
 
@@ -375,9 +378,9 @@ Compiles a SQL file, inserting all the placeholders and returning the result to
 STDOUT
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-  --shadow      Apply shadow DB placeholders (for development).
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --shadow  Apply shadow DB placeholders (for development).
                                                       [boolean] [default: false]
 ```
 
@@ -393,14 +396,16 @@ run against the same database (via GM_DBURL envvar) unless --shadow or
 --rootDatabase are supplied.
 
 Options:
-  --help          Show help                                            [boolean]
-  --config, -c    Optional path to gmrc file [string] [default: .gmrc[.js|.cjs]]
-  --shadow        Apply to the shadow database (for development).
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --shadow        Apply to the shadow database (for development).
                                                       [boolean] [default: false]
-  --root          Run the file using the root user (but application database).
+      --root          Run the file using the root user (but application
+                      database).                      [boolean] [default: false]
+      --rootDatabase  Like --root, but also runs against the root database
+                      rather than application database.
                                                       [boolean] [default: false]
-  --rootDatabase  Like --root, but also runs against the root database rather
-                  than application database.          [boolean] [default: false]
 ```
 <!-- CLI_USAGE_END -->
 <!-- prettier-ignore-end -->
