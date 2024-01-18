@@ -304,9 +304,9 @@ describe("actions", () => {
         ],
       }),
     ).rejects.toMatchInlineSnapshot(`
-            [Error: Errors occurred during settings validation:
-            - Setting 'afterAllMigrations': Action spec of type 'unknown_value' not supported; perhaps you need to upgrade?]
-          `);
+      [Error: Errors occurred during settings validation:
+      - Setting 'afterAllMigrations': Action spec '{ _: 'unknown_value', command: 'pg_dump --schema-only' }' not supported; perhaps you need to upgrade?]
+    `);
   });
 });
 
