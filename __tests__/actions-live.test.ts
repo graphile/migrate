@@ -1,7 +1,7 @@
 import "./helpers"; // Has side-effects; must come first
 
 import { Logger, LogLevel, LogMeta } from "@graphile/logger";
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { executeActions } from "../src/actions";
 import { _migrate } from "../src/commands/migrate";

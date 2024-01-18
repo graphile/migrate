@@ -41,11 +41,11 @@ async function getError(initialSchema = ""): Promise<Error | null> {
     if (initialSchema) {
       await client.query(initialSchema);
     }
-    let error = null;
+    let error: Error | null = null;
     try {
       await _migrateMigrationSchema(client, parsedSettings);
     } catch (e) {
-      error = e;
+      error = e instanceof Error ? e : new Error(String(e));
     }
     return error;
   });

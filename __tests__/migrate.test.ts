@@ -1,6 +1,6 @@
 import "./helpers"; // Has side-effects; must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { migrate } from "../src";
 import { withClient } from "../src/pg";

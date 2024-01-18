@@ -4,7 +4,7 @@ import "mock-fs"; // MUST BE BEFORE EVERYTHING
 
 import { exec } from "child_process";
 import { createHash } from "crypto";
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 import { Pool } from "pg";
 import { parse } from "pg-connection-string";
 
@@ -28,7 +28,7 @@ if (!/^[a-zA-Z0-9_-]+$/.test(TEST_DATABASE_NAME)) {
 }
 
 export const TEST_ROOT_DATABASE_URL: string =
-  process.env.TEST_ROOT_DATABASE_URL || "postgres";
+  process.env.TEST_ROOT_DATABASE_URL || "postgres:///postgres";
 
 export const settings: Settings = {
   connectionString: TEST_DATABASE_URL,

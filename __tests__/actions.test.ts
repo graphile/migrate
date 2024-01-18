@@ -5,7 +5,7 @@ jest.mock("../src/migration");
 import "./helpers"; // Has side-effects; must come first
 
 import { exec } from "child_process";
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 import { parse } from "pg-connection-string";
 
 import { executeActions } from "../src/actions";

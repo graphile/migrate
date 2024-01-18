@@ -1,6 +1,6 @@
 import "./helpers"; // Side effects - must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 import * as path from "path";
 
 import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
