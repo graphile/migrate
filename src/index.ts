@@ -1,4 +1,4 @@
 export * from "./commands";
-export { Settings } from "./settings";
-export { Logger, LogFunctionFactory, LogLevel } from "@graphile/logger";
 export { defaultLogger } from "./logger";
+export { Settings } from "./settings";
+export { LogFunctionFactory, Logger, LogLevel } from "@graphile/logger";

@@ -37,7 +37,7 @@ async function getError(initialSchema = ""): Promise<Error | null> {
     connectionString: TEST_DATABASE_URL,
     manageGraphileMigrateSchema: false,
   });
-  return withClient(parsedSettings, async client => {
+  return withClient(parsedSettings, async (client) => {
     if (initialSchema) {
       await client.query(initialSchema);
     }

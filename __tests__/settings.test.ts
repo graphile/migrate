@@ -79,7 +79,7 @@ it("throws if shadow attempted but no shadow DB", async () => {
 
 it.each([[[]], [{}], ["test"]])(
   "throws error for invalid logger",
-  async invalidLogger => {
+  async (invalidLogger) => {
     await expect(
       parseSettings({
         connectionString: exampleConnectionString,

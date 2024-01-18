@@ -84,7 +84,7 @@ it("runs migrations", async () => {
       ]
     `);
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
+    expect(tables.map((t) => t.relname)).toMatchInlineSnapshot(`
       Array [
         "foo",
       ]
@@ -133,7 +133,7 @@ Array [
       ]
     `);
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
+    expect(tables.map((t) => t.relname)).toMatchInlineSnapshot(`
       Array [
         "foo",
       ]

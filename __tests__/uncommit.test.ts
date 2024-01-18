@@ -48,7 +48,7 @@ it("aborts if current migration is not empty", async () => {
 
 describe.each([[undefined], ["My Commit Message"]])(
   "uncommit message '%s'",
-  commitMessage => {
+  (commitMessage) => {
     const commitMessageSlug = commitMessage
       ? `-${sluggify(commitMessage)}`
       : ``;
@@ -61,7 +61,8 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("rolls back migration", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
         "migrations/current.sql": "-- JUST A COMMENT\n",
       });
       await migrate(settings);
@@ -89,8 +90,10 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("rolls back multifile migration", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
-        [`migrations/committed/000002${commitMessageSlug}.sql`]: MIGRATION_MULTIFILE_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
+        [`migrations/committed/000002${commitMessageSlug}.sql`]:
+          MIGRATION_MULTIFILE_COMMITTED,
         "migrations/current/1.sql": "-- COMMENT",
       });
       await migrate(settings);

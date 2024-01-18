@@ -25,7 +25,7 @@ it("logs output from command actions on success", async () => {
     message: string;
     meta?: LogMeta;
   }> = [];
-  const logger = new Logger(scope => (level, message, meta) => {
+  const logger = new Logger((scope) => (level, message, meta) => {
     logs.push({ scope, level, message, meta });
   });
   const parsedSettings = await parseSettings({
@@ -60,7 +60,7 @@ it("logs output from command actions on failure", async () => {
     message: string;
     meta?: LogMeta;
   }> = [];
-  const logger = new Logger(scope => (level, message, meta) => {
+  const logger = new Logger((scope) => (level, message, meta) => {
     logs.push({ scope, level, message, meta });
   });
   const parsedSettings = await parseSettings({
