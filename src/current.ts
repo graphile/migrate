@@ -113,7 +113,7 @@ export async function readCurrentMigration(
     return compileIncludes(
       parsedSettings,
       content || "",
-      new Set(location.path),
+      new Set([location.path]),
     );
   } else {
     const files = await fsp.readdir(location.path);
