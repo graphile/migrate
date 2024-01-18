@@ -54,6 +54,7 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@localrepo/prettier2-for-jest": "npm:prettier@^2",
     "@tsconfig/node18": "^18.2.2",
     "@types/jest": "^29.5.11",
     "@types/mock-fs": "^4.13.4",
