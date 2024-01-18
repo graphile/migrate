@@ -103,14 +103,14 @@ function idFromFilename(file: string): number {
 }
 
 export async function readCurrentMigration(
-  _parsedSettings: ParsedSettings,
+  parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
 ): Promise<string> {
   if (location.isFile) {
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return compileIncludes(_parsedSettings, content || "");
+    return compileIncludes(parsedSettings, content || "");
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
@@ -186,7 +186,7 @@ export async function readCurrentMigration(
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
 
-    return compileIncludes(_parsedSettings, wholeBody);
+    return compileIncludes(parsedSettings, wholeBody);
   }
 }
 
