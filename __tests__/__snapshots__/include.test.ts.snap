@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`compiles an included file, and won't get stuck in an infinite include loop 1`] = `
-"Circular include detected - '~/migrations/fixtures/foo.sql' is included again! Trace:
+"Circular include detected - '~/migrations/fixtures/foo.sql' is included again! Import statement: \`--!include foo.sql\`; trace:
   ~/migrations/fixtures/foo.sql
   ~/migrations/current.sql"
 `;

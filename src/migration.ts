@@ -154,7 +154,7 @@ export async function compileIncludes(
   // Go through these matches and resolve their full paths, checking they are allowed
   const sqlPathByRawSqlPath = Object.create(null) as Record<string, string>;
   for (const match of matches) {
-    const [, rawSqlPath] = match;
+    const [line, rawSqlPath] = match;
     const sqlPath = await realpathOrNull(`${fixturesPath}/${rawSqlPath}`);
 
     if (!sqlPath) {
@@ -165,7 +165,7 @@ export async function compileIncludes(
 
     if (processedFiles.has(sqlPath)) {
       throw new Error(
-        `Circular include detected - '${sqlPath}' is included again! Trace:\n  ${[...processedFiles].reverse().join("\n  ")}`,
+        `Circular include detected - '${sqlPath}' is included again! Import statement: \`${line}\`; trace:\n  ${[...processedFiles].reverse().join("\n  ")}`,
       );
     }
 
