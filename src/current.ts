@@ -110,7 +110,11 @@ export async function readCurrentMigration(
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return compileIncludes(parsedSettings, content || "");
+    return compileIncludes(
+      parsedSettings,
+      content || "",
+      new Set(location.path),
+    );
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
@@ -160,7 +164,12 @@ export async function readCurrentMigration(
     for (const id of ids) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { file, filePath, bodyPromise } = parts.get(id)!;
-      const contents = await bodyPromise;
+      const rawContents = await bodyPromise;
+      const contents = await compileIncludes(
+        parsedSettings,
+        rawContents,
+        new Set([filePath]),
+      );
       const { body, headers } = parseMigrationText(filePath, contents, false);
       headerses.push(headers);
       if (isNoTransactionDefined(body)) {
@@ -186,7 +195,7 @@ export async function readCurrentMigration(
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
 
-    return compileIncludes(parsedSettings, wholeBody);
+    return wholeBody;
   }
 }
 

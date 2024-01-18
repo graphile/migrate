@@ -1,6 +1,6 @@
 import "./helpers";
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { compileIncludes } from "../src/migration";
 import { ParsedSettings, parseSettings } from "../src/settings";
@@ -36,6 +36,7 @@ it("compiles an included file", async () => {
       `\
 --!include foo.sql
 `,
+      new Set(["current.sql"]),
     ),
   ).toEqual(`\
 select * from foo;
@@ -57,6 +58,7 @@ it("compiles multiple included files", async () => {
 --!include dir2/bar.sql
 --!include dir3/baz.sql
 `,
+      new Set(["current.sql"]),
     ),
   ).toEqual(`\
 select * from foo;
@@ -67,18 +69,17 @@ select * from qux;
 
 it("compiles an included file, and won't get stuck in an infinite include loop", async () => {
   mockFs({
-    "migrations/fixtures/foo.sql": "select * from foo;--!include foo.sql",
+    "migrations/fixtures/foo.sql": "select * from foo;\n--!include foo.sql",
   });
-  expect(
-    await compileIncludes(
+  await expect(
+    compileIncludes(
       settings,
       `\
 --!include foo.sql
 `,
+      new Set(["current.sql"]),
     ),
-  ).toEqual(`\
-select * from foo;
-`);
+  ).rejects.toThrowError(/Circular include/);
 });
 
 it("disallows calling files outside of the migrations/fixtures folder", async () => {
@@ -93,6 +94,7 @@ it("disallows calling files outside of the migrations/fixtures folder", async ()
       `\
 --!include ../../outsideFolder/foo.sql
 `,
+      new Set(["current.sql"]),
     ),
   ).rejects.toThrow();
 });
@@ -119,6 +121,7 @@ commit;
       `\
 --!include foo.sql
 `,
+      new Set(["current.sql"]),
     ),
   ).toEqual(`\
 begin;

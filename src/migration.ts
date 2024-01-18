@@ -130,7 +130,7 @@ async function realpathOrNull(path: string): Promise<string | null> {
 export async function compileIncludes(
   parsedSettings: ParsedSettings,
   content: string,
-  processedFiles: ReadonlySet<string> = new Set<string>(),
+  processedFiles: ReadonlySet<string>,
 ): Promise<string> {
   const regex = /^--!include[ \t]+(.*\.sql)[ \t]*$/gm;
 
