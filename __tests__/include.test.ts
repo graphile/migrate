@@ -26,6 +26,9 @@ afterEach(() => {
   mockFs.restore();
 });
 
+/** Pretents that our compiled files are 'current.sql' */
+const FAKE_VISITED = new Set([`${process.cwd()}/migrations/current.sql`]);
+
 it("compiles an included file", async () => {
   mockFs({
     "migrations/fixtures/foo.sql": "select * from foo;",
@@ -36,7 +39,7 @@ it("compiles an included file", async () => {
       `\
 --!include foo.sql
 `,
-      new Set(["current.sql"]),
+      FAKE_VISITED,
     ),
   ).toEqual(`\
 select * from foo;
@@ -58,7 +61,7 @@ it("compiles multiple included files", async () => {
 --!include dir2/bar.sql
 --!include dir3/baz.sql
 `,
-      new Set(["current.sql"]),
+      FAKE_VISITED,
     ),
   ).toEqual(`\
 select * from foo;
@@ -71,15 +74,16 @@ it("compiles an included file, and won't get stuck in an infinite include loop",
   mockFs({
     "migrations/fixtures/foo.sql": "select * from foo;\n--!include foo.sql",
   });
-  await expect(
-    compileIncludes(
-      settings,
-      `\
+  const promise = compileIncludes(
+    settings,
+    `\
 --!include foo.sql
 `,
-      new Set(["current.sql"]),
-    ),
-  ).rejects.toThrowError(/Circular include/);
+    FAKE_VISITED,
+  );
+  await expect(promise).rejects.toThrowError(/Circular include/);
+  const message = await promise.catch((e) => e.message);
+  expect(message.replaceAll(process.cwd(), "~")).toMatchSnapshot();
 });
 
 it("disallows calling files outside of the migrations/fixtures folder", async () => {
@@ -88,15 +92,16 @@ it("disallows calling files outside of the migrations/fixtures folder", async ()
     "outsideFolder/foo.sql": "select * from foo;",
   });
 
-  await expect(
-    compileIncludes(
-      settings,
-      `\
+  const promise = compileIncludes(
+    settings,
+    `\
 --!include ../../outsideFolder/foo.sql
 `,
-      new Set(["current.sql"]),
-    ),
-  ).rejects.toThrow();
+    FAKE_VISITED,
+  );
+  await expect(promise).rejects.toThrowError(/Forbidden: cannot include/);
+  const message = await promise.catch((e) => e.message);
+  expect(message.replaceAll(process.cwd(), "~")).toMatchSnapshot();
 });
 
 it("compiles an included file that contains escapable things", async () => {
@@ -121,7 +126,7 @@ commit;
       `\
 --!include foo.sql
 `,
-      new Set(["current.sql"]),
+      FAKE_VISITED,
     ),
   ).toEqual(`\
 begin;

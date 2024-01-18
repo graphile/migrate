@@ -154,7 +154,7 @@ export async function compileIncludes(
 
     if (processedFiles.has(sqlPath)) {
       throw new Error(
-        `Circular include detected - '${sqlPath}' is included again! Trace:\n  ${[...processedFiles].reverse().join("\n ")}`,
+        `Circular include detected - '${sqlPath}' is included again! Trace:\n  ${[...processedFiles].reverse().join("\n  ")}`,
       );
     }
 

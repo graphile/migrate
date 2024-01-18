@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`compiles an included file, and won't get stuck in an infinite include loop 1`] = `
+"Circular include detected - '~/migrations/fixtures/foo.sql' is included again! Trace:
+  ~/migrations/fixtures/foo.sql
+  ~/migrations/current.sql"
+`;
+
+exports[`disallows calling files outside of the migrations/fixtures folder 1`] = `"Forbidden: cannot include path '~/outsideFolder/foo.sql' because it's not inside 'migrations/fixtures/'"`;
