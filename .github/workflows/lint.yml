@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 18.x
       - run: yarn --frozen-lockfile
       - run: yarn clean
       - run: yarn prepack
