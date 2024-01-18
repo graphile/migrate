@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 import * as yargs from "yargs";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { version } from "../package.json";
 import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
 import { initCommand } from "./commands/init";
@@ -13,6 +10,7 @@ import { runCommand } from "./commands/run";
 import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
+import { version } from "./version";
 
 function wrapHandler<T1, T2>(
   input: yargs.CommandModule<T1, T2>,
