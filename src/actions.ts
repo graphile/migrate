@@ -2,7 +2,7 @@ import { Logger } from "@graphile/logger";
 import { exec as rawExec } from "child_process";
 import { promises as fsp } from "fs";
 import { parse } from "pg-connection-string";
-import { promisify } from "util";
+import { inspect, promisify } from "util";
 
 import { mergeWithoutClobbering } from "./lib";
 import { generatePlaceholderReplacement } from "./migration";
@@ -60,9 +60,8 @@ export async function executeActions(
       "Could not determine connection string for running commands",
     );
   }
-  const { database: databaseName, user: databaseUser } = parse(
-    connectionString,
-  );
+  const { database: databaseName, user: databaseUser } =
+    parse(connectionString);
   if (!databaseName) {
     throw new Error("Could not extract database name from connection string");
   }
@@ -129,12 +128,13 @@ export async function executeActions(
           parsedSettings.logger.error(stderr);
         }
       } catch (e) {
-        const { stdout, stderr } = e;
-        if (stdout) {
-          parsedSettings.logger.info(stdout);
-        }
-        if (stderr) {
-          parsedSettings.logger.error(stderr);
+        if (typeof e === "object" && e !== null) {
+          if ("stdout" in e && typeof e.stdout === "string" && e.stdout) {
+            parsedSettings.logger.info(e.stdout);
+          }
+          if ("stderr" in e && typeof e.stderr === "string" && e.stderr) {
+            parsedSettings.logger.error(e.stderr);
+          }
         }
         throw e;
       }
@@ -147,14 +147,15 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
     const specs: ActionSpec[] = [];
     if (inputValue) {
       const rawSpecArray = Array.isArray(inputValue)
-        ? inputValue
+        ? (inputValue as unknown[])
         : [inputValue];
       for (const trueRawSpec of rawSpecArray) {
         // This fudge is for backwards compatibility with v0.0.3
         const isV003OrBelowCommand =
           typeof trueRawSpec === "object" &&
-          trueRawSpec &&
-          !trueRawSpec["_"] &&
+          trueRawSpec !== null &&
+          !("_" in trueRawSpec && trueRawSpec._) &&
+          "command" in trueRawSpec &&
           typeof trueRawSpec["command"] === "string";
         if (isV003OrBelowCommand) {
           logger.warn(
@@ -182,7 +183,7 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
             specs.push(rawSpec);
           } else {
             throw new Error(
-              `Action spec of type '${rawSpec["_"]}' not supported; perhaps you need to upgrade?`,
+              `Action spec '${inspect(rawSpec)}' not supported; perhaps you need to upgrade?`,
             );
           }
         } else {

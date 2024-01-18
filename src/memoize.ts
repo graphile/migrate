@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment */
 export default function memoize<T extends (...args: Array<any>) => any>(
   fn: T,
 ): (...funcArgs: Parameters<T>) => ReturnType<T> {
-  let lastArgs: Array<any>;
-  let lastResult: any;
-  return (...args: Array<any>): any => {
+  let lastArgs: Parameters<T>;
+  let lastResult: ReturnType<T>;
+  return (...args: Parameters<T>): ReturnType<T> => {
     if (
       lastArgs &&
       args.length === lastArgs.length &&

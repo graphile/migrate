@@ -3,6 +3,8 @@ import { parse } from "pg-connection-string";
 
 import { ParsedSettings } from "./settings";
 
+type PoolOrMockClient = PoolClient & { __isMockClient?: boolean };
+
 export interface Context {
   database: string;
 }
@@ -24,7 +26,7 @@ interface PoolDetails {
 interface PoolDetailsInternal extends PoolDetails {
   _reference(): void;
   _reallyRelease(): void;
-  _timer: NodeJS.Timer | null;
+  _timer: NodeJS.Timeout | undefined;
 }
 const poolDetailsByConnectionString = new Map<string, PoolDetailsInternal>();
 
@@ -40,9 +42,8 @@ function getPoolDetailsFromConnectionString(
   { logger }: ParsedSettings,
   connectionString: string,
 ): PoolDetails {
-  let details:
-    | PoolDetailsInternal
-    | undefined = poolDetailsByConnectionString.get(connectionString);
+  let details: PoolDetailsInternal | undefined =
+    poolDetailsByConnectionString.get(connectionString);
   if (!details) {
     const { database } = parse(connectionString);
     if (!database) {
@@ -74,17 +75,22 @@ function getPoolDetailsFromConnectionString(
           this._timer = setTimeout(this._reallyRelease, POOL_KEEPALIVE);
         }
       },
-      _timer: null,
+      _timer: undefined,
       _reference(): void {
         clearTimeout(this._timer);
-        this._timer = null;
+        this._timer = undefined;
         this.referenceCount++;
       },
       _reallyRelease(): void {
         clearTimeout(this._timer);
-        this._timer = null;
+        this._timer = undefined;
         pool.end = end;
-        pool.end();
+        pool.end().catch((e) => {
+          // eslint-disable-next-line no-console
+          console.error("Error occurred whilst releasing pool:");
+          // eslint-disable-next-line no-console
+          console.dir(e);
+        });
         poolDetailsByConnectionString.delete(connectionString);
       },
     };
@@ -141,7 +147,7 @@ export async function withClient<T = void>(
 const ADVISORY_LOCK_MIGRATE =
   "4727445306447283"; /* `GRAPHILE MIGRATE` on phone keypad */
 export async function withAdvisoryLock<T>(
-  pgClient: PoolClient,
+  pgClient: PoolOrMockClient,
   callback: (pgClient: PoolClient) => Promise<T>,
 ): Promise<T> {
   if (pgClient["__isMockClient"]) {
@@ -149,9 +155,10 @@ export async function withAdvisoryLock<T>(
   }
   const {
     rows: [{ locked }],
-  } = await pgClient.query("select pg_try_advisory_lock($1) as locked", [
-    ADVISORY_LOCK_MIGRATE,
-  ]);
+  } = await pgClient.query<{ locked: boolean }>(
+    "select pg_try_advisory_lock($1) as locked",
+    [ADVISORY_LOCK_MIGRATE],
+  );
   if (!locked) {
     throw new Error("Failed to get exclusive lock");
   }

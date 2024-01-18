@@ -2,7 +2,7 @@ jest.mock("child_process");
 
 import "./helpers"; // Has side-effects; must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
 import { parseSettings } from "../src/settings";

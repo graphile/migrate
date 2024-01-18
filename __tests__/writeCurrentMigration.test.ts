@@ -1,7 +1,7 @@
 import "./helpers"; // Has side-effects; must come first
 
 import { promises as fsp } from "fs";
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import {
   getCurrentMigrationLocation,

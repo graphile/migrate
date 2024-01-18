@@ -1,6 +1,6 @@
 import "./helpers"; // Side effects - must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 import * as path from "path";
 
 import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
@@ -79,7 +79,7 @@ it("throws if shadow attempted but no shadow DB", async () => {
 
 it.each([[[]], [{}], ["test"]])(
   "throws error for invalid logger",
-  async invalidLogger => {
+  async (invalidLogger) => {
     await expect(
       parseSettings({
         connectionString: exampleConnectionString,
@@ -304,9 +304,9 @@ describe("actions", () => {
         ],
       }),
     ).rejects.toMatchInlineSnapshot(`
-            [Error: Errors occurred during settings validation:
-            - Setting 'afterAllMigrations': Action spec of type 'unknown_value' not supported; perhaps you need to upgrade?]
-          `);
+      [Error: Errors occurred during settings validation:
+      - Setting 'afterAllMigrations': Action spec '{ _: 'unknown_value', command: 'pg_dump --schema-only' }' not supported; perhaps you need to upgrade?]
+    `);
   });
 });
 

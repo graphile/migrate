@@ -14,6 +14,8 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { DbCurrent } from "../interfaces";
+import { isLoggedError } from "../lib";
 import { CommonArgv, getSettings } from "./_common";
 
 interface WatchArgv extends CommonArgv {
@@ -57,7 +59,7 @@ export function _makeCurrentMigrationRunner(
             // 2: Get last current.sql from graphile_migrate.current
             const {
               rows: [previousCurrent],
-            } = await lockingPgClient.query(
+            } = await lockingPgClient.query<DbCurrent>(
               `
               select *
               from graphile_migrate.current
@@ -161,7 +163,8 @@ export function _makeCurrentMigrationRunner(
             : ""
         })`,
       );
-    } catch (e) {
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
       logDbError(parsedSettings, e);
       throw e;
     }
@@ -198,10 +201,10 @@ export async function _watch(
       running = true;
 
       run()
-        .catch(error => {
-          if (!error["_gmlogged"]) {
+        .catch((error: unknown) => {
+          if (!isLoggedError(error)) {
             parsedSettings.logger.error(
-              `Error occurred whilst processing migration: ${error.message}`,
+              `Error occurred whilst processing migration: ${error instanceof Error ? error.message : String(error)}`,
               { error },
             );
           }
@@ -254,7 +257,7 @@ export async function watch(
   return _watch(parsedSettings, once, shadow);
 }
 
-export const watchCommand: CommandModule<never, WatchArgv> = {
+export const watchCommand: CommandModule<Record<string, never>, WatchArgv> = {
   command: "watch",
   aliases: [],
   describe:
@@ -271,7 +274,7 @@ export const watchCommand: CommandModule<never, WatchArgv> = {
       description: "Applies changes to shadow DB.",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     await watch(
       await getSettings({ configFile: argv.config }),
       argv.once,

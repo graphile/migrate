@@ -25,7 +25,7 @@ export async function _reset(
   await withClient(
     parsedSettings.rootConnectionString,
     parsedSettings,
-    async pgClient => {
+    async (pgClient) => {
       const databaseName = shadow
         ? parsedSettings.shadowDatabaseName
         : parsedSettings.databaseName;
@@ -48,7 +48,7 @@ export async function _reset(
         );
       } catch (e) {
         throw new Error(
-          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e.message}`,
+          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e instanceof Error ? e.message : String(e)}`,
         );
       }
       await pgClient.query(
@@ -68,7 +68,7 @@ export async function reset(settings: Settings, shadow = false): Promise<void> {
   return _reset(parsedSettings, shadow);
 }
 
-export const resetCommand: CommandModule<never, ResetArgv> = {
+export const resetCommand: CommandModule<Record<string, never>, ResetArgv> = {
   command: "reset",
   aliases: [],
   describe:
@@ -86,7 +86,7 @@ export const resetCommand: CommandModule<never, ResetArgv> = {
         "This is your double opt-in to make it clear this DELETES EVERYTHING.",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     if (!argv.erase) {
       // eslint-disable-next-line no-console
       console.error(

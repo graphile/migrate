@@ -2,6 +2,7 @@ import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
+import { errorCode } from "./lib";
 import { parseMigrationText, serializeHeader } from "./migration";
 import { ParsedSettings } from "./settings";
 
@@ -11,7 +12,7 @@ async function statOrNull(path: string): Promise<Stats | null> {
   try {
     return await fsp.stat(path);
   } catch (e) {
-    if (e.code === "ENOENT") {
+    if (errorCode(e) === "ENOENT") {
       return null;
     }
     throw e;
@@ -22,7 +23,7 @@ async function readFileOrNull(path: string): Promise<string | null> {
   try {
     return await fsp.readFile(path, "utf8");
   } catch (e) {
-    if (e.code === "ENOENT") {
+    if (errorCode(e) === "ENOENT") {
       return null;
     }
     throw e;
@@ -32,7 +33,9 @@ async function readFileOrError(path: string): Promise<string> {
   try {
     return await fsp.readFile(path, "utf8");
   } catch (e) {
-    throw new Error(`Failed to read file at '${path}': ${e.message}`);
+    throw new Error(
+      `Failed to read file at '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 

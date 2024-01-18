@@ -69,8 +69,8 @@ export async function _migrate(
             remainingMigrations.length > 0
               ? `${remainingMigrations.length} committed migrations executed`
               : lastMigration
-              ? "Already up to date"
-              : `Up to date — no committed migrations to run`
+                ? "Already up to date"
+                : `Up to date — no committed migrations to run`
           }`,
         );
       });
@@ -87,7 +87,10 @@ export async function migrate(
   return _migrate(parsedSettings, shadow, forceActions);
 }
 
-export const migrateCommand: CommandModule<never, MigrateArgv> = {
+export const migrateCommand: CommandModule<
+  Record<string, never>,
+  MigrateArgv
+> = {
   command: "migrate",
   aliases: [],
   describe:
@@ -105,7 +108,7 @@ export const migrateCommand: CommandModule<never, MigrateArgv> = {
         "Run beforeAllMigrations and afterAllMigrations actions even if no migration was necessary.",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     await migrate(
       await getSettings({ configFile: argv.config }),
       argv.shadow,

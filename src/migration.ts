@@ -87,11 +87,7 @@ export const slowGeneratePlaceholderReplacement = (
   );
 
   const regexp = new RegExp(
-    "(?:" +
-      Object.keys(placeholders)
-        .map(escapeRegexp)
-        .join("|") +
-      ")\\b",
+    "(?:" + Object.keys(placeholders).map(escapeRegexp).join("|") + ")\\b",
     "g",
   );
   return (str: string): string =>
@@ -103,7 +99,7 @@ export const generatePlaceholderReplacement = memoize(
 );
 
 // So memoization above holds from compilePlaceholders
-const contextObj = memoize(database => ({ database }));
+const contextObj = memoize((database: string) => ({ database }));
 
 export function compilePlaceholders(
   parsedSettings: ParsedSettings,
@@ -135,7 +131,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
   // Verify that graphile_migrate schema exists
   const {
     rows: [graphileMigrateSchema],
-  } = await pgClient.query(
+  } = await pgClient.query<{ oid: string }>(
     `select oid from pg_namespace where nspname = 'graphile_migrate';`,
   );
   if (!graphileMigrateSchema) {
@@ -148,7 +144,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     // Check that table exists
     const {
       rows: [table],
-    } = await pgClient.query(
+    } = await pgClient.query<{ oid: string }>(
       `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`,
     );
     if (!table) {
@@ -158,7 +154,10 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     }
 
     // Check that it has the right number of columns
-    const { rows: columns } = await pgClient.query(
+    const { rows: columns } = await pgClient.query<{
+      attrelid: string;
+      attname: string;
+    }>(
       `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`,
     );
     if (columns.length !== expected.columnCount) {
@@ -242,11 +241,7 @@ export function parseMigrationText(
     );
   }
 
-  const body =
-    lines
-      .slice(headerLines)
-      .join("\n")
-      .trim() + "\n";
+  const body = lines.slice(headerLines).join("\n").trim() + "\n";
   return { headers, body };
 }
 
@@ -286,7 +281,12 @@ export async function getLastMigration(
 
   const {
     rows: [row],
-  } = await pgClient.query(
+  } = await pgClient.query<{
+    filename: string;
+    previousHash: string | null;
+    hash: string;
+    date: Date;
+  }>(
     `select filename, previous_hash as "previousHash", hash, date from graphile_migrate.migrations order by filename desc limit 1`,
   );
   return (row as DbMigration) || null;
@@ -312,56 +312,51 @@ export async function getAllMigrations(
     files
       .map(isMigrationFilename)
       .filter((matches): matches is RegExpMatchArray => !!matches)
-      .map(
-        async (matches): Promise<FileMigration> => {
-          const [
-            realFilename,
-            migrationNumberString,
-            messageSlug = null,
-          ] = matches;
-          const fullPath = `${committedMigrationsFolder}/${realFilename}`;
-          const contents = await fsp.readFile(fullPath, "utf8");
+      .map(async (matches): Promise<FileMigration> => {
+        const [realFilename, migrationNumberString, messageSlug = null] =
+          matches;
+        const fullPath = `${committedMigrationsFolder}/${realFilename}`;
+        const contents = await fsp.readFile(fullPath, "utf8");
 
-          const { headers, body } = parseMigrationText(fullPath, contents);
+        const { headers, body } = parseMigrationText(fullPath, contents);
 
-          // --! Previous:
-          const previousHashRaw = headers["Previous"];
-          if (!previousHashRaw) {
-            throw new Error(
-              `Invalid committed migration '${fullPath}': no 'Previous' comment`,
-            );
-          }
-          const previousHash =
-            previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
+        // --! Previous:
+        const previousHashRaw = headers["Previous"];
+        if (!previousHashRaw) {
+          throw new Error(
+            `Invalid committed migration '${fullPath}': no 'Previous' comment`,
+          );
+        }
+        const previousHash =
+          previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
 
-          // --! Hash:
-          const hash = headers["Hash"];
-          if (!hash) {
-            throw new Error(
-              `Invalid committed migration '${fullPath}': no 'Hash' comment`,
-            );
-          }
+        // --! Hash:
+        const hash = headers["Hash"];
+        if (!hash) {
+          throw new Error(
+            `Invalid committed migration '${fullPath}': no 'Hash' comment`,
+          );
+        }
 
-          // --! Message:
-          const message = headers["Message"];
+        // --! Message:
+        const message = headers["Message"];
 
-          // --! AllowInvalidHash
-          const allowInvalidHash = "AllowInvalidHash" in headers;
+        // --! AllowInvalidHash
+        const allowInvalidHash = "AllowInvalidHash" in headers;
 
-          return {
-            realFilename,
-            filename: migrationNumberString + ".sql",
-            message,
-            messageSlug,
-            fullPath,
-            hash,
-            previousHash,
-            allowInvalidHash,
-            body,
-            previous: null,
-          };
-        },
-      ),
+        return {
+          realFilename,
+          filename: migrationNumberString + ".sql",
+          message,
+          messageSlug,
+          fullPath,
+          hash,
+          previousHash,
+          allowInvalidHash,
+          body,
+          previous: null,
+        };
+      }),
   );
   migrations.sort((a, b) => a.filename.localeCompare(b.filename, "en"));
   // Validate and link
@@ -392,7 +387,7 @@ export async function getMigrationsAfter(
 ): Promise<Array<FileMigration>> {
   const allMigrations = await getAllMigrations(parsedSettings);
   return allMigrations.filter(
-    m => !previousMigration || m.filename > previousMigration.filename,
+    (m) => !previousMigration || m.filename > previousMigration.filename,
   );
 }
 
@@ -424,8 +419,7 @@ export async function runStringMigration(
         const { hash, previousHash, filename } = committedMigration;
         await pgClient.query({
           name: "migration-insert",
-          text:
-            "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
+          text: "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
           values: [hash, previousHash, filename],
         });
       }
@@ -450,7 +444,7 @@ export async function undoMigration(
   await withClient(
     parsedSettings.connectionString,
     parsedSettings,
-    async pgClient => {
+    async (pgClient) => {
       await pgClient.query({
         name: "migration-delete",
         text: "delete from graphile_migrate.migrations where hash = $1",
@@ -467,14 +461,8 @@ export async function runCommittedMigration(
   committedMigration: FileMigration,
   logSuffix: string,
 ): Promise<void> {
-  const {
-    hash,
-    realFilename,
-    filename,
-    body,
-    previousHash,
-    allowInvalidHash,
-  } = committedMigration;
+  const { hash, realFilename, filename, body, previousHash, allowInvalidHash } =
+    committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
   const hashIsInvalid = newHash !== hash;

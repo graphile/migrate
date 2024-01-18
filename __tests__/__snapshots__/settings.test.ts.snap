@@ -1,30 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`actions is backwards-compatible with untagged command specs 1`] = `
-Object {
-  "afterAllMigrations": Array [
-    Object {
+{
+  "afterAllMigrations": [
+    {
       "_": "sql",
       "file": "foo.sql",
     },
-    Object {
+    {
       "_": "sql",
       "file": "bar.sql",
     },
-    Object {
+    {
       "_": "command",
       "command": "pg_dump --schema-only",
     },
-    Object {
+    {
       "_": "command",
       "command": "graphile-worker --once",
     },
   ],
-  "afterCurrent": Array [],
-  "afterReset": Array [],
-  "beforeAllMigrations": Array [],
-  "beforeCurrent": Array [],
-  "beforeReset": Array [],
+  "afterCurrent": [],
+  "afterReset": [],
+  "beforeAllMigrations": [],
+  "beforeCurrent": [],
+  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -32,7 +32,7 @@ Object {
   "databaseOwner": "dbname",
   "logger": Logger {
     "_logFactory": [Function],
-    "_scope": Object {},
+    "_scope": {},
     "log": [Function],
   },
   "manageGraphileMigrateSchema": true,
@@ -45,27 +45,27 @@ Object {
 `;
 
 exports[`actions parses SQL actions 1`] = `
-Object {
-  "afterAllMigrations": Array [
-    Object {
+{
+  "afterAllMigrations": [
+    {
       "_": "sql",
       "file": "bar.sql",
     },
-    Object {
+    {
       "_": "sql",
       "file": "baz.sql",
     },
   ],
-  "afterCurrent": Array [],
-  "afterReset": Array [
-    Object {
+  "afterCurrent": [],
+  "afterReset": [
+    {
       "_": "sql",
       "file": "foo.sql",
     },
   ],
-  "beforeAllMigrations": Array [],
-  "beforeCurrent": Array [],
-  "beforeReset": Array [],
+  "beforeAllMigrations": [],
+  "beforeCurrent": [],
+  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -73,7 +73,7 @@ Object {
   "databaseOwner": "dbname",
   "logger": Logger {
     "_logFactory": [Function],
-    "_scope": Object {},
+    "_scope": {},
     "log": [Function],
   },
   "manageGraphileMigrateSchema": true,
@@ -86,22 +86,22 @@ Object {
 `;
 
 exports[`actions parses command actions 1`] = `
-Object {
-  "afterAllMigrations": Array [
-    Object {
+{
+  "afterAllMigrations": [
+    {
       "_": "command",
       "command": "pg_dump --schema-only",
     },
-    Object {
+    {
       "_": "command",
       "command": "graphile-worker --once",
     },
   ],
-  "afterCurrent": Array [],
-  "afterReset": Array [],
-  "beforeAllMigrations": Array [],
-  "beforeCurrent": Array [],
-  "beforeReset": Array [],
+  "afterCurrent": [],
+  "afterReset": [],
+  "beforeAllMigrations": [],
+  "beforeCurrent": [],
+  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -109,7 +109,7 @@ Object {
   "databaseOwner": "dbname",
   "logger": Logger {
     "_logFactory": [Function],
-    "_scope": Object {},
+    "_scope": {},
     "log": [Function],
   },
   "manageGraphileMigrateSchema": true,
@@ -122,30 +122,30 @@ Object {
 `;
 
 exports[`actions parses mixed actions 1`] = `
-Object {
-  "afterAllMigrations": Array [
-    Object {
+{
+  "afterAllMigrations": [
+    {
       "_": "sql",
       "file": "foo.sql",
     },
-    Object {
+    {
       "_": "sql",
       "file": "bar.sql",
     },
-    Object {
+    {
       "_": "command",
       "command": "pg_dump --schema-only",
     },
-    Object {
+    {
       "_": "command",
       "command": "graphile-worker --once",
     },
   ],
-  "afterCurrent": Array [],
-  "afterReset": Array [],
-  "beforeAllMigrations": Array [],
-  "beforeCurrent": Array [],
-  "beforeReset": Array [],
+  "afterCurrent": [],
+  "afterReset": [],
+  "beforeAllMigrations": [],
+  "beforeCurrent": [],
+  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -153,7 +153,7 @@ Object {
   "databaseOwner": "dbname",
   "logger": Logger {
     "_logFactory": [Function],
-    "_scope": Object {},
+    "_scope": {},
     "log": [Function],
   },
   "manageGraphileMigrateSchema": true,
@@ -166,27 +166,27 @@ Object {
 `;
 
 exports[`actions parses string values into SQL actions 1`] = `
-Object {
-  "afterAllMigrations": Array [
-    Object {
+{
+  "afterAllMigrations": [
+    {
       "_": "sql",
       "file": "bar.sql",
     },
-    Object {
+    {
       "_": "sql",
       "file": "baz.sql",
     },
   ],
-  "afterCurrent": Array [],
-  "afterReset": Array [
-    Object {
+  "afterCurrent": [],
+  "afterReset": [
+    {
       "_": "sql",
       "file": "foo.sql",
     },
   ],
-  "beforeAllMigrations": Array [],
-  "beforeCurrent": Array [],
-  "beforeReset": Array [],
+  "beforeAllMigrations": [],
+  "beforeCurrent": [],
+  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -194,7 +194,7 @@ Object {
   "databaseOwner": "dbname",
   "logger": Logger {
     "_logFactory": [Function],
-    "_scope": Object {},
+    "_scope": {},
     "log": [Function],
   },
   "manageGraphileMigrateSchema": true,

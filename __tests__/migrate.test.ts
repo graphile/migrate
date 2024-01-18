@@ -1,6 +1,6 @@
 import "./helpers"; // Has side-effects; must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { migrate } from "../src";
 import { withClient } from "../src/pg";
@@ -69,35 +69,11 @@ it("runs migrations", async () => {
     const { migrations, tables, enums } = await getStuff(parsedSettings);
 
     expect(migrations).toHaveLength(2);
-    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "filename": "000001.sql",
-          "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-          "previous_hash": null,
-        },
-        Object {
-          "filename": "000002.sql",
-          "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-          "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-        },
-      ]
-    `);
+    expect(migrations.map(({ date, ...rest }) => rest)).toMatchSnapshot();
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
-      Array [
-        "foo",
-      ]
-    `);
+    expect(tables.map((t) => t.relname)).toMatchSnapshot();
     expect(enums).toHaveLength(1);
-    expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "1",
-  },
-]
-`);
+    expect(enums).toMatchSnapshot();
   }
 
   mockFs({
@@ -113,40 +89,13 @@ Array [
     const { migrations, tables, enums } = await getStuff(parsedSettings);
 
     expect(migrations).toHaveLength(3);
-    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "filename": "000001.sql",
-          "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-          "previous_hash": null,
-        },
-        Object {
-          "filename": "000002.sql",
-          "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-          "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-        },
-        Object {
-          "filename": "000003.sql",
-          "hash": "sha1:2d248344ac299ebbad2aeba5bfec2ae3c3cb0a4f",
-          "previous_hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-        },
-      ]
-    `);
+    const mappedMigrations = migrations.map(({ date, ...rest }) => rest);
+    expect(mappedMigrations).toMatchSnapshot();
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
-      Array [
-        "foo",
-      ]
-    `);
+    const mappedTables = tables.map((t) => t.relname);
+    expect(mappedTables).toMatchSnapshot();
     expect(enums).toHaveLength(1);
-    expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "2",
-  },
-]
-`);
+    expect(enums).toMatchSnapshot();
   }
 });
 
@@ -160,9 +109,7 @@ it("refuses to run migration with invalid hash", async () => {
     "migrations/current.sql": "",
   });
 
-  await expect(migrate(settings)).rejects.toThrowErrorMatchingInlineSnapshot(
-    `"Hash for 000002.sql does not match - sha1:cbed240dda7dfa510ff785783bbe6af7743b3a11 !== sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b; has the file been tampered with?"`,
-  );
+  await expect(migrate(settings)).rejects.toThrowErrorMatchingSnapshot();
 });
 
 it("will run a migration with invalid hash if told to do so", async () => {
@@ -184,33 +131,9 @@ it("will run a migration with invalid hash if told to do so", async () => {
     const { migrations, enums } = await getStuff(parsedSettings);
 
     expect(migrations).toHaveLength(3);
-    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "filename": "000001.sql",
-    "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-    "previous_hash": null,
-  },
-  Object {
-    "filename": "000002.sql",
-    "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-    "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-  },
-  Object {
-    "filename": "000003.sql",
-    "hash": "sha1:2d248344ac299ebbad2aeba5bfec2ae3c3cb0a4f",
-    "previous_hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-  },
-]
-`);
+    const mappedMigrations = migrations.map(({ date, ...rest }) => rest);
+    expect(mappedMigrations).toMatchSnapshot();
     expect(enums).toHaveLength(1);
-    expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "2",
-  },
-]
-`);
+    expect(enums).toMatchSnapshot();
   }
 });

@@ -1,7 +1,7 @@
 import "./helpers"; // Has side-effects; must come first
 
 import { promises as fsp } from "fs";
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { commit } from "../src";
 import { sluggify } from "../src/sluggify";
@@ -31,7 +31,7 @@ it("aborts if current.sql is empty", async () => {
 
 describe.each([[undefined], ["My Commit Message"]])(
   "commit message '%s'",
-  commitMessage => {
+  (commitMessage) => {
     const commitMessageSlug = commitMessage
       ? `-${sluggify(commitMessage)}`
       : ``;
@@ -63,7 +63,8 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("can commit the second migration", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
         "migrations/current.sql": MIGRATION_2_TEXT,
       });
 
@@ -88,8 +89,10 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("can execute a --! no-transaction migration", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
-        [`migrations/committed/000002${commitMessageSlug}.sql`]: MIGRATION_ENUM_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
+        [`migrations/committed/000002${commitMessageSlug}.sql`]:
+          MIGRATION_ENUM_COMMITTED,
         "migrations/current.sql": MIGRATION_NOTRX_TEXT,
       });
 
@@ -116,7 +119,8 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("can commit multi-file migration", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
         ...MIGRATION_MULTIFILE_FILES,
       });
 
@@ -137,7 +141,8 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("throws on invalid message", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
         ...MIGRATION_MULTIFILE_FILES,
       });
 
@@ -150,7 +155,8 @@ describe.each([[undefined], ["My Commit Message"]])(
 
     it("throws on --!no-transaction in multifile", async () => {
       mockFs({
-        [`migrations/committed/000001${commitMessageSlug}.sql`]: MIGRATION_1_COMMITTED,
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
         "migrations/current": {
           "001.sql": "--! no-transaction\nSELECT 1;",
         },

@@ -35,13 +35,15 @@ async function _status(
     if (!connectionString) {
       throw new Error("Could not determine connection string");
     }
-    await withClient(connectionString, parsedSettings, async pgClient => {
+    await withClient(connectionString, parsedSettings, async (pgClient) => {
       const lastMigration = await getLastMigration(pgClient, parsedSettings);
       const remainingMigrationDefinitions = await getMigrationsAfter(
         parsedSettings,
         lastMigration,
       );
-      remainingMigrations = remainingMigrationDefinitions.map(m => m.filename);
+      remainingMigrations = remainingMigrationDefinitions.map(
+        (m) => m.filename,
+      );
       return {
         remainingMigrations,
       };
@@ -62,7 +64,7 @@ export async function status(
   return _status(parsedSettings, options);
 }
 
-export const statusCommand: CommandModule<never, StatusArgv> = {
+export const statusCommand: CommandModule<Record<string, never>, StatusArgv> = {
   command: "status",
   aliases: [],
   describe: `\
@@ -80,7 +82,7 @@ are true, exit status will be 0 (success). Additional messages may also be outpu
       default: false,
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     /* eslint-disable no-console */
     let exitCode = 0;
     const { config, ...options } = argv;

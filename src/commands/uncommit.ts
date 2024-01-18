@@ -65,13 +65,16 @@ export async function uncommit(settings: Settings): Promise<void> {
   return _uncommit(parsedSettings);
 }
 
-export const uncommitCommand: CommandModule<never, CommonArgv> = {
+export const uncommitCommand: CommandModule<
+  Record<string, never>,
+  CommonArgv
+> = {
   command: "uncommit",
   aliases: [],
   describe:
     "This command is useful in development if you need to modify your latest commit before you push/merge it, or if other DB commits have been made by other developers and you need to 'rebase' your migration onto theirs. Moves the latest commit out of the committed migrations folder and back to the current migration (assuming the current migration is empty-ish). Removes the migration tracking entry from ONLY the local database. Do not use after other databases have executed this committed migration otherwise they will fall out of sync. Assuming nothing else has changed, `graphile-migrate uncommit && graphile-migrate commit` should result in the exact same hash. Development only, and liable to cause conflicts with other developers - be careful.",
   builder: {},
-  handler: async argv => {
+  handler: async (argv) => {
     if (argv.message !== undefined && !argv.message) {
       throw new Error("Missing or empty commit message after --message flag");
     }

@@ -16,3 +16,21 @@ export function mergeWithoutClobbering(
 
   return result;
 }
+
+export function isLoggedError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "_gmlogged" in error &&
+    error._gmlogged === true
+  );
+}
+
+export function errorCode(e: unknown): string | null {
+  return typeof e === "object" &&
+    e !== null &&
+    "code" in e &&
+    typeof e.code === "string"
+    ? e.code
+    : null;
+}

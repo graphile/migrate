@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 import * as yargs from "yargs";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { version } from "../package.json";
 import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
 import { initCommand } from "./commands/init";
@@ -13,20 +10,19 @@ import { runCommand } from "./commands/run";
 import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
+import { isLoggedError } from "./lib";
+import { version } from "./version";
 
-function wrapHandler(
-  input: yargs.CommandModule<unknown, unknown>,
-): yargs.CommandModule<unknown, unknown> {
+function wrapHandler<T1, T2>(
+  input: yargs.CommandModule<T1, T2>,
+): yargs.CommandModule<T1, T2> {
   const { handler, ...rest } = input;
 
-  const newHandler: yargs.CommandModule<
-    unknown,
-    unknown
-  >["handler"] = async argv => {
+  const newHandler: yargs.CommandModule<T1, T2>["handler"] = async (argv) => {
     try {
       return await Promise.resolve(handler(argv));
     } catch (e) {
-      if (!e["_gmlogged"]) {
+      if (!isLoggedError(e)) {
         // eslint-disable-next-line no-console
         console.error(e);
       }
@@ -40,7 +36,7 @@ function wrapHandler(
   };
 }
 
-yargs
+const f = yargs
   .parserConfiguration({
     "boolean-negation": true,
     "camel-case-expansion": false,
@@ -104,3 +100,10 @@ You are running graphile-migrate v${version}.
   ╚═══════════════════════════════════╝
 `,
   ).argv;
+
+if ("then" in f && typeof f.then === "function") {
+  f.then(null, (e: Error) => {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  });
+}

@@ -1,7 +1,7 @@
 import "./helpers"; // Has side-effects; must come first
 
 import { Logger, LogLevel, LogMeta } from "@graphile/logger";
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { executeActions } from "../src/actions";
 import { _migrate } from "../src/commands/migrate";
@@ -25,7 +25,7 @@ it("logs output from command actions on success", async () => {
     message: string;
     meta?: LogMeta;
   }> = [];
-  const logger = new Logger(scope => (level, message, meta) => {
+  const logger = new Logger((scope) => (level, message, meta) => {
     logs.push({ scope, level, message, meta });
   });
   const parsedSettings = await parseSettings({
@@ -60,7 +60,7 @@ it("logs output from command actions on failure", async () => {
     message: string;
     meta?: LogMeta;
   }> = [];
-  const logger = new Logger(scope => (level, message, meta) => {
+  const logger = new Logger((scope) => (level, message, meta) => {
     logs.push({ scope, level, message, meta });
   });
   const parsedSettings = await parseSettings({

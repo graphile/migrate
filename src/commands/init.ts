@@ -1,11 +1,9 @@
 import { promises as fsp } from "fs";
 import { CommandModule } from "yargs";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
+import { version } from "../version";
 import {
   CommonArgv,
   DEFAULT_GMRC_PATH,
@@ -223,7 +221,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
   );
 }
 
-export const initCommand: CommandModule<{}, InitArgv> = {
+export const initCommand: CommandModule<Record<string, never>, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\
