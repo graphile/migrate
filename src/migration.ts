@@ -132,7 +132,7 @@ export async function compileIncludes(
   content: string,
   processedFiles: ReadonlySet<string> = new Set<string>(),
 ): Promise<string> {
-  const regex = /^--!include\s+(.*\.sql)\s*$/gm;
+  const regex = /^--!include[ \t]+(.*\.sql)[ \t]*$/gm;
 
   // Don't need to validate this unless an include happens. MUST end in a `/`
   const fixturesPath = `${parsedSettings.migrationsFolder}/fixtures/`;
