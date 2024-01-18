@@ -14,7 +14,7 @@ import { defaultLogger } from "./logger";
 export type Actions = string | Array<string | ActionSpec>;
 
 export function isActionSpec(o: unknown): o is ActionSpec {
-  if (!(typeof o === "object" && o && typeof o["_"] === "string")) {
+  if (!(typeof o === "object" && o && "_" in o && typeof o["_"] === "string")) {
     return false;
   }
 
@@ -117,15 +117,15 @@ export async function parseSettings(
   const errors: Array<string> = [];
   const keysToCheck = Object.keys(settings);
   const checkedKeys: Array<string> = [];
-  async function check<T = void>(
-    key: string,
-    callback: (key: unknown) => T | Promise<T>,
+  async function check<TKey extends keyof Settings, T = void>(
+    key: TKey,
+    callback: (value: unknown) => T | Promise<T>,
   ): Promise<T> {
     checkedKeys.push(key);
     const value = settings[key];
     try {
       return await callback(value);
-    } catch (e) {
+    } catch (e: any) {
       errors.push(`Setting '${key}': ${e.message}`);
       return void 0 as never;
     }
@@ -143,17 +143,14 @@ export async function parseSettings(
     },
   );
 
-  const logger = await check(
-    "logger",
-    (rawLogger = defaultLogger): Logger => {
-      if (!(rawLogger instanceof Logger)) {
-        throw new Error(
-          "Expected 'logger' to be a @graphile/logger Logger instance",
-        );
-      }
-      return rawLogger;
-    },
-  );
+  const logger = await check("logger", (rawLogger = defaultLogger): Logger => {
+    if (!(rawLogger instanceof Logger)) {
+      throw new Error(
+        "Expected 'logger' to be a @graphile/logger Logger instance",
+      );
+    }
+    return rawLogger;
+  });
 
   const rootConnectionString = await check(
     "rootConnectionString",
@@ -218,13 +215,13 @@ export async function parseSettings(
   );
   const { database: shadowDatabaseName } = parse(shadowConnectionString || "");
 
-  await check("pgSettings", pgSettings => {
+  await check("pgSettings", (pgSettings) => {
     if (pgSettings) {
       if (typeof pgSettings !== "object" || pgSettings === null) {
         throw new Error("Expected settings.pgSettings to be an object");
       }
-      const badKeys = Object.keys(pgSettings).filter(key => {
-        const value = pgSettings[key];
+      const badKeys = Object.keys(pgSettings).filter((key) => {
+        const value = (pgSettings as Record<string, unknown>)[key];
         return typeof value !== "string" && typeof value !== "number";
       });
       if (badKeys.length) {
@@ -237,56 +234,57 @@ export async function parseSettings(
     }
   });
 
-  const placeholders = await check("placeholders", (rawPlaceholders):
-    | { [key: string]: string }
-    | undefined => {
-    if (rawPlaceholders) {
-      if (typeof rawPlaceholders !== "object" || rawPlaceholders === null) {
-        throw new Error("Expected settings.placeholders to be an object");
-      }
-      const badKeys = Object.keys(rawPlaceholders).filter(
-        key => !/^:[A-Z][0-9A-Z_]+$/.exec(key),
-      );
-      if (badKeys.length) {
-        throw new Error(
-          `Invalid placeholders keys '${badKeys.join(
-            ", ",
-          )}' - expected to follow format ':ABCD_EFG_HIJ'`,
+  const placeholders = await check(
+    "placeholders",
+    (rawPlaceholders): { [key: string]: string } | undefined => {
+      if (rawPlaceholders) {
+        if (typeof rawPlaceholders !== "object" || rawPlaceholders === null) {
+          throw new Error("Expected settings.placeholders to be an object");
+        }
+        const badKeys = Object.keys(rawPlaceholders).filter(
+          (key) => !/^:[A-Z][0-9A-Z_]+$/.exec(key),
         );
-      }
-      const badValueKeys = Object.keys(rawPlaceholders).filter(key => {
-        const value = rawPlaceholders[key];
-        return typeof value !== "string";
-      });
-      if (badValueKeys.length) {
-        throw new Error(
-          `Invalid placeholders values for keys '${badValueKeys.join(
-            ", ",
-          )}' - expected string`,
-        );
-      }
-      return Object.entries(rawPlaceholders).reduce(
-        (
-          memo: { [key: string]: string },
-          [key, value],
-        ): { [key: string]: string } => {
-          if (value === "!ENV") {
-            const envvarKey = key.substring(1);
-            const envvar = process.env[envvarKey];
-            if (!envvar) {
-              throw new Error(
-                `Could not find environmental variable '${envvarKey}'`,
-              );
+        if (badKeys.length) {
+          throw new Error(
+            `Invalid placeholders keys '${badKeys.join(
+              ", ",
+            )}' - expected to follow format ':ABCD_EFG_HIJ'`,
+          );
+        }
+        const badValueKeys = Object.keys(rawPlaceholders).filter((key) => {
+          const value = (rawPlaceholders as Record<string, unknown>)[key];
+          return typeof value !== "string";
+        });
+        if (badValueKeys.length) {
+          throw new Error(
+            `Invalid placeholders values for keys '${badValueKeys.join(
+              ", ",
+            )}' - expected string`,
+          );
+        }
+        return Object.entries(rawPlaceholders).reduce(
+          (
+            memo: { [key: string]: string },
+            [key, value],
+          ): { [key: string]: string } => {
+            if (value === "!ENV") {
+              const envvarKey = key.substring(1);
+              const envvar = process.env[envvarKey];
+              if (!envvar) {
+                throw new Error(
+                  `Could not find environmental variable '${envvarKey}'`,
+                );
+              }
+              memo[key] = envvar;
             }
-            memo[key] = envvar;
-          }
-          return memo;
-        },
-        { ...rawPlaceholders },
-      );
-    }
-    return undefined;
-  });
+            return memo;
+          },
+          { ...rawPlaceholders },
+        );
+      }
+      return undefined;
+    },
+  );
 
   const validateAction = makeValidateActionCallback(logger);
   const rootValidateAction = makeValidateActionCallback(logger, true);
@@ -303,7 +301,7 @@ export async function parseSettings(
 
   const manageGraphileMigrateSchema = await check(
     "manageGraphileMigrateSchema",
-    mgms => {
+    (mgms) => {
       const type = typeof mgms;
       if (type !== "undefined" && type !== "boolean") {
         throw new Error(
@@ -319,8 +317,8 @@ export async function parseSettings(
   /******/
 
   const uncheckedKeys = keysToCheck
-    .filter(key => !checkedKeys.includes(key))
-    .filter(key => !key.startsWith("//"));
+    .filter((key) => !checkedKeys.includes(key))
+    .filter((key) => !key.startsWith("//"));
   if (uncheckedKeys.length) {
     errors.push(
       `The following config settings were not understood: '${uncheckedKeys.join(

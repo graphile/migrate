@@ -161,7 +161,7 @@ export function _makeCurrentMigrationRunner(
             : ""
         })`,
       );
-    } catch (e) {
+    } catch (e: any) {
       logDbError(parsedSettings, e);
       throw e;
     }
@@ -198,7 +198,7 @@ export async function _watch(
       running = true;
 
       run()
-        .catch(error => {
+        .catch((error) => {
           if (!error["_gmlogged"]) {
             parsedSettings.logger.error(
               `Error occurred whilst processing migration: ${error.message}`,
@@ -254,7 +254,7 @@ export async function watch(
   return _watch(parsedSettings, once, shadow);
 }
 
-export const watchCommand: CommandModule<never, WatchArgv> = {
+export const watchCommand: CommandModule<Record<string, never>, WatchArgv> = {
   command: "watch",
   aliases: [],
   describe:
@@ -271,7 +271,7 @@ export const watchCommand: CommandModule<never, WatchArgv> = {
       description: "Applies changes to shadow DB.",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     await watch(
       await getSettings({ configFile: argv.config }),
       argv.once,

@@ -10,7 +10,7 @@ export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
 async function statOrNull(path: string): Promise<Stats | null> {
   try {
     return await fsp.stat(path);
-  } catch (e) {
+  } catch (e: any) {
     if (e.code === "ENOENT") {
       return null;
     }
@@ -21,7 +21,7 @@ async function statOrNull(path: string): Promise<Stats | null> {
 async function readFileOrNull(path: string): Promise<string | null> {
   try {
     return await fsp.readFile(path, "utf8");
-  } catch (e) {
+  } catch (e: any) {
     if (e.code === "ENOENT") {
       return null;
     }
@@ -31,7 +31,7 @@ async function readFileOrNull(path: string): Promise<string | null> {
 async function readFileOrError(path: string): Promise<string> {
   try {
     return await fsp.readFile(path, "utf8");
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(`Failed to read file at '${path}': ${e.message}`);
   }
 }

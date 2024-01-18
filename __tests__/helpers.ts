@@ -67,7 +67,7 @@ async function createDatabases() {
     );
   }
   const parsedSettings = await parsedSettingsPromise;
-  await withClient(ROOT_DB, parsedSettings, async client => {
+  await withClient(ROOT_DB, parsedSettings, async (client) => {
     const result = await client.query(
       `select
         exists(select 1 from pg_database where datname = $1) as "hasMain",
@@ -113,7 +113,7 @@ beforeAll(createDatabases);
 
 export async function resetDb() {
   const parsedSettings = await parsedSettingsPromise;
-  await withClient(TEST_DATABASE_URL, parsedSettings, async client => {
+  await withClient(TEST_DATABASE_URL, parsedSettings, async (client) => {
     await client.query("drop schema if exists graphile_migrate cascade;");
     {
       const { rows } = await client.query(
@@ -151,7 +151,7 @@ interface ActionSpies {
   >;
 }
 export function makeActionSpies(shadow = false): ActionSpies {
-  const mockedExec = (exec as unknown) as jest.Mock<typeof exec>;
+  const mockedExec = exec as unknown as jest.Mock<typeof exec>;
   if (!mockedExec.mock) {
     throw new Error("Must mock child_process");
   }

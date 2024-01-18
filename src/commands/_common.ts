@@ -33,12 +33,12 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   let data;
   try {
     data = await fsp.readFile(path, "utf8");
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(`Failed to read '${path}': ${e.message}`);
   }
   try {
     return JSON5.parse(data);
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(`Failed to parse '${path}': ${e.message}`);
   }
 }
@@ -72,7 +72,7 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
 
     try {
       return require(relativePath);
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
           /\n/g,

@@ -14,18 +14,15 @@ import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
 
-function wrapHandler(
-  input: yargs.CommandModule<unknown, unknown>,
-): yargs.CommandModule<unknown, unknown> {
+function wrapHandler<T1, T2>(
+  input: yargs.CommandModule<T1, T2>,
+): yargs.CommandModule<T1, T2> {
   const { handler, ...rest } = input;
 
-  const newHandler: yargs.CommandModule<
-    unknown,
-    unknown
-  >["handler"] = async argv => {
+  const newHandler: yargs.CommandModule<T1, T2>["handler"] = async (argv) => {
     try {
       return await Promise.resolve(handler(argv));
-    } catch (e) {
+    } catch (e: any) {
       if (!e["_gmlogged"]) {
         // eslint-disable-next-line no-console
         console.error(e);

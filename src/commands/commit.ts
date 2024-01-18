@@ -111,7 +111,7 @@ export async function _commit(
       currentLocation,
       parsedSettings.blankMigrationContent.trim() + "\n",
     );
-  } catch (e) {
+  } catch (e: any) {
     logDbError(parsedSettings, e);
 
     parsedSettings.logger.error("ABORTING...");
@@ -130,7 +130,7 @@ export async function commit(
   return _commit(parsedSettings, message);
 }
 
-export const commitCommand: CommandModule<never, CommitArgv> = {
+export const commitCommand: CommandModule<Record<string, never>, CommitArgv> = {
   command: "commit",
   aliases: [],
   describe:
@@ -144,7 +144,7 @@ export const commitCommand: CommandModule<never, CommitArgv> = {
       nargs: 1,
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     if (argv.message !== undefined && !argv.message) {
       throw new Error("Missing or empty commit message after --message flag");
     }

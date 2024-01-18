@@ -24,7 +24,7 @@ export async function runQueryWithErrorInstrumentation<T = any>(
       text: body,
     });
     return rows;
-  } catch (e) {
+  } catch (e: any) {
     if (e.position) {
       const p = parseInt(e.position, 10);
       let line = 1;

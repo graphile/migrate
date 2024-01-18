@@ -38,8 +38,8 @@ export async function run<T = any>(
   const baseConnectionString = rootDatabase
     ? parsedSettings.rootConnectionString
     : shadow
-    ? parsedSettings.shadowConnectionString
-    : parsedSettings.connectionString;
+      ? parsedSettings.shadowConnectionString
+      : parsedSettings.connectionString;
   if (!baseConnectionString) {
     throw new Error("Could not determine connection string to use.");
   }
@@ -52,12 +52,12 @@ export async function run<T = any>(
         )
       : baseConnectionString;
 
-  return withClient(connectionString, parsedSettings, pgClient =>
+  return withClient(connectionString, parsedSettings, (pgClient) =>
     runQueryWithErrorInstrumentation<T>(pgClient, sql, filename),
   );
 }
 
-export const runCommand: CommandModule<{}, RunArgv> = {
+export const runCommand: CommandModule<Record<string, never>, RunArgv> = {
   command: "run [file]",
   aliases: [],
   describe: `\
@@ -81,7 +81,7 @@ Compiles a SQL file, inserting all the placeholders, and then runs it against th
         "Like --root, but also runs against the root database rather than application database.",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     const defaultSettings = await getSettings({ configFile: argv.config });
 
     // `run` might be called from an action; in this case `DATABASE_URL` will

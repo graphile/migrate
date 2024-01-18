@@ -60,9 +60,8 @@ export async function executeActions(
       "Could not determine connection string for running commands",
     );
   }
-  const { database: databaseName, user: databaseUser } = parse(
-    connectionString,
-  );
+  const { database: databaseName, user: databaseUser } =
+    parse(connectionString);
   if (!databaseName) {
     throw new Error("Could not extract database name from connection string");
   }
@@ -128,7 +127,7 @@ export async function executeActions(
         if (stderr) {
           parsedSettings.logger.error(stderr);
         }
-      } catch (e) {
+      } catch (e: any) {
         const { stdout, stderr } = e;
         if (stdout) {
           parsedSettings.logger.info(stdout);

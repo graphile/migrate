@@ -18,7 +18,10 @@ export async function compile(
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
-export const compileCommand: CommandModule<{}, CompileArgv> = {
+export const compileCommand: CommandModule<
+  Record<string, never>,
+  CompileArgv
+> = {
   command: "compile [file]",
   aliases: [],
   describe: `\
@@ -30,7 +33,7 @@ Compiles a SQL file, inserting all the placeholders and returning the result to 
       description: "Apply shadow DB placeholders (for development).",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     const settings = await getSettings({ configFile: argv.config });
     const content =
       typeof argv.file === "string"

@@ -223,7 +223,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
   );
 }
 
-export const initCommand: CommandModule<{}, InitArgv> = {
+export const initCommand: CommandModule<Record<string, never>, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\
