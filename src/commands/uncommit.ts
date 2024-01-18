@@ -1,5 +1,5 @@
 import pgMinify = require("pg-minify");
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import { CommandModule } from "yargs";
 
 import {

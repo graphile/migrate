@@ -1,4 +1,4 @@
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import { relative } from "path";
 
 import { VALID_FILE_REGEX } from "./current";

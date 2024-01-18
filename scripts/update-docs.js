@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { promises: fsp } = require("fs");
+const fsp = require("fs/promises");
 const { spawnSync } = require("child_process");
 
 async function main() {

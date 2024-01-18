@@ -1,4 +1,4 @@
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";

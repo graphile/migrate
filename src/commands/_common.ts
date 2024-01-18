@@ -1,4 +1,5 @@
-import { constants, promises as fsp } from "fs";
+import { constants } from "fs";
+import * as fsp from "fs/promises";
 import * as JSON5 from "json5";
 import { resolve } from "path";
 import { parse } from "pg-connection-string";
