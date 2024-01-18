@@ -134,21 +134,32 @@ export async function compileIncludes(
 ): Promise<string> {
   const regex = /^--!include[ \t]+(.*\.sql)[ \t]*$/gm;
 
-  // Don't need to validate this unless an include happens. MUST end in a `/`
-  const fixturesPath = `${parsedSettings.migrationsFolder}/fixtures/`;
-
   // Find all includes in this `content`
-  const matches = content.matchAll(regex);
+  const matches = [...content.matchAll(regex)];
+
+  // There's no includes
+  if (matches.length === 0) {
+    return content;
+  }
+
+  // Since there's at least one include, we need the fixtures path:
+  const rawFixturesPath = `${parsedSettings.migrationsFolder}/fixtures`;
+  const fixturesPath = await realpathOrNull(rawFixturesPath);
+  if (!fixturesPath) {
+    throw new Error(
+      `File contains '--!include' but fixtures folder '${rawFixturesPath}' doesn't exist?`,
+    );
+  }
 
   // Go through these matches and resolve their full paths, checking they are allowed
   const sqlPathByRawSqlPath = Object.create(null) as Record<string, string>;
   for (const match of matches) {
     const [, rawSqlPath] = match;
-    const sqlPath = await realpathOrNull(`${fixturesPath}${rawSqlPath}`);
+    const sqlPath = await realpathOrNull(`${fixturesPath}/${rawSqlPath}`);
 
     if (!sqlPath) {
       throw new Error(
-        `Include of '${rawSqlPath}' failed because '${fixturesPath}${rawSqlPath}' doesn't seem to exist?`,
+        `Include of '${rawSqlPath}' failed because '${fixturesPath}/${rawSqlPath}' doesn't seem to exist?`,
       );
     }
 

@@ -6,4 +6,4 @@ exports[`compiles an included file, and won't get stuck in an infinite include l
   ~/migrations/current.sql"
 `;
 
-exports[`disallows calling files outside of the migrations/fixtures folder 1`] = `"Forbidden: cannot include path '~/outsideFolder/foo.sql' because it's not inside 'migrations/fixtures/'"`;
+exports[`disallows calling files outside of the migrations/fixtures folder 1`] = `"Forbidden: cannot include path '~/outsideFolder/foo.sql' because it's not inside '~/migrations/fixtures'"`;
