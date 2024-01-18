@@ -130,7 +130,7 @@ async function realpathOrNull(path: string): Promise<string | null> {
 export async function compileIncludes(
   parsedSettings: ParsedSettings,
   content: string,
-  processedFiles: ReadonlySet<String> = new Set<string>(),
+  processedFiles: ReadonlySet<string> = new Set<string>(),
 ): Promise<string> {
   const regex = /^--!include\s+(.*\.sql)\s*$/gm;
 
@@ -141,7 +141,7 @@ export async function compileIncludes(
   const matches = content.matchAll(regex);
 
   // Go through these matches and resolve their full paths, checking they are allowed
-  const sqlPathByRawSqlPath: Record<string, string> = Object.create(null);
+  const sqlPathByRawSqlPath = Object.create(null) as Record<string, string>;
   for (const match of matches) {
     const [, rawSqlPath] = match;
     const sqlPath = await realpathOrNull(`${fixturesPath}${rawSqlPath}`);
@@ -184,7 +184,7 @@ export async function compileIncludes(
   );
 
   // Turn the results into a map for ease of lookup
-  const contentBySqlPath: Record<string, string> = Object.create(null);
+  const contentBySqlPath = Object.create(null) as Record<string, string>;
   for (let i = 0, l = distinctSqlPaths.length; i < l; i++) {
     const sqlPath = distinctSqlPaths[i];
     const content = contentsForDistinctSqlPaths[i];
@@ -192,11 +192,14 @@ export async function compileIncludes(
   }
 
   // Simple string replacement for each path matched
-  const compiledContent = content.replace(regex, (_match, rawSqlPath) => {
-    const sqlPath = sqlPathByRawSqlPath[rawSqlPath];
-    const content = contentBySqlPath[sqlPath];
-    return content;
-  });
+  const compiledContent = content.replace(
+    regex,
+    (_match, rawSqlPath: string) => {
+      const sqlPath = sqlPathByRawSqlPath[rawSqlPath];
+      const content = contentBySqlPath[sqlPath];
+      return content;
+    },
+  );
 
   return compiledContent;
 }
