@@ -2,6 +2,7 @@ import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
+import { errorCode } from "./lib";
 import { parseMigrationText, serializeHeader } from "./migration";
 import { ParsedSettings } from "./settings";
 
@@ -10,8 +11,8 @@ export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
 async function statOrNull(path: string): Promise<Stats | null> {
   try {
     return await fsp.stat(path);
-  } catch (e: any) {
-    if (e.code === "ENOENT") {
+  } catch (e) {
+    if (errorCode(e) === "ENOENT") {
       return null;
     }
     throw e;
@@ -21,8 +22,8 @@ async function statOrNull(path: string): Promise<Stats | null> {
 async function readFileOrNull(path: string): Promise<string | null> {
   try {
     return await fsp.readFile(path, "utf8");
-  } catch (e: any) {
-    if (e.code === "ENOENT") {
+  } catch (e) {
+    if (errorCode(e) === "ENOENT") {
       return null;
     }
     throw e;
@@ -31,8 +32,10 @@ async function readFileOrNull(path: string): Promise<string | null> {
 async function readFileOrError(path: string): Promise<string> {
   try {
     return await fsp.readFile(path, "utf8");
-  } catch (e: any) {
-    throw new Error(`Failed to read file at '${path}': ${e.message}`);
+  } catch (e) {
+    throw new Error(
+      `Failed to read file at '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 

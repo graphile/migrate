@@ -1,4 +1,5 @@
 import { promises as fsp } from "fs";
+import { QueryResultRow } from "pg";
 import { CommandModule } from "yargs";
 
 import { DO_NOT_USE_DATABASE_URL } from "../actions";
@@ -19,7 +20,7 @@ interface RunArgv extends CommonArgv {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function run<T = any>(
+export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: Settings,
   content: string,
   filename: string,

@@ -10,6 +10,7 @@ import { runCommand } from "./commands/run";
 import { statusCommand } from "./commands/status";
 import { uncommitCommand } from "./commands/uncommit";
 import { watchCommand } from "./commands/watch";
+import { isLoggedError } from "./lib";
 import { version } from "./version";
 
 function wrapHandler<T1, T2>(
@@ -20,8 +21,8 @@ function wrapHandler<T1, T2>(
   const newHandler: yargs.CommandModule<T1, T2>["handler"] = async (argv) => {
     try {
       return await Promise.resolve(handler(argv));
-    } catch (e: any) {
-      if (!e["_gmlogged"]) {
+    } catch (e) {
+      if (!isLoggedError(e)) {
         // eslint-disable-next-line no-console
         console.error(e);
       }
@@ -35,7 +36,7 @@ function wrapHandler<T1, T2>(
   };
 }
 
-yargs
+const f = yargs
   .parserConfiguration({
     "boolean-negation": true,
     "camel-case-expansion": false,
@@ -99,3 +100,10 @@ You are running graphile-migrate v${version}.
   ╚═══════════════════════════════════╝
 `,
   ).argv;
+
+if ("then" in f && typeof f.then === "function") {
+  f.then(null, (e: Error) => {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  });
+}

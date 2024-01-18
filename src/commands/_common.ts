@@ -2,6 +2,7 @@ import { constants, promises as fsp } from "fs";
 import * as JSON5 from "json5";
 import { resolve } from "path";
 import { parse } from "pg-connection-string";
+import { pathToFileURL } from "url";
 
 import { Settings } from "../settings";
 
@@ -33,13 +34,17 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   let data;
   try {
     data = await fsp.readFile(path, "utf8");
-  } catch (e: any) {
-    throw new Error(`Failed to read '${path}': ${e.message}`);
+  } catch (e) {
+    throw new Error(
+      `Failed to read '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
   try {
     return JSON5.parse(data);
-  } catch (e: any) {
-    throw new Error(`Failed to parse '${path}': ${e.message}`);
+  } catch (e) {
+    throw new Error(
+      `Failed to parse '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 
@@ -64,20 +69,21 @@ interface Options {
  */
 export async function getSettings(options: Options = {}): Promise<Settings> {
   const { configFile } = options;
-  const tryRequire = (path: string): Settings => {
+  const tryRequire = async (path: string): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
     // path.
-    const relativePath = resolve(process.cwd(), path);
+    const relativePath = pathToFileURL(resolve(process.cwd(), path)).href;
 
     try {
-      return require(relativePath);
-    } catch (e: any) {
+      return (await import(relativePath)) as Settings;
+    } catch (e) {
       throw new Error(
-        `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
-          /\n/g,
-          "\n    ",
-        )}`,
+        `Failed to import '${relativePath}'; error:\n    ${
+          e instanceof Error && e.stack
+            ? e.stack.replace(/\n/g, "\n    ")
+            : String(e)
+        }`,
       );
     }
   };
@@ -120,7 +126,7 @@ export function readStdin(): Promise<string> {
     process.stdin.on("readable", () => {
       let chunk;
       // Use a loop to make sure we read all available data.
-      while ((chunk = process.stdin.read()) !== null) {
+      while ((chunk = process.stdin.read() as string | null) !== null) {
         data += chunk;
       }
     });

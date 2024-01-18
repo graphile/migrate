@@ -111,7 +111,9 @@ export async function _commit(
       currentLocation,
       parsedSettings.blankMigrationContent.trim() + "\n",
     );
-  } catch (e: any) {
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error(String(err));
+
     logDbError(parsedSettings, e);
 
     parsedSettings.logger.error("ABORTING...");

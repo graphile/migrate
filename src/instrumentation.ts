@@ -1,10 +1,11 @@
 import * as chalk from "chalk";
+import { QueryResultRow } from "pg";
 
 import indent from "./indent";
 import { Client } from "./pg";
 import { ParsedSettings } from "./settings";
 
-interface InstrumentationError extends Error {
+export interface InstrumentationError extends Error {
   severity?: string;
   code?: string;
   detail?: string;
@@ -14,19 +15,21 @@ interface InstrumentationError extends Error {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function runQueryWithErrorInstrumentation<T = any>(
-  pgClient: Client,
-  body: string,
-  filename: string,
-): Promise<T[] | undefined> {
+export async function runQueryWithErrorInstrumentation<
+  T extends QueryResultRow = QueryResultRow,
+>(pgClient: Client, body: string, filename: string): Promise<T[] | undefined> {
   try {
-    const { rows } = await pgClient.query({
+    const { rows } = await pgClient.query<T>({
       text: body,
     });
     return rows;
-  } catch (e: any) {
-    if (e.position) {
-      const p = parseInt(e.position, 10);
+  } catch (e) {
+    if (
+      e instanceof Error &&
+      "position" in e &&
+      (typeof e.position === "string" || typeof e.position === "number")
+    ) {
+      const p = parseInt(String(e.position), 10);
       let line = 1;
       let column = 0;
       let idx = 0;
@@ -61,9 +64,11 @@ export async function runQueryWithErrorInstrumentation<T = any>(
         chalk.reset(indent(indent(snippet, codeIndent), indentString)),
         indentString +
           chalk.red("-".repeat(positionWithinLine - 1 + codeIndent) + "^"),
-        indentString + chalk.red.bold(e.code) + chalk.red(": " + e.message),
+        indentString +
+          chalk.red.bold((e as InstrumentationError).code) +
+          chalk.red(": " + e.message),
       ];
-      e["_gmMessageOverride"] = lines.join("\n");
+      (e as InstrumentationError)["_gmMessageOverride"] = lines.join("\n");
     }
     throw e;
   }

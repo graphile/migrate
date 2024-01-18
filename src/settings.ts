@@ -125,8 +125,10 @@ export async function parseSettings(
     const value = settings[key];
     try {
       return await callback(value);
-    } catch (e: any) {
-      errors.push(`Setting '${key}': ${e.message}`);
+    } catch (e) {
+      errors.push(
+        `Setting '${key}': ${e instanceof Error ? e.message : String(e)}`,
+      );
       return void 0 as never;
     }
   }

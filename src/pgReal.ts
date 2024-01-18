@@ -85,7 +85,12 @@ function getPoolDetailsFromConnectionString(
         clearTimeout(this._timer);
         this._timer = undefined;
         pool.end = end;
-        pool.end();
+        pool.end().catch((e) => {
+          // eslint-disable-next-line no-console
+          console.error("Error occurred whilst releasing pool:");
+          // eslint-disable-next-line no-console
+          console.dir(e);
+        });
         poolDetailsByConnectionString.delete(connectionString);
       },
     };
@@ -150,9 +155,10 @@ export async function withAdvisoryLock<T>(
   }
   const {
     rows: [{ locked }],
-  } = await pgClient.query("select pg_try_advisory_lock($1) as locked", [
-    ADVISORY_LOCK_MIGRATE,
-  ]);
+  } = await pgClient.query<{ locked: boolean }>(
+    "select pg_try_advisory_lock($1) as locked",
+    [ADVISORY_LOCK_MIGRATE],
+  );
   if (!locked) {
     throw new Error("Failed to get exclusive lock");
   }

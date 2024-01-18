@@ -99,7 +99,7 @@ export const generatePlaceholderReplacement = memoize(
 );
 
 // So memoization above holds from compilePlaceholders
-const contextObj = memoize((database) => ({ database }));
+const contextObj = memoize((database: string) => ({ database }));
 
 export function compilePlaceholders(
   parsedSettings: ParsedSettings,
@@ -131,7 +131,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
   // Verify that graphile_migrate schema exists
   const {
     rows: [graphileMigrateSchema],
-  } = await pgClient.query(
+  } = await pgClient.query<{ oid: string }>(
     `select oid from pg_namespace where nspname = 'graphile_migrate';`,
   );
   if (!graphileMigrateSchema) {
@@ -144,7 +144,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     // Check that table exists
     const {
       rows: [table],
-    } = await pgClient.query(
+    } = await pgClient.query<{ oid: string }>(
       `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`,
     );
     if (!table) {
@@ -154,7 +154,10 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     }
 
     // Check that it has the right number of columns
-    const { rows: columns } = await pgClient.query(
+    const { rows: columns } = await pgClient.query<{
+      attrelid: string;
+      attname: string;
+    }>(
       `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`,
     );
     if (columns.length !== expected.columnCount) {
@@ -278,7 +281,12 @@ export async function getLastMigration(
 
   const {
     rows: [row],
-  } = await pgClient.query(
+  } = await pgClient.query<{
+    filename: string;
+    previousHash: string | null;
+    hash: string;
+    date: Date;
+  }>(
     `select filename, previous_hash as "previousHash", hash, date from graphile_migrate.migrations order by filename desc limit 1`,
   );
   return (row as DbMigration) || null;

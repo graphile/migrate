@@ -46,9 +46,9 @@ export async function _reset(
             databaseName,
           )} OWNER ${escapeIdentifier(databaseOwner)};`,
         );
-      } catch (e: any) {
+      } catch (e) {
         throw new Error(
-          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e.message}`,
+          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e instanceof Error ? e.message : String(e)}`,
         );
       }
       await pgClient.query(
