@@ -3,7 +3,11 @@ import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
 import { errorCode } from "./lib";
-import { parseMigrationText, serializeHeader } from "./migration";
+import {
+  compileIncludes,
+  parseMigrationText,
+  serializeHeader,
+} from "./migration";
 import { ParsedSettings } from "./settings";
 
 export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
@@ -99,14 +103,18 @@ function idFromFilename(file: string): number {
 }
 
 export async function readCurrentMigration(
-  _parsedSettings: ParsedSettings,
+  parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
 ): Promise<string> {
   if (location.isFile) {
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return content || "";
+    return compileIncludes(
+      parsedSettings,
+      content || "",
+      new Set([location.path]),
+    );
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
@@ -156,7 +164,12 @@ export async function readCurrentMigration(
     for (const id of ids) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { file, filePath, bodyPromise } = parts.get(id)!;
-      const contents = await bodyPromise;
+      const rawContents = await bodyPromise;
+      const contents = await compileIncludes(
+        parsedSettings,
+        rawContents,
+        new Set([filePath]),
+      );
       const { body, headers } = parseMigrationText(filePath, contents, false);
       headerses.push(headers);
       if (isNoTransactionDefined(body)) {
@@ -181,6 +194,7 @@ export async function readCurrentMigration(
     if (headerLines.length) {
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
+
     return wholeBody;
   }
 }

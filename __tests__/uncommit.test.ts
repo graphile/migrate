@@ -1,6 +1,6 @@
 import "./helpers"; // Has side-effects; must come first
 
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import mockFs from "mock-fs";
 
 import { commit, migrate, uncommit } from "../src";

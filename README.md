@@ -724,6 +724,59 @@ by `graphile-migrate watch` is defined. By default this is in the
 `migrations/current.sql` file, but it might be `migrations/current/*.sql` if
 you're using folder mode.
 
+#### Including external files in the current migration
+
+You can include external files in your `current.sql` to better assist in source
+control. These includes are identified by paths within the `migrations/fixtures`
+folder.
+
+For example. Given the following directory structure:
+
+```
+/- migrate
+ - migrations
+   |
+   - current.sql
+   - fixtures
+     |
+     - functions
+       |
+       - myfunction.sql
+```
+
+and the contents of `myfunction.sql`:
+
+```sql
+create or replace function myfunction(a int, b int)
+returns int as $$
+  select a + b;
+$$ language sql stable;
+```
+
+When you make changes to `myfunction.sql`, include it in your current migration
+by adding `--!include functions/myfunction.sql` to your `current.sql` (or any
+`current/*.sql`). This statement doesn't need to be at the top of the file,
+wherever it is will be replaced by the content of
+`migrations/fixtures/functions/myfunction.sql` when the migration is committed.
+
+```sql
+--!include fixtures/functions/myfunction.sql
+drop policy if exists access_by_numbers on mytable;
+create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
+```
+
+and when the migration is committed or watched, the contents of `myfunction.sql`
+will be included in the result, such that the following SQL is executed:
+
+```sql
+create or replace function myfunction(a int, b int)
+returns int as $$
+  select a + b;
+$$ language sql stable;
+drop policy if exists access_by_numbers on mytable;
+create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
+```
+
 ### Committed migration(s)
 
 The files for migrations that you've committed with `graphile-migrate commit`

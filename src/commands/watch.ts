@@ -217,29 +217,32 @@ export async function _watch(
           }
         });
     };
-    const watcher = chokidar.watch(currentLocation.path, {
-      /*
-       * Without `usePolling`, on Linux, you can prevent the watching from
-       * working by issuing `git stash && sleep 2 && git stash pop`. This is
-       * annoying.
-       */
-      usePolling: true,
+    const watcher = chokidar.watch(
+      [currentLocation.path, `${parsedSettings.migrationsFolder}/fixtures`],
+      {
+        /*
+         * Without `usePolling`, on Linux, you can prevent the watching from
+         * working by issuing `git stash && sleep 2 && git stash pop`. This is
+         * annoying.
+         */
+        usePolling: true,
 
-      /*
-       * Some editors stream the writes out a little at a time, we want to wait
-       * for the write to finish before triggering.
-       */
-      awaitWriteFinish: {
-        stabilityThreshold: 200,
-        pollInterval: 100,
+        /*
+         * Some editors stream the writes out a little at a time, we want to wait
+         * for the write to finish before triggering.
+         */
+        awaitWriteFinish: {
+          stabilityThreshold: 200,
+          pollInterval: 100,
+        },
+
+        /*
+         * We don't want to run the queue too many times during startup; so we
+         * call it once on the 'ready' event.
+         */
+        ignoreInitial: true,
       },
-
-      /*
-       * We don't want to run the queue too many times during startup; so we
-       * call it once on the 'ready' event.
-       */
-      ignoreInitial: true,
-    });
+    );
     watcher.on("add", queue);
     watcher.on("change", queue);
     watcher.on("unlink", queue);

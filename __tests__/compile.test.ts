@@ -1,7 +1,8 @@
 import "./helpers";
 
-import { compile } from "../src";
+import * as mockFs from "mock-fs";
 
+import { compile } from "../src";
 let old: string | undefined;
 beforeAll(() => {
   old = process.env.DATABASE_AUTHENTICATOR;
@@ -9,6 +10,10 @@ beforeAll(() => {
 });
 afterAll(() => {
   process.env.DATABASE_AUTHENTICATOR = old;
+});
+
+afterEach(() => {
+  mockFs.restore();
 });
 
 it("compiles SQL with settings", async () => {

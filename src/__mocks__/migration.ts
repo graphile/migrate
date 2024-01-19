@@ -36,3 +36,7 @@ export const runStringMigration = jest.fn(
 export const runCommittedMigration = jest.fn(
   (_client, _settings, _context, _committedMigration, _logSuffix) => {},
 );
+
+export const compileIncludes = jest.fn((parsedSettings, content) => {
+  return content;
+});

@@ -1,6 +1,6 @@
 import { Logger } from "@graphile/logger";
 import { exec as rawExec } from "child_process";
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import { parse } from "pg-connection-string";
 import { inspect, promisify } from "util";
 
