@@ -11,7 +11,7 @@
     "tsc": "tsc -p tsconfig.build.json",
     "prepack": "npm run tsc && chmod +x dist/cli.js",
     "clean": "rm -Rf dist",
-    "test": "yarn lint && yarn run lint:deps && yarn run test:only --ci",
+    "test": "yarn lint && yarn run lint:deps && FORCE_COLOR=1 yarn run test:only --ci",
     "test:only": "jest -i",
     "version": "yarn prepack && ./scripts/update-docs.js && node ./scripts/version.mjs && git add README.md src/version.ts",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && npm run tsc --watch"
