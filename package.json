@@ -8,12 +8,13 @@
     "lint:deps": "depcheck --ignores @types/jest,@types/json5,@types/node,@types/mock-fs,@types/pg,@types/yargs,eslint_d,mock-fs,tslib",
     "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx,.graphql . --fix; prettier --ignore-path .eslintignore --write '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
     "prettier:check": "prettier --ignore-path .eslintignore --check '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
-    "prepack": "tsc && chmod +x dist/cli.js",
+    "tsc": "tsc -p tsconfig.build.json",
+    "prepack": "npm run tsc && chmod +x dist/cli.js",
     "clean": "rm -Rf dist",
     "test": "yarn lint && yarn run lint:deps && yarn run test:only --ci",
     "test:only": "jest -i",
     "version": "yarn prepack && ./scripts/update-docs.js && node ./scripts/version.mjs && git add README.md src/version.ts",
-    "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && tsc --watch"
+    "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && npm run tsc --watch"
   },
   "bin": {
     "graphile-migrate": "./dist/cli.js"
