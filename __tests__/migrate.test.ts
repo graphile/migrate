@@ -6,6 +6,7 @@ import { migrate } from "../src";
 import { withClient } from "../src/pg";
 import { ParsedSettings, parseSettings } from "../src/settings";
 import { makeMigrations, resetDb, settings } from "./helpers";
+import { logDbError } from "../src/instrumentation";
 
 beforeEach(resetDb);
 beforeEach(async () => {
@@ -136,4 +137,46 @@ it("will run a migration with invalid hash if told to do so", async () => {
     expect(enums).toHaveLength(1);
     expect(enums).toMatchSnapshot();
   }
+});
+
+it("handles errors during migration gracefully", async () => {
+  mockFs({
+    "migrations/current.sql": ``,
+    "migrations/committed/000001.sql": `\
+--! Previous: -
+--! Hash: sha1:2fd4e1c67a2d28fced849ee1bb76e7391b93eb12
+--! AllowInvalidHash
+
+drop table if exists frogs;
+
+create table frogs (
+  id serial primary key,
+  name text not null,
+  speckled bool not null
+);
+
+select 1/0;
+
+comment on table frogs is 'Ribbit';
+`,
+  });
+
+  let err: any;
+  try {
+    await migrate(settings);
+  } catch (e) {
+    err = e;
+  }
+  expect(err).toBeTruthy();
+  expect(err.message).toMatch(/division by zero/);
+  expect(err).toMatchSnapshot();
+
+  const parsedSettings = await parseSettings(settings);
+  const mock = jest.fn();
+  parsedSettings.logger.error = mock;
+
+  logDbError(parsedSettings, err);
+  expect(mock).toHaveBeenCalledTimes(1);
+  const call = mock.mock.calls[0];
+  expect(call).toMatchSnapshot();
 });

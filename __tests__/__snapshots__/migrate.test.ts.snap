@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`handles errors during migration gracefully 1`] = `[error: division by zero]`;
+
 exports[`refuses to run migration with invalid hash 1`] = `"Hash for 000002.sql does not match - sha1:cbed240dda7dfa510ff785783bbe6af7743b3a11 !== sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b; has the file been tampered with?"`;
 
 exports[`runs migrations 1`] = `
