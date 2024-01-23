@@ -3,10 +3,10 @@ import "./helpers"; // Has side-effects; must come first
 import mockFs from "mock-fs";
 
 import { migrate } from "../src";
+import { logDbError } from "../src/instrumentation";
 import { withClient } from "../src/pg";
 import { ParsedSettings, parseSettings } from "../src/settings";
 import { makeMigrations, resetDb, settings } from "./helpers";
-import { logDbError } from "../src/instrumentation";
 
 beforeEach(resetDb);
 beforeEach(async () => {
