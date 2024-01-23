@@ -178,5 +178,9 @@ comment on table frogs is 'Ribbit';
   logDbError(parsedSettings, err);
   expect(mock).toHaveBeenCalledTimes(1);
   const call = mock.mock.calls[0];
-  expect(call).toMatchSnapshot();
+  expect(
+    String(call)
+      .replaceAll(process.cwd(), "~")
+      .replace(/:[0-9]+:[0-9]+($|\))/gm, ":[LINE]:[COL]$1"),
+  ).toMatchSnapshot();
 });
