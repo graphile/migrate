@@ -3,7 +3,12 @@ import "./helpers"; // Side effects - must come first
 import mockFs from "mock-fs";
 import * as path from "path";
 
-import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
+import {
+  DEFAULT_GMRC_COMMONJS_PATH,
+  DEFAULT_GMRC_PATH,
+  DEFAULT_GMRCJS_PATH,
+  getSettings,
+} from "../src/commands/_common";
 import {
   makeRootDatabaseConnectionString,
   ParsedSettings,
@@ -338,6 +343,51 @@ describe("gmrc path", () => {
     const settings = await getSettings({ configFile: ".other-gmrc" });
     expect(settings.connectionString).toEqual(
       "postgres://appuser:apppassword@host:5432/otherdb",
+    );
+    mockFs.restore();
+  });
+});
+
+describe("gmrc from JS", () => {
+  const nodeMajor = parseInt(process.versions.node.split(".")[0], 10);
+  // Only test these on Node20+
+  const node20PlusIt = nodeMajor >= 20 ? it : it.skip.bind(it);
+  node20PlusIt("supports .gmrc.js", async () => {
+    mockFs.restore();
+    // The warmups force all the parts of Node import to be exercised before we
+    // try and import something from our mocked filesystem.
+    // @ts-ignore
+    await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
+
+    mockFs({
+      [DEFAULT_GMRCJS_PATH]: /* JavaScript */ `\
+module.exports = {
+  connectionString: "postgres://appuser:apppassword@host:5432/gmrcjs_test",
+};`,
+    });
+    const settings = await getSettings();
+    expect(settings.connectionString).toEqual(
+      "postgres://appuser:apppassword@host:5432/gmrcjs_test",
+    );
+    mockFs.restore();
+  });
+
+  node20PlusIt("supports .gmrc.cjs", async () => {
+    mockFs.restore();
+    // The warmups force all the parts of Node import to be exercised before we
+    // try and import something from our mocked filesystem.
+    // @ts-ignore
+    await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
+
+    mockFs({
+      [DEFAULT_GMRC_COMMONJS_PATH]: /* JavaScript */ `\
+module.exports = {
+  connectionString: "postgres://appuser:apppassword@host:5432/gmrc_commonjs_test",
+};`,
+    });
+    const settings = await getSettings();
+    expect(settings.connectionString).toEqual(
+      "postgres://appuser:apppassword@host:5432/gmrc_commonjs_test",
     );
     mockFs.restore();
   });
