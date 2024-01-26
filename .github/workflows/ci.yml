@@ -11,6 +11,7 @@ env:
   TEST_ROOT_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
   TEST_DATABASE_URL: postgres://someone:something@127.0.0.1:5432/graphile_migrate_test
   PGVERSION: 10
+  NODE_OPTIONS: "--experimental-vm-modules"
 
 jobs:
   test:

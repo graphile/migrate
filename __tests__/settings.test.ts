@@ -349,7 +349,10 @@ describe("gmrc path", () => {
 });
 
 describe("gmrc from JS", () => {
-  it("supports .gmrc.js", async () => {
+  const nodeMajor = parseInt(process.versions.node.split(".")[0], 10);
+  // Only test these on Node20+
+  const node20PlusIt = nodeMajor >= 20 ? it : it.skip.bind(it);
+  node20PlusIt("supports .gmrc.js", async () => {
     mockFs.restore();
     // The warmups force all the parts of Node import to be exercised before we
     // try and import something from our mocked filesystem.
@@ -369,7 +372,7 @@ module.exports = {
     mockFs.restore();
   });
 
-  it("supports .gmrc.cjs", async () => {
+  node20PlusIt("supports .gmrc.cjs", async () => {
     mockFs.restore();
     // The warmups force all the parts of Node import to be exercised before we
     // try and import something from our mocked filesystem.
