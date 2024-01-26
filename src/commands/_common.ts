@@ -77,10 +77,8 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     const relativePath = pathToFileURL(resolve(process.cwd(), path)).href;
 
     try {
-      const module = (await import(relativePath)) as {
-        default: Settings;
-      };
-      return module.default;
+      const module = await import(relativePath);
+      return module.default as Settings;
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${
