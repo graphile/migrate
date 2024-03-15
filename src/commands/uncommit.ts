@@ -42,9 +42,16 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const contents = await fsp.readFile(lastMigrationFilepath, "utf8");
   const { headers, body } = parseMigrationText(lastMigrationFilepath, contents);
 
+  // Remove included migrations
+  const includeRegex =
+    /^--![ \t]*Included[ \t]+(?<filename>.*?\.sql)[ \t]*$.*?^--![ \t]*EndIncluded[ \t]*\k<filename>[ \t]*$/gms;
+  const decompiledBody = body.replace(includeRegex, (match) => {
+    return match.split("\n")[0].replace(" Included", "include");
+  });
+
   // Drop Hash, Previous and AllowInvalidHash from headers; then write out
   const { Hash, Previous, AllowInvalidHash, ...otherHeaders } = headers;
-  const completeBody = serializeMigration(body, otherHeaders);
+  const completeBody = serializeMigration(decompiledBody, otherHeaders);
   await writeCurrentMigration(parsedSettings, currentLocation, completeBody);
 
   // Delete the migration from committed and from the DB

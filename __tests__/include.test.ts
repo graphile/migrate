@@ -42,7 +42,9 @@ it("compiles an included file", async () => {
       FAKE_VISITED,
     ),
   ).toEqual(`\
+--! Include foo.sql
 select * from foo;
+--! EndInclude foo.sql
 `);
 });
 
@@ -64,9 +66,17 @@ it("compiles multiple included files", async () => {
       FAKE_VISITED,
     ),
   ).toEqual(`\
+--! Include dir1/foo.sql
 select * from foo;
+--! EndInclude dir1/foo.sql
+--! Include dir2/bar.sql
 select * from bar;
+--! EndInclude dir2/bar.sql
+--! Include dir3/baz.sql
+--! Include dir4/qux.sql
 select * from qux;
+--! EndInclude dir4/qux.sql
+--! EndInclude dir3/baz.sql
 `);
 });
 
@@ -129,6 +139,7 @@ commit;
       FAKE_VISITED,
     ),
   ).toEqual(`\
+--! Include foo.sql
 begin;
 
 create or replace function current_user_id() returns uuid as $$
@@ -140,6 +151,6 @@ comment on function current_user_id is E'The ID of the current user.';
 grant all on function current_user_id to :DATABASE_USER;
 
 commit;
-
+--! EndInclude foo.sql
 `);
 });

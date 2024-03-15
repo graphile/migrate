@@ -38,7 +38,9 @@ async function readFileOrError(path: string): Promise<string> {
     return await fsp.readFile(path, "utf8");
   } catch (e) {
     throw new Error(
-      `Failed to read file at '${path}': ${e instanceof Error ? e.message : String(e)}`,
+      `Failed to read file at '${path}': ${
+        e instanceof Error ? e.message : String(e)
+      }`,
     );
   }
 }

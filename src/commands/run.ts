@@ -39,8 +39,8 @@ export async function run<T extends QueryResultRow = QueryResultRow>(
   const baseConnectionString = rootDatabase
     ? parsedSettings.rootConnectionString
     : shadow
-      ? parsedSettings.shadowConnectionString
-      : parsedSettings.connectionString;
+    ? parsedSettings.shadowConnectionString
+    : parsedSettings.connectionString;
   if (!baseConnectionString) {
     throw new Error("Could not determine connection string to use.");
   }

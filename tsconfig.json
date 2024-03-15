@@ -3,6 +3,6 @@
   "include": ["src/**/*", "__tests__/**/*", "*.js", "./.*.js"],
   "exclude": [],
   "compilerOptions": {
-    "noEmit": true,
-  },
+    "noEmit": true
+  }
 }
