@@ -69,8 +69,8 @@ export async function _migrate(
             remainingMigrations.length > 0
               ? `${remainingMigrations.length} committed migrations executed`
               : lastMigration
-              ? "Already up to date"
-              : `Up to date — no committed migrations to run`
+                ? "Already up to date"
+                : `Up to date — no committed migrations to run`
           }`,
         );
       });
