@@ -44,9 +44,7 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
     return JSON5.parse(data);
   } catch (e) {
     throw new Error(
-      `Failed to parse '${path}': ${
-        e instanceof Error ? e.message : String(e)
-      }`,
+      `Failed to parse '${path}': ${e instanceof Error ? e.message : String(e)}`,
     );
   }
 }

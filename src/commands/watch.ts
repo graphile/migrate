@@ -204,9 +204,7 @@ export async function _watch(
         .catch((error: unknown) => {
           if (!isLoggedError(error)) {
             parsedSettings.logger.error(
-              `Error occurred whilst processing migration: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
+              `Error occurred whilst processing migration: ${error instanceof Error ? error.message : String(error)}`,
               { error },
             );
           }

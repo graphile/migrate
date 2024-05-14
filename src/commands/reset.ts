@@ -48,9 +48,7 @@ export async function _reset(
         );
       } catch (e) {
         throw new Error(
-          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${
-            e instanceof Error ? e.message : String(e)
-          }`,
+          `Failed to create database '${databaseName}' with owner '${databaseOwner}': ${e instanceof Error ? e.message : String(e)}`,
         );
       }
       await pgClient.query(
