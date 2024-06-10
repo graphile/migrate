@@ -320,12 +320,12 @@ describe("gmrc path", () => {
     mockFs.restore();
     mockFs({
       [DEFAULT_GMRC_PATH]: `
-        { "connectionString": "postgres://appuser:apppassword@host:5432/defaultdb" }
+        { "connectionString": "postgres://dbowner:password@host:5432/defaultdb" }
       `,
     });
     const settings = await getSettings();
     expect(settings.connectionString).toEqual(
-      "postgres://appuser:apppassword@host:5432/defaultdb",
+      "postgres://dbowner:password@host:5432/defaultdb",
     );
     mockFs.restore();
   });
@@ -334,15 +334,15 @@ describe("gmrc path", () => {
     mockFs.restore();
     mockFs({
       [DEFAULT_GMRC_PATH]: `
-        { "connectionString": "postgres://appuser:apppassword@host:5432/defaultdb" }
+        { "connectionString": "postgres://dbowner:password@host:5432/defaultdb" }
       `,
       ".other-gmrc": `
-        { "connectionString": "postgres://appuser:apppassword@host:5432/otherdb" }
+        { "connectionString": "postgres://dbowner:password@host:5432/otherdb" }
       `,
     });
     const settings = await getSettings({ configFile: ".other-gmrc" });
     expect(settings.connectionString).toEqual(
-      "postgres://appuser:apppassword@host:5432/otherdb",
+      "postgres://dbowner:password@host:5432/otherdb",
     );
     mockFs.restore();
   });
@@ -362,12 +362,12 @@ describe("gmrc from JS", () => {
     mockFs({
       [DEFAULT_GMRCJS_PATH]: /* JavaScript */ `\
 module.exports = {
-  connectionString: "postgres://appuser:apppassword@host:5432/gmrcjs_test",
+  connectionString: "postgres://dbowner:password@host:5432/gmrcjs_test",
 };`,
     });
     const settings = await getSettings();
     expect(settings.connectionString).toEqual(
-      "postgres://appuser:apppassword@host:5432/gmrcjs_test",
+      "postgres://dbowner:password@host:5432/gmrcjs_test",
     );
     mockFs.restore();
   });
@@ -382,12 +382,12 @@ module.exports = {
     mockFs({
       [DEFAULT_GMRC_COMMONJS_PATH]: /* JavaScript */ `\
 module.exports = {
-  connectionString: "postgres://appuser:apppassword@host:5432/gmrc_commonjs_test",
+  connectionString: "postgres://dbowner:password@host:5432/gmrc_commonjs_test",
 };`,
     });
     const settings = await getSettings();
     expect(settings.connectionString).toEqual(
-      "postgres://appuser:apppassword@host:5432/gmrc_commonjs_test",
+      "postgres://dbowner:password@host:5432/gmrc_commonjs_test",
     );
     mockFs.restore();
   });

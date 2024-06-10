@@ -108,9 +108,9 @@ unaffected by the iteration you've been applying to your development database
 Create your database role (if desired), database and shadow database:
 
 ```bash
-createuser --pwprompt appuser
-createdb myapp --owner=appuser
-createdb myapp_shadow --owner=appuser
+createuser --pwprompt dbowner
+createdb myapp --owner=dbowner
+createdb myapp_shadow --owner=dbowner
 ```
 
 Export your database URL, shadow database URL, and a "root" database URL which
@@ -119,8 +119,8 @@ PostgreSQL servers have a default database called `postgres` which is a good
 choice for this).
 
 ```bash
-export DATABASE_URL="postgres://appuser:password@localhost/myapp"
-export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
+export DATABASE_URL="postgres://dbowner:password@localhost/myapp"
+export SHADOW_DATABASE_URL="postgres://dbowner:password@localhost/myapp_shadow"
 
 export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
 ```
