@@ -113,6 +113,10 @@ createdb myapp --owner=dbowner
 createdb myapp_shadow --owner=dbowner
 ```
 
+> For an in depth-discussion on the different users and roles typically
+> involved in database and migration management, please see issue
+> [#215](https://github.com/graphile/migrate/issues/215).
+
 Export your database URL, shadow database URL, and a "root" database URL which
 should be a superuser account connection to any **other** database (most
 PostgreSQL servers have a default database called `postgres` which is a good
