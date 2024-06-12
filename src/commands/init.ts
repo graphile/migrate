@@ -46,7 +46,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
    *
    * RECOMMENDATION: use \`DATABASE_URL\` envvar instead.
    */
-  // "connectionString": "postgres://appuser:apppassword@host:5432/appdb",
+  // "connectionString": "postgres://dbowner:password@host:5432/appdb",
 
   /*
    * shadowConnectionString: like connectionString, but this is used for the
@@ -54,7 +54,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
    *
    * RECOMMENDATION: use \`SHADOW_DATABASE_URL\` envvar instead.
    */
-  // "shadowConnectionString": "postgres://appuser:apppassword@host:5432/appdb_shadow",
+  // "shadowConnectionString": "postgres://dbowner:password@host:5432/appdb_shadow",
 
   /*
    * rootConnectionString: like connectionString, but this is used for
