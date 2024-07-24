@@ -111,5 +111,8 @@ it("reads from current.sql, and processes included files", async () => {
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual("-- TEST from foo");
+  expect(content).toEqual(`\
+--! Included foo_current.sql
+-- TEST from foo
+--! EndIncluded foo_current.sql`);
 });

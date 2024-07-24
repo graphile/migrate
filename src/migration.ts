@@ -132,7 +132,7 @@ export async function compileIncludes(
   content: string,
   processedFiles: ReadonlySet<string>,
 ): Promise<string> {
-  const regex = /^--![ \t]*include[ \t]+(.*\.sql)[ \t]*$/gm;
+  const regex = /^--![ \t]*[iI]nclude[ \t]+(.*\.sql)[ \t]*$/gm;
 
   // Find all includes in this `content`
   const matches = [...content.matchAll(regex)];
@@ -205,10 +205,12 @@ export async function compileIncludes(
   // Simple string replacement for each path matched
   const compiledContent = content.replace(
     regex,
-    (_match, rawSqlPath: string) => {
+    (match, rawSqlPath: string) => {
       const sqlPath = sqlPathByRawSqlPath[rawSqlPath];
       const content = contentBySqlPath[sqlPath];
-      return content;
+      const included = match.replace(/^--![ \t]*include/, "--! Included");
+      const endIncluded = included.replace("Included", "EndIncluded");
+      return `${included}\n${content.trim()}\n${endIncluded}`;
     },
   );
 
