@@ -332,10 +332,20 @@ export function parseMigrationText(
     headers[key] = value ? value.trim() : value;
   }
 
+  // The `\r\n` should never exist; however Windows users may be having git convert LF to CRLF, corrupting migrations.
   if (strict && lines[headerLines] !== "") {
-    throw new Error(
-      `Invalid migration '${fullPath}': there should be two newlines after the headers section`,
-    );
+    if (lines[headerLines] === "\r") {
+      throw new Error(
+        `Invalid migration '${fullPath}': it looks like the line endings have been corrupted - perhaps you have configured git to replace LF with CRLF? Here's a couple potential solutions:
+Option 1: Add \`path/to/migrations/committed/*.sql -text\` to \`.gitattributes\` in your repository
+Option 2: Globally reconfigure git to convert CRLF to LF on commit, but never convert LF back to CRLF: \`git config --global core.autocrlf input\`
+`,
+      );
+    } else {
+      throw new Error(
+        `Invalid migration '${fullPath}': there should be two newlines after the headers section`,
+      );
+    }
   }
 
   const body = lines.slice(headerLines).join("\n").trim() + "\n";
