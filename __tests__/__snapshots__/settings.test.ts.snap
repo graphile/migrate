@@ -38,7 +38,7 @@ exports[`actions is backwards-compatible with untagged command specs 1`] = `
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
-  "rootConnectionString": "template1",
+  "rootConnectionString": "postgres:///template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
 }
@@ -79,7 +79,7 @@ exports[`actions parses SQL actions 1`] = `
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
-  "rootConnectionString": "template1",
+  "rootConnectionString": "postgres:///template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
 }
@@ -115,7 +115,7 @@ exports[`actions parses command actions 1`] = `
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
-  "rootConnectionString": "template1",
+  "rootConnectionString": "postgres:///template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
 }
@@ -159,7 +159,7 @@ exports[`actions parses mixed actions 1`] = `
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
-  "rootConnectionString": "template1",
+  "rootConnectionString": "postgres:///template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
 }
@@ -200,7 +200,7 @@ exports[`actions parses string values into SQL actions 1`] = `
   "manageGraphileMigrateSchema": true,
   "migrationsFolder": "./migrations",
   "placeholders": undefined,
-  "rootConnectionString": "template1",
+  "rootConnectionString": "postgres:///template1",
   "shadowConnectionString": undefined,
   "shadowDatabaseName": undefined,
 }
