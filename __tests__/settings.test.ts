@@ -367,7 +367,7 @@ module.exports = {
     });
     const settings = await getSettings();
     expect(settings.connectionString).toEqual(
-      "postgres:///dbowner:password@host:5432/gmrcjs_test",
+      "postgres://dbowner:password@host:5432/gmrcjs_test",
     );
     mockFs.restore();
   });
