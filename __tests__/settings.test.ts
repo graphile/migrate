@@ -362,7 +362,7 @@ describe("gmrc from JS", () => {
     mockFs({
       [DEFAULT_GMRCJS_PATH]: /* JavaScript */ `\
 module.exports = {
-  connectionString: "postgres:///dbowner:password@host:5432/gmrcjs_test",
+  connectionString: "postgres://dbowner:password@host:5432/gmrcjs_test",
 };`,
     });
     const settings = await getSettings();
