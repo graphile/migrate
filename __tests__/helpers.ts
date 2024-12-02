@@ -266,6 +266,15 @@ export const makeMigrations = (commitMessage?: string) => {
     commitMessage ? `\n--! Message: ${commitMessage}` : ``
   }\n\n${MIGRATION_NOTRX_TEXT.trim()}\n`;
 
+  const MIGRATION_INCLUDE_TEXT = `--!include foo.sql`;
+  const MIGRATION_INCLUDE_COMPILED = `${MIGRATION_INCLUDE_TEXT}\n${MIGRATION_1_TEXT}\n${MIGRATION_INCLUDE_TEXT}`;
+  const MIGRATION_INCLUDE_HASH = createHash("sha1")
+    .update(`${MIGRATION_INCLUDE_COMPILED.trim()}` + "\n")
+    .digest("hex");
+  const MIGRATION_INCLUDE_COMMITTED = `--! Previous: -\n--! Hash: sha1:${MIGRATION_INCLUDE_HASH}${
+    commitMessage ? `\n--! Message: ${commitMessage}` : ``
+  }\n\n${MIGRATION_INCLUDE_COMPILED}\n`;
+
   const MIGRATION_MULTIFILE_FILES = {
     "migrations/links/two.sql": "select 2;",
     "migrations/current": {
@@ -308,6 +317,9 @@ select 3;
     MIGRATION_NOTRX_TEXT,
     MIGRATION_NOTRX_HASH,
     MIGRATION_NOTRX_COMMITTED,
+    MIGRATION_INCLUDE_TEXT,
+    MIGRATION_INCLUDE_HASH,
+    MIGRATION_INCLUDE_COMMITTED,
     MIGRATION_MULTIFILE_TEXT,
     MIGRATION_MULTIFILE_HASH,
     MIGRATION_MULTIFILE_COMMITTED,
