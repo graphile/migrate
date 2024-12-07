@@ -498,7 +498,7 @@ environmental variables being set:
   },
   "afterReset": [
     "afterReset.sql",
-    { "_": "command", "command": "npx --no-install graphile-worker --once" }
+    { "_": "command", "command": "DATABASE_URL=\"$GM_DBURL\" npx --no-install graphile-worker --schema-only" }
   ],
   "afterAllMigrations": [
     {
