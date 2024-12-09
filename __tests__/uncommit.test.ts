@@ -55,6 +55,8 @@ describe.each([[undefined], ["My Commit Message"]])(
     const {
       MIGRATION_1_TEXT,
       MIGRATION_1_COMMITTED,
+      MIGRATION_INCLUDE_TEXT,
+      MIGRATION_INCLUDE_COMMITTED,
       MIGRATION_MULTIFILE_COMMITTED,
       MIGRATION_MULTIFILE_FILES,
     } = makeMigrations(commitMessage);
@@ -86,6 +88,36 @@ describe.each([[undefined], ["My Commit Message"]])(
           "utf8",
         ),
       ).toEqual(MIGRATION_1_COMMITTED);
+    });
+
+    it("rolls back a migration that has included another file", async () => {
+      mockFs({
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_INCLUDE_COMMITTED,
+        "migrations/current.sql": "-- JUST A COMMENT\n",
+        "migrations/fixtures/foo.sql": MIGRATION_1_TEXT,
+      });
+      await migrate(settings);
+      await uncommit(settings);
+
+      await expect(
+        fsp.stat("migrations/committed/000001.sql"),
+      ).rejects.toMatchObject({
+        code: "ENOENT",
+      });
+      expect(await fsp.readFile("migrations/current.sql", "utf8")).toEqual(
+        (commitMessage ? `--! Message: ${commitMessage}\n\n` : "") +
+          MIGRATION_INCLUDE_TEXT.trim() +
+          "\n",
+      );
+
+      await commit(settings);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000001${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_INCLUDE_COMMITTED);
     });
 
     it("rolls back multifile migration", async () => {
