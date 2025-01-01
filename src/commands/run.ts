@@ -4,7 +4,7 @@ import { CommandModule } from "yargs";
 
 import { DO_NOT_USE_DATABASE_URL } from "../actions";
 import { runQueryWithErrorInstrumentation } from "../instrumentation";
-import { compilePlaceholders } from "../migration";
+import { compileIncludes, compilePlaceholders } from "../migration";
 import { withClient } from "../pgReal";
 import {
   makeRootDatabaseConnectionString,
@@ -19,10 +19,9 @@ interface RunArgv extends CommonArgv {
   rootDatabase?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: Settings,
-  content: string,
+  rawContents: string,
   filename: string,
   {
     shadow = false,
@@ -35,7 +34,12 @@ export async function run<T extends QueryResultRow = QueryResultRow>(
   } = {},
 ): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
-  const sql = compilePlaceholders(parsedSettings, content, shadow);
+  const contents = await compileIncludes(
+    parsedSettings,
+    rawContents,
+    new Set([filename]),
+  );
+  const sql = compilePlaceholders(parsedSettings, contents, shadow);
   const baseConnectionString = rootDatabase
     ? parsedSettings.rootConnectionString
     : shadow
@@ -62,7 +66,7 @@ export const runCommand: CommandModule<Record<string, never>, RunArgv> = {
   command: "run [file]",
   aliases: [],
   describe: `\
-Compiles a SQL file, inserting all the placeholders, and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
+Compiles a SQL file, resolving includes and inserting all the placeholders, and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
   builder: {
     shadow: {
       type: "boolean",
