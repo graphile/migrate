@@ -8,7 +8,7 @@ import { runQueryWithErrorInstrumentation } from "./instrumentation";
 import { mergeWithoutClobbering } from "./lib";
 import memoize from "./memoize";
 import { Client, Context, withClient } from "./pg";
-import { withAdvisoryLock } from "./pgReal";
+import { escapeIdentifier, withAdvisoryLock } from "./pgReal";
 import { ParsedSettings } from "./settings";
 
 // From https://stackoverflow.com/a/3561711/141284
@@ -224,12 +224,13 @@ const TABLE_CHECKS = {
   },
 };
 
-async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
-  // Verify that graphile_migrate schema exists
+async function verifyGraphileMigrateSchema(pgClient: Client, migrationSchema: string): Promise<null> {
+  // Verify that the migration schema exists
   const {
     rows: [graphileMigrateSchema],
   } = await pgClient.query<{ oid: string }>(
-    `select oid from pg_namespace where nspname = 'graphile_migrate';`,
+    `select oid from pg_namespace where nspname = $1;`,
+    [migrationSchema]
   );
   if (!graphileMigrateSchema) {
     throw new Error(
@@ -246,7 +247,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     );
     if (!table) {
       throw new Error(
-        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table couldn't be found - we cannot continue.`,
+        `You've set manageGraphileMigrateSchema to false, but the '${migrationSchema}.${tableName}' table couldn't be found - we cannot continue.`,
       );
     }
 
@@ -259,7 +260,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     );
     if (columns.length !== expected.columnCount) {
       throw new Error(
-        `You've set manageGraphileMigrateSchema to false, but the 'graphile_migrate.${tableName}' table has the wrong number of columns (${columns.length} != ${expected.columnCount}) - we cannot continue.`,
+        `You've set manageGraphileMigrateSchema to false, but the '${migrationSchema}.${tableName}' table has the wrong number of columns (${columns.length} != ${expected.columnCount}) - we cannot continue.`,
       );
     }
   }
@@ -271,23 +272,25 @@ export async function _migrateMigrationSchema(
   pgClient: Client,
   parsedSettings: ParsedSettings,
 ): Promise<void> {
+  const { graphileMigrateSchema } = parsedSettings
   if (!parsedSettings.manageGraphileMigrateSchema) {
     // Verify schema
-    await verifyGraphileMigrateSchema(pgClient);
+    await verifyGraphileMigrateSchema(pgClient, graphileMigrateSchema);
     return;
   }
 
+  const escapedSchemaName = escapeIdentifier(graphileMigrateSchema)
   await pgClient.query(`
-    create schema if not exists graphile_migrate;
+    create schema if not exists ${escapedSchemaName};
 
-    create table if not exists graphile_migrate.migrations (
+    create table if not exists ${escapedSchemaName}.migrations (
       hash text primary key,
       previous_hash text references graphile_migrate.migrations,
       filename text not null,
       date timestamptz not null default now()
     );
 
-    create table if not exists graphile_migrate.current (
+    create table if not exists ${escapedSchemaName}.current (
       filename text primary key default 'current.sql',
       content text not null,
       date timestamptz not null default now()
@@ -394,7 +397,7 @@ export async function getLastMigration(
     hash: string;
     date: Date;
   }>(
-    `select filename, previous_hash as "previousHash", hash, date from graphile_migrate.migrations order by filename desc limit 1`,
+    `select filename, previous_hash as "previousHash", hash, date from ${escapeIdentifier(parsedSettings.graphileMigrateSchema)}.migrations order by filename desc limit 1`,
   );
   return (row as DbMigration) || null;
 }
@@ -526,7 +529,7 @@ export async function runStringMigration(
         const { hash, previousHash, filename } = committedMigration;
         await pgClient.query({
           name: "migration-insert",
-          text: "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
+          text: `insert into ${escapeIdentifier(parsedSettings.graphileMigrateSchema)}.migrations(hash, previous_hash, filename) values ($1, $2, $3)`,
           values: [hash, previousHash, filename],
         });
       }
@@ -554,7 +557,7 @@ export async function undoMigration(
     async (pgClient) => {
       await pgClient.query({
         name: "migration-delete",
-        text: "delete from graphile_migrate.migrations where hash = $1",
+        text: `delete from ${escapeIdentifier(parsedSettings.graphileMigrateSchema)}.migrations where hash = $1`,
         values: [hash],
       });
     },
@@ -600,12 +603,13 @@ export async function runCommittedMigration(
 
 export async function reverseMigration(
   pgClient: Client,
+  escapedGraphileMigrateSchema: string,
   _body: string,
 ): Promise<void> {
   // TODO: reverse the migration
 
-  // Clean up graphile_migrate.current
+  // Clean up "current"
   await pgClient.query(
-    `delete from graphile_migrate.current where filename = 'current.sql'`,
+    `delete from ${escapedGraphileMigrateSchema}.current where filename = 'current.sql'`,
   );
 }

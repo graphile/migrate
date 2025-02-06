@@ -470,6 +470,8 @@ options are available:
   migrations isn't granted schema creation privileges. If you set this to
   `false`, you must be sure to migrate the `graphile_migrate` database schema
   any time you update the `graphile-migrate` module.
+- `graphileMigrateSchema` (defaults to `graphile_migrate`) - sets the schema name
+  for the migration tables.
 - `blankMigrationContent` ─ what should be written to the current migration
   after commit. NOTE: this should only contain comments such that the current
   commit is "empty-ish" on creation.

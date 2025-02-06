@@ -172,10 +172,16 @@ export async function init(options: InitArgv = {}): Promise<void> {
 
   /*
    * manageGraphileMigrateSchema: if you set this false, you must be sure to
-   * keep the graphile_migrate schema up to date yourself. We recommend you
+   * keep the migration schema up to date yourself. We recommend you
    * leave it at its default.
    */
   // "manageGraphileMigrateSchema": true,
+
+  /*
+   * graphileMigrateSchema: the schema name to use for reading/storing migrations,
+   * defaults to "graphile_migrate". We recommend you leave it at its default.
+   */
+  // "graphileMigrateSchema": "graphile_migrate",
 
   /*
    * migrationsFolder: path to the folder in which to store your migrations.

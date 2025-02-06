@@ -3,7 +3,7 @@ import * as chokidar from "chokidar";
 import { executeActions } from "../actions";
 import { logDbError } from "../instrumentation";
 import { reverseMigration, runStringMigration } from "../migration";
-import { withClient, withTransaction } from "../pg";
+import { escapeIdentifier, withClient, withTransaction } from "../pg";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { _migrate } from "./migrate";
 import pgMinify = require("pg-minify");
@@ -31,6 +31,7 @@ export function _makeCurrentMigrationRunner(
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);
+    const escapedGraphileMigrateSchema =  escapeIdentifier(parsedSettings.graphileMigrateSchema)
     let migrationsAreEquivalent = false;
 
     try {
@@ -51,18 +52,18 @@ export function _makeCurrentMigrationRunner(
         parsedSettings,
         (lockingPgClient, context) =>
           withTransaction(lockingPgClient, async () => {
-            // 1: lock graphile_migrate.current so no concurrent migrations can occur
+            // 1: lock "current" so no concurrent migrations can occur
             await lockingPgClient.query(
-              "lock graphile_migrate.current in EXCLUSIVE mode",
+              `lock ${escapedGraphileMigrateSchema}.current in EXCLUSIVE mode`,
             );
 
-            // 2: Get last current.sql from graphile_migrate.current
+            // 2: Get last current.sql from "current"
             const {
               rows: [previousCurrent],
             } = await lockingPgClient.query<DbCurrent>(
               `
               select *
-              from graphile_migrate.current
+              from ${escapedGraphileMigrateSchema}.current
               where filename = 'current.sql'
             `,
             );
@@ -94,9 +95,9 @@ export function _makeCurrentMigrationRunner(
                 parsedSettings.beforeCurrent,
               );
 
-              // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
+              // 4a: invert previous current; on success delete from "current"; on failure rollback and abort
               if (previousBody) {
-                await reverseMigration(lockingPgClient, previousBody);
+                await reverseMigration(lockingPgClient, escapedGraphileMigrateSchema, previousBody);
               }
 
               // COMMIT ─ because we need to commit that the migration was reversed
@@ -104,7 +105,7 @@ export function _makeCurrentMigrationRunner(
               await lockingPgClient.query("begin");
               // Re-establish a lock ASAP to continue with migration
               await lockingPgClient.query(
-                "lock graphile_migrate.current in EXCLUSIVE mode",
+                `lock ${escapeIdentifier(parsedSettings.graphileMigrateSchema)}.current in EXCLUSIVE mode`,
               );
 
               // 4b: run this current (in its own independent transaction) if not empty
@@ -129,13 +130,13 @@ export function _makeCurrentMigrationRunner(
               );
             }
 
-            // 5: update graphile_migrate.current with latest content
+            // 5: update "current" with latest content
             //   (NOTE: we update even if the minified versions don't differ since
             //    the comments may have changed.)
             await lockingPgClient.query({
               name: "current-insert",
               text: `
-              insert into graphile_migrate.current(content)
+              insert into ${escapeIdentifier(parsedSettings.graphileMigrateSchema)}.current(content)
               values ($1)
               on conflict (filename)
               do update

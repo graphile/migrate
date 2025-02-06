@@ -30,6 +30,7 @@ exports[`actions is backwards-compatible with untagged command specs 1`] = `
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "graphileMigrateSchema": "graphile_migrate",
   "logger": Logger {
     "_logFactory": [Function],
     "_scope": {},
@@ -71,6 +72,7 @@ exports[`actions parses SQL actions 1`] = `
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "graphileMigrateSchema": "graphile_migrate",
   "logger": Logger {
     "_logFactory": [Function],
     "_scope": {},
@@ -107,6 +109,7 @@ exports[`actions parses command actions 1`] = `
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "graphileMigrateSchema": "graphile_migrate",
   "logger": Logger {
     "_logFactory": [Function],
     "_scope": {},
@@ -151,6 +154,7 @@ exports[`actions parses mixed actions 1`] = `
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "graphileMigrateSchema": "graphile_migrate",
   "logger": Logger {
     "_logFactory": [Function],
     "_scope": {},
@@ -192,6 +196,7 @@ exports[`actions parses string values into SQL actions 1`] = `
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
   "databaseName": "dbname",
   "databaseOwner": "dbname",
+  "graphileMigrateSchema": "graphile_migrate",
   "logger": Logger {
     "_logFactory": [Function],
     "_scope": {},

@@ -68,6 +68,7 @@ export interface Settings {
   shadowConnectionString?: string;
   rootConnectionString?: string;
   databaseOwner?: string;
+  graphileMigrateSchema?: string;
   migrationsFolder?: string;
   manageGraphileMigrateSchema?: boolean;
   pgSettings?: {
@@ -92,6 +93,7 @@ export interface ParsedSettings extends Settings {
   rootConnectionString: string;
   databaseOwner: string;
   databaseName: string;
+  graphileMigrateSchema: string;
   shadowDatabaseName?: string;
   migrationsFolder: string;
   beforeReset: ActionSpec[];
@@ -317,6 +319,19 @@ export async function parseSettings(
     },
   );
 
+  const graphileMigrateSchema = await check("graphileMigrateSchema", (graphileMigrateSchema = 'graphile_migrate') => {
+    if (typeof graphileMigrateSchema !== "string") {
+      throw new Error(
+        "Expected a string for graphile migrate schema name",
+      );
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]{0,62}$/.test(graphileMigrateSchema)) {
+      throw new Error(
+        "Invalid format for graphile migrate schema name",
+      );
+    }
+    return graphileMigrateSchema;
+  },)
+
   /******/
 
   const uncheckedKeys = keysToCheck
@@ -379,6 +394,7 @@ export async function parseSettings(
     afterCurrent,
     rootConnectionString,
     connectionString,
+    graphileMigrateSchema,
     manageGraphileMigrateSchema,
     databaseOwner,
     migrationsFolder,
