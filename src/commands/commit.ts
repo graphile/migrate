@@ -95,7 +95,7 @@ export async function _commit(
     Message: message ? message : undefined,
     ...omit(headers, ["Previous", "Hash", "Message"]),
   });
-  await _reset(parsedSettings, true);
+  await _reset(parsedSettings, true, false);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
   await fsp.chmod(newMigrationFilepath, "440");
