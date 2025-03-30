@@ -4,6 +4,7 @@
 [![Package on npm](https://img.shields.io/npm/v/graphile-migrate.svg?style=flat)](https://www.npmjs.com/package/graphile-migrate)
 ![MIT license](https://img.shields.io/npm/l/graphile-migrate.svg)
 [![Follow](https://img.shields.io/badge/twitter-@GraphileHQ-blue.svg)](https://twitter.com/GraphileHQ)
+[![libs.tech recommends](https://libs.tech/project/173320732/badge.svg)](https://libs.tech/project/173320732/migrate)
 
 Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
 
