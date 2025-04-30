@@ -760,7 +760,8 @@ When you make changes to `myfunction.sql`, include it in your current migration
 by adding `--!include functions/myfunction.sql` to your `current.sql` (or any
 `current/*.sql`). This statement doesn't need to be at the top of the file,
 wherever it is will be replaced by the content of
-`migrations/fixtures/functions/myfunction.sql` when the migration is committed.
+`migrations/fixtures/functions/myfunction.sql` when the migration is committed
+(or compiled using `commit` or `run` commands).
 
 ```sql
 --!include functions/myfunction.sql
