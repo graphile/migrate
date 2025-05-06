@@ -342,6 +342,8 @@ Options:
       --shadow  Applies migrations to shadow DB.      [boolean] [default: false]
       --erase   This is your double opt-in to make it clear this DELETES
                 EVERYTHING.                           [boolean] [default: false]
+      --force   Terminate all existing connections to the database.
+                                                      [boolean] [default: false]
 ```
 
 

@@ -56,7 +56,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   );
 
   // Reset shadow
-  await _reset(parsedSettings, true);
+  await _reset(parsedSettings, true, false);
   await _migrate(parsedSettings, true, true);
 }
 

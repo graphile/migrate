@@ -9,11 +9,13 @@ import { _migrate } from "./migrate";
 interface ResetArgv extends CommonArgv {
   shadow: boolean;
   erase: boolean;
+  force: boolean;
 }
 
 export async function _reset(
   parsedSettings: ParsedSettings,
   shadow: boolean,
+  force: boolean,
 ): Promise<void> {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
@@ -34,9 +36,15 @@ export async function _reset(
       }
       const databaseOwner = parsedSettings.databaseOwner;
       const logSuffix = shadow ? "[shadow]" : "";
-      await pgClient.query(
-        `DROP DATABASE IF EXISTS ${escapeIdentifier(databaseName)};`,
-      );
+      if (force) {
+        await pgClient.query(
+          `DROP DATABASE IF EXISTS ${escapeIdentifier(databaseName)} WITH (FORCE);`,
+        );
+      } else {
+        await pgClient.query(
+          `DROP DATABASE IF EXISTS ${escapeIdentifier(databaseName)};`,
+        );
+      }
       parsedSettings.logger.info(
         `graphile-migrate${logSuffix}: dropped database '${databaseName}'`,
       );
@@ -63,9 +71,13 @@ export async function _reset(
   await _migrate(parsedSettings, shadow);
 }
 
-export async function reset(settings: Settings, shadow = false): Promise<void> {
+export async function reset(
+  settings: Settings,
+  shadow = false,
+  force = false,
+): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
-  return _reset(parsedSettings, shadow);
+  return _reset(parsedSettings, shadow, force);
 }
 
 export const resetCommand: CommandModule<Record<string, never>, ResetArgv> = {
@@ -85,6 +97,11 @@ export const resetCommand: CommandModule<Record<string, never>, ResetArgv> = {
       description:
         "This is your double opt-in to make it clear this DELETES EVERYTHING.",
     },
+    force: {
+      type: "boolean",
+      default: false,
+      description: "Terminate all existing connections to the database.",
+    },
   },
   handler: async (argv) => {
     if (!argv.erase) {
@@ -94,6 +111,10 @@ export const resetCommand: CommandModule<Record<string, never>, ResetArgv> = {
       );
       process.exit(2);
     }
-    await reset(await getSettings({ configFile: argv.config }), argv.shadow);
+    await reset(
+      await getSettings({ configFile: argv.config }),
+      argv.shadow,
+      argv.force,
+    );
   },
 };
