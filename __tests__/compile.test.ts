@@ -2,18 +2,17 @@ import "./helpers";
 
 import mockFs from "mock-fs";
 
-import { compile, Settings } from "../src";
+import { compile } from "../src";
 let old: string | undefined;
-let settings: Settings;
-beforeAll(async () => {
+const settings = {
+  connectionString: "postgres://dbowner:dbpassword@dbhost:1221/dbname",
+  placeholders: {
+    ":DATABASE_AUTHENTICATOR": "!ENV",
+  },
+};
+beforeAll(() => {
   old = process.env.DATABASE_AUTHENTICATOR;
   process.env.DATABASE_AUTHENTICATOR = "dbauth";
-  settings = {
-    connectionString: "postgres://dbowner:dbpassword@dbhost:1221/dbname",
-    placeholders: {
-      ":DATABASE_AUTHENTICATOR": "!ENV",
-    },
-  };
 });
 afterAll(() => {
   process.env.DATABASE_AUTHENTICATOR = old;
