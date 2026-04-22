@@ -93,7 +93,9 @@ it("runs sql afterReset action with correct connection string when root", async 
   mockedWithClient.mockClear();
   await executeActions(parsedSettings, false, parsedSettings.afterReset);
   expect(mockedWithClient).toHaveBeenCalledTimes(1);
-  expect(mockedWithClient.mock.calls[0][0]).toBe(TEST_DATABASE_NAME);
+  expect(mockedWithClient.mock.calls[0][0]).toBe(
+    `postgres:///${TEST_DATABASE_NAME}`,
+  );
 });
 
 it("runs command afterReset action with correct env vars when root", async () => {

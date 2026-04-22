@@ -157,7 +157,8 @@ export async function parseSettings(
   const rootConnectionString = await check(
     "rootConnectionString",
     (
-      rawRootConnectionString = process.env.ROOT_DATABASE_URL || "template1",
+      rawRootConnectionString = process.env.ROOT_DATABASE_URL ||
+        "postgres:///template1",
     ): string => {
       if (typeof rawRootConnectionString !== "string") {
         throw new Error(

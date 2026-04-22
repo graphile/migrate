@@ -1,5 +1,6 @@
 export { commit } from "./commit";
 export { compile } from "./compile";
+export { current } from "./current";
 export { init } from "./init";
 export { migrate } from "./migrate";
 export { reset } from "./reset";

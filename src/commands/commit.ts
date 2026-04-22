@@ -11,10 +11,10 @@ import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
 import {
   getAllMigrations,
-  isMigrationFilename,
   parseMigrationText,
   serializeMigration,
 } from "../migration";
+import { isMigrationFilename } from "../migrationFilename";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { sluggify } from "../sluggify";
 import { CommonArgv, getSettings } from "./_common";

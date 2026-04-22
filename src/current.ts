@@ -8,9 +8,8 @@ import {
   parseMigrationText,
   serializeHeader,
 } from "./migration";
-import { ParsedSettings } from "./settings";
-
-export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
+import { idFromFilename, isMigrationFilename } from "./migrationFilename";
+import type { ParsedSettings } from "./settings";
 
 async function statOrNull(path: string): Promise<Stats | null> {
   try {
@@ -82,24 +81,6 @@ export async function getCurrentMigrationLocation(
     exists,
     // stats,
   };
-}
-
-function idFromFilename(file: string): number {
-  const matches = VALID_FILE_REGEX.exec(file);
-  if (!matches) {
-    throw new Error(
-      `Invalid current migration filename: '${file}'. File must follow the naming 001.sql or 001-message.sql, where 001 is a unique number (with optional zero padding) and message is an optional alphanumeric string.`,
-    );
-  }
-  const [, rawId, _message] = matches;
-  const id = parseInt(rawId, 10);
-
-  if (!id || !isFinite(id) || id < 1) {
-    throw new Error(
-      `Invalid current migration filename: '${file}'. File must start with a (positive) number, could not coerce '${rawId}' to int.`,
-    );
-  }
-  return id;
 }
 
 export async function readCurrentMigration(
@@ -314,7 +295,7 @@ export async function writeCurrentMigration(
     const files = await fsp.readdir(location.path);
     for (const file of files) {
       if (
-        VALID_FILE_REGEX.test(file) &&
+        isMigrationFilename(file) &&
         !file.startsWith(".") &&
         file.endsWith(".sql") &&
         !filenamesWritten.includes(file)

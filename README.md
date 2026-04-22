@@ -20,13 +20,7 @@ via sponsorship.
 And please give some love to our featured sponsors 🤩:
 
 <table><tr>
-<td align="center"><a href="https://www.the-guild.dev/"><img src="https://graphile.org/images/sponsors/theguild.png" width="90" height="90" alt="The Guild" /><br />The Guild</a> *</td>
-<td align="center"><a href="https://dovetailapp.com/"><img src="https://graphile.org/images/sponsors/dovetail.png" width="90" height="90" alt="Dovetail" /><br />Dovetail</a> *</td>
-<td align="center"><a href="https://www.netflix.com/"><img src="https://graphile.org/images/sponsors/Netflix.png" width="90" height="90" alt="Netflix" /><br />Netflix</a> *</td>
-<td align="center"><a href="https://stellate.co/"><img src="https://graphile.org/images/sponsors/Stellate.png" width="90" height="90" alt="Stellate" /><br />Stellate</a> *</td>
-</tr><tr>
 <td align="center"><a href="https://gosteelhead.com/"><img src="https://graphile.org/images/sponsors/steelhead.svg" width="90" height="90" alt="Steelhead" /><br />Steelhead</a> *</td>
-<td align="center"><a href="https://www.sylvera.com/"><img src="https://graphile.org/images/sponsors/sylvera.svg" width="90" height="90" alt="Sylvera" /><br />Sylvera</a> *</td>
 </tr></table>
 
 <em>\* Sponsors the entire Graphile suite</em>
@@ -108,10 +102,14 @@ unaffected by the iteration you've been applying to your development database
 Create your database role (if desired), database and shadow database:
 
 ```bash
-createuser --pwprompt appuser
-createdb myapp --owner=appuser
-createdb myapp_shadow --owner=appuser
+createuser --pwprompt dbowner
+createdb myapp --owner=dbowner
+createdb myapp_shadow --owner=dbowner
 ```
+
+> For an in depth-discussion on the different users and roles typically involved
+> in database and migration management, please see issue
+> [#215](https://github.com/graphile/migrate/issues/215).
 
 Export your database URL, shadow database URL, and a "root" database URL which
 should be a superuser account connection to any **other** database (most
@@ -119,8 +117,8 @@ PostgreSQL servers have a default database called `postgres` which is a good
 choice for this).
 
 ```bash
-export DATABASE_URL="postgres://appuser:password@localhost/myapp"
-export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
+export DATABASE_URL="postgres://dbowner:password@localhost/myapp"
+export SHADOW_DATABASE_URL="postgres://dbowner:password@localhost/myapp_shadow"
 
 export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
 ```
@@ -182,6 +180,9 @@ Commands:
   graphile-migrate watch           Runs any un-executed committed migrations and
                                    then runs and watches the current migration,
                                    re-running it on any change. For development.
+  graphile-migrate current         Runs any un-executed committed migrations, as
+                                   well as the current migration. For
+                                   development.
   graphile-migrate commit          Commits the current migration into the
                                    `committed/` folder, resetting the current
                                    migration. Resets the shadow database.
@@ -219,22 +220,23 @@ Commands:
   graphile-migrate reset           Drops and re-creates the database, re-running
                                    all committed migrations from the start.
                                    **HIGHLY DESTRUCTIVE**.
-  graphile-migrate compile [file]  Compiles a SQL file, inserting all the
-                                   placeholders and returning the result to
-                                   STDOUT
-  graphile-migrate run [file]      Compiles a SQL file, inserting all the
-                                   placeholders, and then runs it against the
-                                   database. Useful for seeding. If called from
-                                   an action will automatically run against the
-                                   same database (via GM_DBURL envvar) unless
-                                   --shadow or --rootDatabase are supplied.
+  graphile-migrate compile [file]  Compiles a SQL file (resolving `--!includes`,
+                                   replacing :PLACEHOLDERs, etc) and outputs the
+                                   result to STDOUT
+  graphile-migrate run [file]      Compiles a SQL file (resolving `--!includes`,
+                                   replacing :PLACEHOLDERs, etc) and then runs
+                                   it against the database. Useful for seeding.
+                                   If called from an action will automatically
+                                   run against the same database (via GM_DBURL
+                                   envvar) unless --shadow or --rootDatabase are
+                                   supplied.
   graphile-migrate completion      Generate shell completion script.
 
 Options:
       --help    Show help                                              [boolean]
   -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
 
-You are running graphile-migrate v2.0.0-rc.1.
+You are running graphile-migrate v2.0.0-rc.2.
 ```
 
 
@@ -285,9 +287,29 @@ migration, re-running it on any change. For development.
 Options:
       --help    Show help                                              [boolean]
   -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-      --once    Runs the current migration and then exits.
-                                                      [boolean] [default: false]
+      --once    Runs the current migration and then exits (equivalent to
+                `graphile-migrate current`).          [boolean] [default: false]
       --shadow  Applies changes to shadow DB.         [boolean] [default: false]
+```
+
+
+## graphile-migrate current
+
+```
+graphile-migrate current
+
+Runs any un-executed committed migrations, as well as the current migration. For
+development.
+
+Options:
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --shadow        Apply migrations to the shadow DB (for development).
+                                                      [boolean] [default: false]
+      --forceActions  Run beforeAllMigrations, afterAllMigrations,
+                      beforeCurrent, and afterCurrent actions even if no
+                      migration was necessary.        [boolean] [default: false]
 ```
 
 
@@ -375,8 +397,8 @@ Options:
 ```
 graphile-migrate compile [file]
 
-Compiles a SQL file, inserting all the placeholders and returning the result to
-STDOUT
+Compiles a SQL file (resolving `--!includes`, replacing :PLACEHOLDERs, etc) and
+outputs the result to STDOUT
 
 Options:
       --help    Show help                                              [boolean]
@@ -391,10 +413,10 @@ Options:
 ```
 graphile-migrate run [file]
 
-Compiles a SQL file, inserting all the placeholders, and then runs it against
-the database. Useful for seeding. If called from an action will automatically
-run against the same database (via GM_DBURL envvar) unless --shadow or
---rootDatabase are supplied.
+Compiles a SQL file (resolving `--!includes`, replacing :PLACEHOLDERs, etc) and
+then runs it against the database. Useful for seeding. If called from an action
+will automatically run against the same database (via GM_DBURL envvar) unless
+--shadow or --rootDatabase are supplied.
 
 Options:
       --help          Show help                                        [boolean]
@@ -495,7 +517,10 @@ environmental variables being set:
   },
   "afterReset": [
     "afterReset.sql",
-    { "_": "command", "command": "npx --no-install graphile-worker --once" }
+    {
+      "_": "command",
+      "command": "DATABASE_URL=\"$GM_DBURL\" npx --no-install graphile-worker --schema-only"
+    }
   ],
   "afterAllMigrations": [
     {
@@ -766,8 +791,9 @@ drop policy if exists access_by_numbers on mytable;
 create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```
 
-and when the migration is committed or watched, the contents of `myfunction.sql`
-will be included in the result, such that the following SQL is executed:
+and when the migration is committed, watched, run, or compiled, the contents of
+`myfunction.sql` will be included in the result, such that the following SQL is
+executed:
 
 ```sql
 --! Included functions/myfunction.sql
