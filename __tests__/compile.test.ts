@@ -71,7 +71,9 @@ select 2;
     ),
   ).toEqual(`\
 select 1;
+--! Included foo.sql
 select * from foo;
+--! EndIncluded foo.sql
 select 2;
 `);
 });

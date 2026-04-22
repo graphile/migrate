@@ -55,8 +55,11 @@ describe.each([[undefined], ["My Commit Message"]])(
     const {
       MIGRATION_1_TEXT,
       MIGRATION_1_COMMITTED,
+      MIGRATION_INCLUDE_TEXT,
+      MIGRATION_INCLUDE_COMMITTED,
       MIGRATION_MULTIFILE_COMMITTED,
       MIGRATION_MULTIFILE_FILES,
+      MIGRATION_INCLUDED_FIXTURE,
     } = makeMigrations(commitMessage);
 
     it("rolls back migration", async () => {
@@ -86,6 +89,36 @@ describe.each([[undefined], ["My Commit Message"]])(
           "utf8",
         ),
       ).toEqual(MIGRATION_1_COMMITTED);
+    });
+
+    it("rolls back a migration that has included another file", async () => {
+      mockFs({
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_INCLUDE_COMMITTED,
+        "migrations/current.sql": "-- JUST A COMMENT\n",
+        "migrations/fixtures/foo.sql": MIGRATION_INCLUDED_FIXTURE,
+      });
+      await migrate(settings);
+      await uncommit(settings);
+
+      await expect(
+        fsp.stat("migrations/committed/000001.sql"),
+      ).rejects.toMatchObject({
+        code: "ENOENT",
+      });
+      expect(await fsp.readFile("migrations/current.sql", "utf8")).toEqual(
+        (commitMessage ? `--! Message: ${commitMessage}\n\n` : "") +
+          MIGRATION_INCLUDE_TEXT.trim() +
+          "\n",
+      );
+
+      await commit(settings);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000001${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toEqual(MIGRATION_INCLUDE_COMMITTED);
     });
 
     it("rolls back multifile migration", async () => {
@@ -138,6 +171,55 @@ describe.each([[undefined], ["My Commit Message"]])(
           "utf8",
         ),
       ).toEqual(MIGRATION_MULTIFILE_COMMITTED);
+    });
+
+    it("supports the same fixture twice", async () => {
+      const current = `\
+--!include fixture2.sql
+select 22;
+--!include fixture2.sql
+`;
+      mockFs({
+        "migrations/fixtures/fixture1.sql": "select 'fixture1';",
+        "migrations/fixtures/fixture2.sql":
+          "select 1;\n--!include fixture1.sql\nselect 2;",
+        [`migrations/committed/000001${commitMessageSlug}.sql`]:
+          MIGRATION_1_COMMITTED,
+        [`migrations/committed/000002${commitMessageSlug}.sql`]:
+          MIGRATION_MULTIFILE_COMMITTED,
+        "migrations/current/1.sql": current,
+      });
+      await migrate(settings);
+      await commit(settings, commitMessage);
+      expect(
+        await fsp.readFile(
+          `migrations/committed/000003${commitMessageSlug}.sql`,
+          "utf8",
+        ),
+      ).toContain(
+        `\
+--! Included fixture2.sql
+select 1;
+--! Included fixture1.sql
+select 'fixture1';
+--! EndIncluded fixture1.sql
+select 2;
+--! EndIncluded fixture2.sql
+select 22;
+--! Included fixture2.sql
+select 1;
+--! Included fixture1.sql
+select 'fixture1';
+--! EndIncluded fixture1.sql
+select 2;
+--! EndIncluded fixture2.sql
+`,
+      );
+      await uncommit(settings);
+
+      expect(await fsp.readFile(`migrations/current/1.sql`, "utf8")).toEqual(
+        (commitMessage ? `--! Message: ${commitMessage}\n\n` : "") + current,
+      );
     });
   },
 );

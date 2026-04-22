@@ -796,10 +796,12 @@ and when the migration is committed, watched, run, or compiled, the contents of
 executed:
 
 ```sql
+--! Included functions/myfunction.sql
 create or replace function myfunction(a int, b int)
 returns int as $$
   select a + b;
 $$ language sql stable;
+--! EndIncluded functions/myfunction.sql
 drop policy if exists access_by_numbers on mytable;
 create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```

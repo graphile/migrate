@@ -40,7 +40,16 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   // Restore current.sql from migration
   const lastMigrationFilepath = lastMigration.fullPath;
   const contents = await fsp.readFile(lastMigrationFilepath, "utf8");
-  const { headers, body } = parseMigrationText(lastMigrationFilepath, contents);
+  const { headers, body: committedBody } = parseMigrationText(
+    lastMigrationFilepath,
+    contents,
+  );
+
+  // Replace included migrations with their `--!include` equivalent
+  const body = committedBody.replace(
+    /^--! Included (?<filename>\S+)$[\s\S]*?^--! EndIncluded \k<filename>$/gm,
+    (_, filename) => `--!include ${filename}`,
+  );
 
   // Drop Hash, Previous and AllowInvalidHash from headers; then write out
   const { Hash, Previous, AllowInvalidHash, ...otherHeaders } = headers;
