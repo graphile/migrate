@@ -119,6 +119,23 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
   }
 }
 
+export async function readFileOrStdin(file: unknown): Promise<{
+  filename: string;
+  content: string;
+}> {
+  if (file != null) {
+    if (typeof file === "string") {
+      const filename = resolve(file);
+      const content = await fsp.readFile(filename, "utf8");
+      return { filename, content };
+    } else {
+      throw new Error(`Unexpected value for "file" flag`);
+    }
+  } else {
+    return { filename: "stdin", content: await readStdin() };
+  }
+}
+
 export function readStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = "";

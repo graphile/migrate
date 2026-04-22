@@ -1,5 +1,3 @@
-import * as fsp from "fs/promises";
-import { resolve } from "path";
 import { QueryResultRow } from "pg";
 import { CommandModule } from "yargs";
 
@@ -12,7 +10,8 @@ import {
   parseSettings,
   Settings,
 } from "../settings";
-import { CommonArgv, getDatabaseName, getSettings, readStdin } from "./_common";
+import type { CommonArgv } from "./_common";
+import { getDatabaseName, getSettings, readFileOrStdin } from "./_common";
 
 interface RunArgv extends CommonArgv {
   shadow?: boolean;
@@ -108,14 +107,7 @@ Compiles a SQL file, resolving includes, inserting all the placeholders, and the
             connectionString: process.env.GM_DBURL,
           };
 
-    const { content, filename } =
-      typeof argv.file === "string"
-        ? {
-            filename: resolve(argv.file),
-            content: await fsp.readFile(argv.file, "utf8"),
-          }
-        : { filename: "stdin", content: await readStdin() };
-
+    const { content, filename } = await readFileOrStdin(argv.file);
     const rows = await run(settings, content, filename, argv);
 
     if (rows) {

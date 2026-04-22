@@ -1,10 +1,8 @@
-import * as fsp from "fs/promises";
-import { resolve } from "path";
-import { ArgumentsCamelCase, CommandModule } from "yargs";
+import { CommandModule } from "yargs";
 
 import { compileIncludes, compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
-import { CommonArgv, getSettings, readStdin } from "./_common";
+import { CommonArgv, getSettings, readFileOrStdin } from "./_common";
 
 interface CompileArgv extends CommonArgv {
   shadow?: boolean;
@@ -34,20 +32,6 @@ export async function compile(
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
-async function readInput(argv: ArgumentsCamelCase<CompileArgv>) {
-  if (argv.file != null) {
-    if (typeof argv.file === "string") {
-      const filename = resolve(argv.file);
-      const content = await fsp.readFile(filename, "utf8");
-      return { filename, content };
-    } else {
-      throw new Error(`Unexpected value for "file" flag`);
-    }
-  } else {
-    return { filename: "stdin", content: await readStdin() };
-  }
-}
-
 export const compileCommand: CommandModule<
   Record<string, never>,
   CompileArgv
@@ -65,7 +49,7 @@ Compiles a SQL file, resolving includes, inserting all the placeholders and retu
   },
   handler: async (argv) => {
     const settings = await getSettings({ configFile: argv.config });
-    const { content, filename } = await readInput(argv);
+    const { content, filename } = await readFileOrStdin(argv.file);
     const compiled = await compile(settings, content, {
       shadow: argv.shadow,
       filename,
