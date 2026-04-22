@@ -218,22 +218,23 @@ Commands:
   graphile-migrate reset           Drops and re-creates the database, re-running
                                    all committed migrations from the start.
                                    **HIGHLY DESTRUCTIVE**.
-  graphile-migrate compile [file]  Compiles a SQL file, inserting all the
-                                   placeholders and returning the result to
-                                   STDOUT
-  graphile-migrate run [file]      Compiles a SQL file, inserting all the
-                                   placeholders, and then runs it against the
-                                   database. Useful for seeding. If called from
-                                   an action will automatically run against the
-                                   same database (via GM_DBURL envvar) unless
-                                   --shadow or --rootDatabase are supplied.
+  graphile-migrate compile [file]  Compiles a SQL file (resolving `--!includes`,
+                                   replacing :PLACEHOLDERs, etc) and outputs the
+                                   result to STDOUT
+  graphile-migrate run [file]      Compiles a SQL file (resolving `--!includes`,
+                                   replacing :PLACEHOLDERs, etc) and then runs
+                                   it against the database. Useful for seeding.
+                                   If called from an action will automatically
+                                   run against the same database (via GM_DBURL
+                                   envvar) unless --shadow or --rootDatabase are
+                                   supplied.
   graphile-migrate completion      Generate shell completion script.
 
 Options:
       --help    Show help                                              [boolean]
   -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
 
-You are running graphile-migrate v2.0.0-rc.1.
+You are running graphile-migrate v2.0.0-rc.2.
 ```
 
 
@@ -374,8 +375,8 @@ Options:
 ```
 graphile-migrate compile [file]
 
-Compiles a SQL file, inserting all the placeholders and returning the result to
-STDOUT
+Compiles a SQL file (resolving `--!includes`, replacing :PLACEHOLDERs, etc) and
+outputs the result to STDOUT
 
 Options:
       --help    Show help                                              [boolean]
@@ -390,10 +391,10 @@ Options:
 ```
 graphile-migrate run [file]
 
-Compiles a SQL file, inserting all the placeholders, and then runs it against
-the database. Useful for seeding. If called from an action will automatically
-run against the same database (via GM_DBURL envvar) unless --shadow or
---rootDatabase are supplied.
+Compiles a SQL file (resolving `--!includes`, replacing :PLACEHOLDERs, etc) and
+then runs it against the database. Useful for seeding. If called from an action
+will automatically run against the same database (via GM_DBURL envvar) unless
+--shadow or --rootDatabase are supplied.
 
 Options:
       --help          Show help                                        [boolean]
