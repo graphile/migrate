@@ -1,10 +1,12 @@
+jest.mock("child_process");
 import "./helpers"; // Has side-effects; must come first
 
+import { exec } from "child_process";
 import mockFs from "mock-fs";
 
 import { current } from "../src";
 import { withClient } from "../src/pg";
-import { ParsedSettings, parseSettings } from "../src/settings";
+import { ParsedSettings, parseSettings, Settings } from "../src/settings";
 import { makeMigrations, resetDb, settings } from "./helpers";
 
 beforeEach(resetDb);
@@ -133,4 +135,70 @@ it("runs migrations", async () => {
   `);
   expect(newTables).toEqual(tables);
   expect(newEnums).toEqual(enums);
+});
+
+it("runs actions when forceActions is set", async () => {
+  const ACTIONS = {
+    initial: {
+      forceActions: false,
+      currentSql: "",
+      expectedActions: [
+        "beforeAllMigrations",
+        "afterAllMigrations",
+        "beforeCurrent",
+        "afterCurrent",
+      ],
+    },
+    currentChange: {
+      forceActions: false,
+      currentSql: MIGRATION_NOTRX_TEXT,
+      expectedActions: ["beforeCurrent", "afterCurrent"],
+    },
+    noop: {
+      forceActions: false,
+      currentSql: MIGRATION_NOTRX_TEXT,
+      expectedActions: [],
+    },
+    forceActions: {
+      forceActions: true,
+      currentSql: MIGRATION_NOTRX_TEXT,
+      expectedActions: [
+        "beforeAllMigrations",
+        "afterAllMigrations",
+        "beforeCurrent",
+        "afterCurrent",
+      ],
+    },
+  } as const;
+  const settingsWithHooks: Settings = {
+    ...settings,
+    beforeAllMigrations: [
+      { _: "command", command: "echo did_beforeAllMigrations" },
+    ],
+    afterAllMigrations: [
+      { _: "command", command: "echo did_afterAllMigrations" },
+    ],
+    beforeCurrent: [{ _: "command", command: "echo did_beforeCurrent" }],
+    afterCurrent: [{ _: "command", command: "echo did_afterCurrent" }],
+  };
+  for (const mode of Object.keys(ACTIONS) as Array<keyof typeof ACTIONS>) {
+    const { forceActions, currentSql, expectedActions } = ACTIONS[mode];
+
+    mockFs({
+      [`migrations/committed/000001.sql`]: MIGRATION_1_COMMITTED,
+      [`migrations/committed/000002.sql`]: MIGRATION_ENUM_COMMITTED, // Creates enum with 1 value
+      "migrations/current.sql": currentSql,
+    });
+
+    const mockedExec: jest.Mock<typeof exec> = exec as any;
+    mockedExec.mockClear();
+    mockedExec.mockImplementation((_cmd, _options, callback) =>
+      callback(null, { stdout: "", stderr: "" }),
+    );
+    await current(settingsWithHooks, { forceActions });
+    const calledActions = mockedExec.mock.calls.map((c) =>
+      c[0].substring("echo did_".length),
+    );
+    expect(calledActions).toEqual(expectedActions);
+  }
 });
