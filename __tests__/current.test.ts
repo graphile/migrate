@@ -1,6 +1,6 @@
 import "./helpers"; // Has side-effects; must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { current } from "../src";
 import { withClient } from "../src/pg";
@@ -82,7 +82,7 @@ it("runs migrations", async () => {
       ]
     `);
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
+    expect(tables.map((t) => t.relname)).toMatchInlineSnapshot(`
       Array [
         "foo",
       ]
@@ -131,7 +131,7 @@ Array [
       ]
     `);
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
+    expect(tables.map((t) => t.relname)).toMatchInlineSnapshot(`
       Array [
         "foo",
       ]

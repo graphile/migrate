@@ -1,10 +1,10 @@
 import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
+import { makeCurrentMigrationRunner } from "../currentRunner";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
-import { _makeCurrentMigrationRunner } from "./watch";
 
 interface CurrentArgv extends CommonArgv {
   shadow: boolean;
@@ -13,9 +13,9 @@ interface CurrentArgv extends CommonArgv {
 
 export async function _current(
   parsedSettings: ParsedSettings,
-  shadow = false,
-  forceActions = false,
+  options: Partial<CurrentArgv>,
 ): Promise<void> {
+  const { shadow = false, forceActions = false } = options;
   await _migrate(parsedSettings, shadow);
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -27,25 +27,26 @@ export async function _current(
     );
   }
 
-  const run = _makeCurrentMigrationRunner(
-    parsedSettings,
-    false,
+  const run = makeCurrentMigrationRunner(parsedSettings, {
+    once: true,
     shadow,
     forceActions,
-  );
+  });
   return run();
 }
 
 export async function current(
   settings: Settings,
-  shadow = false,
-  forceActions = false,
+  options: Partial<CurrentArgv> = {},
 ): Promise<void> {
-  const parsedSettings = await parseSettings(settings, shadow);
-  return _current(parsedSettings, shadow, forceActions);
+  const parsedSettings = await parseSettings(settings, options.shadow);
+  return _current(parsedSettings, options);
 }
 
-export const currentCommand: CommandModule<never, CurrentArgv> = {
+export const currentCommand: CommandModule<
+  Record<string, never>,
+  CurrentArgv
+> = {
   command: "current",
   aliases: [],
   describe:
@@ -63,11 +64,7 @@ export const currentCommand: CommandModule<never, CurrentArgv> = {
         "Run beforeAllMigrations and afterAllMigrations actions even if no migration was necessary.",
     },
   },
-  handler: async argv => {
-    await current(
-      await getSettings({ configFile: argv.config }),
-      argv.shadow,
-      argv.forceActions,
-    );
+  handler: async (argv) => {
+    await current(await getSettings({ configFile: argv.config }), argv);
   },
 };
