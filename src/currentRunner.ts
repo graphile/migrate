@@ -13,9 +13,10 @@ export function makeCurrentMigrationRunner(
   options: {
     once?: boolean;
     shadow?: boolean;
+    forceActions?: boolean;
   } = {},
 ): () => Promise<void> {
-  const { shadow = false } = options;
+  const { shadow = false, forceActions = false } = options;
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);
@@ -75,7 +76,7 @@ export function makeCurrentMigrationRunner(
               currentBodyMinified === previousBodyMinified;
 
             // 4: if different
-            if (!migrationsAreEquivalent) {
+            if (forceActions || !migrationsAreEquivalent) {
               await executeActions(
                 parsedSettings,
                 shadow,
