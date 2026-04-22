@@ -132,6 +132,11 @@ export async function compileIncludes(
   content: string,
   processedFiles: ReadonlySet<string>,
 ): Promise<string> {
+  if (/--!\s*(End)?Included?/.test(content)) {
+    throw new Error(
+      "`--! Included` / `--! EndIncluded` comments not allowed in user migrations. Use `--!include` instead.",
+    );
+  }
   const regex = /^--![ \t]*include[ \t]+(.*\.sql)[ \t]*$/gm;
 
   // Find all includes in this `content`
