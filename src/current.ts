@@ -1,9 +1,11 @@
 import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
+import pgMinify = require("pg-minify");
 
 import { executeActions } from "./actions";
 import { isNoTransactionDefined } from "./header";
 import { logDbError } from "./instrumentation";
+import type { DbCurrent } from "./interfaces";
 import { errorCode } from "./lib";
 import {
   compileIncludes,
@@ -14,9 +16,7 @@ import {
 } from "./migration";
 import { idFromFilename, isMigrationFilename } from "./migrationFilename";
 import { withClient, withTransaction } from "./pg";
-import { ParsedSettings } from "./settings";
-import pgMinify = require("pg-minify");
-import { DbCurrent } from "./interfaces";
+import type { ParsedSettings } from "./settings";
 
 async function statOrNull(path: string): Promise<Stats | null> {
   try {
