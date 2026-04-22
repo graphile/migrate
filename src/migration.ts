@@ -205,12 +205,10 @@ export async function compileIncludes(
   // Simple string replacement for each path matched
   const compiledContent = content.replace(
     regex,
-    (match, rawSqlPath: string) => {
+    (_match, rawSqlPath: string) => {
       const sqlPath = sqlPathByRawSqlPath[rawSqlPath];
       const content = contentBySqlPath[sqlPath];
-      const included = match.replace(/^--![ \t]*include/, "--! Included");
-      const endIncluded = included.replace("Included", "EndIncluded");
-      return `${included}\n${content.trim()}\n${endIncluded}`;
+      return `--! Included ${rawSqlPath}\n${content.trim()}\n--! EndIncluded ${rawSqlPath}`;
     },
   );
 

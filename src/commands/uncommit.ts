@@ -42,11 +42,9 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const contents = await fsp.readFile(lastMigrationFilepath, "utf8");
   const { headers, body } = parseMigrationText(lastMigrationFilepath, contents);
 
-  // Remove included migrations
-  const includeRegex =
-    /^--![ \t]*Included[ \t]+(?<filename>\S+)[ \t]*$[\s\S]*?^--![ \t]*EndIncluded[ \t]*\k<filename>[ \t]*$/gm;
+  // Replace included migrations with their `--! include` equivalent
   const decompiledBody = body.replace(
-    includeRegex,
+    /^--! Included (?<filename>\S+)$[\s\S]*?^--! EndIncluded \k<filename>$/gm,
     (_, filename) => `--! include ${filename}`,
   );
 
