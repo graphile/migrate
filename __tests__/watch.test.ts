@@ -4,7 +4,8 @@ import "./helpers"; // Has side-effects; must come first
 
 import mockFs from "mock-fs";
 
-import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
+import { _watch } from "../src/commands/watch";
+import { makeCurrentMigrationRunner } from "../src/current";
 import { parseSettings } from "../src/settings";
 import { makeMigrations } from "./helpers";
 import {
@@ -26,7 +27,7 @@ it("doesn't run current.sql if it's already up to date", async () => {
     ...settings,
   });
   await setup(parsedSettings);
-  const migrationRunner = _makeCurrentMigrationRunner(
+  const migrationRunner = makeCurrentMigrationRunner(
     parsedSettings,
     false,
     false,
@@ -77,7 +78,7 @@ it("watches symlinked files", async () => {
     ...settings,
   });
   await setup(parsedSettings);
-  const migrationRunner = _makeCurrentMigrationRunner(
+  const migrationRunner = makeCurrentMigrationRunner(
     parsedSettings,
     false,
     false,

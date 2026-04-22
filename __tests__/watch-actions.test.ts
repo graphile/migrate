@@ -3,7 +3,7 @@ jest.mock("../src/migration");
 
 import "./helpers"; // Has side-effects; must come first
 
-import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
+import { _watch } from "../src/commands/watch";
 import { _migrateMigrationSchema } from "../src/migration";
 import { parseSettings } from "../src/settings";
 import {
