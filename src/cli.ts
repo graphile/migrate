@@ -68,12 +68,12 @@ const f = yargs
   .command(wrapHandler(initCommand))
   .command(wrapHandler(migrateCommand))
   .command(wrapHandler(watchCommand))
+  .command(wrapHandler(currentCommand))
   .command(wrapHandler(commitCommand))
   .command(wrapHandler(uncommitCommand))
   .command(wrapHandler(statusCommand))
   .command(wrapHandler(resetCommand))
   .command(wrapHandler(compileCommand))
-  .command(wrapHandler(currentCommand))
   .command(wrapHandler(runCommand))
 
   // Make sure options added here are represented in CommonArgv
