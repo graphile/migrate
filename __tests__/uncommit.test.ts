@@ -59,6 +59,7 @@ describe.each([[undefined], ["My Commit Message"]])(
       MIGRATION_INCLUDE_COMMITTED,
       MIGRATION_MULTIFILE_COMMITTED,
       MIGRATION_MULTIFILE_FILES,
+      MIGRATION_INCLUDED_FIXTURE,
     } = makeMigrations(commitMessage);
 
     it("rolls back migration", async () => {
@@ -95,7 +96,7 @@ describe.each([[undefined], ["My Commit Message"]])(
         [`migrations/committed/000001${commitMessageSlug}.sql`]:
           MIGRATION_INCLUDE_COMMITTED,
         "migrations/current.sql": "-- JUST A COMMENT\n",
-        "migrations/fixtures/foo.sql": MIGRATION_1_TEXT,
+        "migrations/fixtures/foo.sql": MIGRATION_INCLUDED_FIXTURE,
       });
       await migrate(settings);
       await uncommit(settings);
