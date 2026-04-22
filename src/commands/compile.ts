@@ -10,19 +10,28 @@ interface CompileArgv extends CommonArgv {
   shadow?: boolean;
 }
 
+interface CompileOptions {
+  shadow?: boolean;
+  filename?: string;
+}
+
+function resolveOptions(options: CompileOptions | boolean) {
+  return typeof options === "boolean" ? { shadow: options } : options;
+}
+
 export async function compile(
   settings: Settings,
-  content: string,
-  filename: string,
-  shadow = false,
+  rawContent: string,
+  options: boolean | CompileOptions = false,
 ): Promise<string> {
+  const { shadow = false, filename = "stdin" } = resolveOptions(options);
   const parsedSettings = await parseSettings(settings, shadow);
-  const parsedContent = await compileIncludes(
+  const content = await compileIncludes(
     parsedSettings,
-    content,
+    rawContent,
     new Set([filename]),
   );
-  return compilePlaceholders(parsedSettings, parsedContent, shadow);
+  return compilePlaceholders(parsedSettings, content, shadow);
 }
 
 async function readInput(argv: ArgumentsCamelCase<CompileArgv>) {
@@ -57,8 +66,10 @@ Compiles a SQL file, resolving includes, inserting all the placeholders and retu
   handler: async (argv) => {
     const settings = await getSettings({ configFile: argv.config });
     const { content, filename } = await readInput(argv);
-    const compiled = await compile(settings, content, filename, argv.shadow);
-
+    const compiled = await compile(settings, content, {
+      shadow: argv.shadow,
+      filename,
+    });
     // eslint-disable-next-line no-console
     console.log(compiled);
   },
