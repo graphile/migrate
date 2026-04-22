@@ -110,7 +110,8 @@ export const watchCommand: CommandModule<Record<string, never>, WatchArgv> = {
     once: {
       type: "boolean",
       default: false,
-      description: "Runs the current migration and then exits.",
+      description:
+        "Runs the current migration and then exits (equivalent to `graphile-migrate current`).",
     },
     shadow: {
       type: "boolean",

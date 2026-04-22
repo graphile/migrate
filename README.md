@@ -287,8 +287,8 @@ migration, re-running it on any change. For development.
 Options:
       --help    Show help                                              [boolean]
   -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-      --once    Runs the current migration and then exits.
-                                                      [boolean] [default: false]
+      --once    Runs the current migration and then exits (equivalent to
+                `graphile-migrate current`).          [boolean] [default: false]
       --shadow  Applies changes to shadow DB.         [boolean] [default: false]
 ```
 
