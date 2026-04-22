@@ -68,13 +68,13 @@ it("runs migrations", async () => {
 
     expect(migrations).toHaveLength(2);
     expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "filename": "000001.sql",
           "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
           "previous_hash": null,
         },
-        Object {
+        {
           "filename": "000002.sql",
           "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
           "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
@@ -83,19 +83,19 @@ it("runs migrations", async () => {
     `);
     expect(tables).toHaveLength(1);
     expect(tables.map((t) => t.relname)).toMatchInlineSnapshot(`
-      Array [
+      [
         "foo",
       ]
     `);
     expect(enums).toHaveLength(1);
     expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "2",
-  },
-]
-`);
+      [
+        {
+          "typname": "user_role",
+          "value_count": "2",
+        },
+      ]
+    `);
   }
 
   mockFs({
@@ -112,18 +112,18 @@ Array [
 
     expect(migrations).toHaveLength(3);
     expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "filename": "000001.sql",
           "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
           "previous_hash": null,
         },
-        Object {
+        {
           "filename": "000002.sql",
           "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
           "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
         },
-        Object {
+        {
           "filename": "000003.sql",
           "hash": "sha1:2d248344ac299ebbad2aeba5bfec2ae3c3cb0a4f",
           "previous_hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
@@ -132,18 +132,18 @@ Array [
     `);
     expect(tables).toHaveLength(1);
     expect(tables.map((t) => t.relname)).toMatchInlineSnapshot(`
-      Array [
+      [
         "foo",
       ]
     `);
     expect(enums).toHaveLength(1);
     expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "2",
-  },
-]
-`);
+      [
+        {
+          "typname": "user_role",
+          "value_count": "2",
+        },
+      ]
+    `);
   }
 });
