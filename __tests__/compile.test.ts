@@ -64,11 +64,15 @@ it("will compile included files", async () => {
     await compile(
       settings,
       `\
+select 1;
 --!include foo.sql
+select 2;
 `,
       `${process.cwd()}/migrations/current.sql`,
     ),
   ).toEqual(`\
+select 1;
 select * from foo;
+select 2;
 `);
 });
