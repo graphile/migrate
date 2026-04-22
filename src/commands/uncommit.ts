@@ -44,10 +44,11 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
 
   // Remove included migrations
   const includeRegex =
-    /^--![ \t]*Included[ \t]+(?<filename>.*?\.sql)[ \t]*$.*?^--![ \t]*EndIncluded[ \t]*\k<filename>[ \t]*$/gms;
-  const decompiledBody = body.replace(includeRegex, (match) => {
-    return match.split("\n")[0].replace(" Included", "include");
-  });
+    /^--![ \t]*Included[ \t]+(?<filename>\S+)[ \t]*$[\s\S]*?^--![ \t]*EndIncluded[ \t]*\k<filename>[ \t]*$/gm;
+  const decompiledBody = body.replace(
+    includeRegex,
+    (_, filename) => `--! include ${filename}`,
+  );
 
   // Drop Hash, Previous and AllowInvalidHash from headers; then write out
   const { Hash, Previous, AllowInvalidHash, ...otherHeaders } = headers;

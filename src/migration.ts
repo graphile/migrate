@@ -132,7 +132,7 @@ export async function compileIncludes(
   content: string,
   processedFiles: ReadonlySet<string>,
 ): Promise<string> {
-  const regex = /^--![ \t]*[iI]nclude[ \t]+(.*\.sql)[ \t]*$/gm;
+  const regex = /^--![ \t]*include[ \t]+(.*\.sql)[ \t]*$/gm;
 
   // Find all includes in this `content`
   const matches = [...content.matchAll(regex)];
