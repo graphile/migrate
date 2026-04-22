@@ -39,7 +39,7 @@ export const compileCommand: CommandModule<
   command: "compile [file]",
   aliases: [],
   describe: `\
-Compiles a SQL file, resolving includes, inserting all the placeholders and returning the result to STDOUT`,
+Compiles a SQL file (resolving \`--!includes\`, replacing :PLACEHOLDERs, etc) and outputs the result to STDOUT`,
   builder: {
     shadow: {
       type: "boolean",

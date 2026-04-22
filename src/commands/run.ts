@@ -67,7 +67,7 @@ export const runCommand: CommandModule<Record<string, never>, RunArgv> = {
   command: "run [file]",
   aliases: [],
   describe: `\
-Compiles a SQL file, resolving includes, inserting all the placeholders, and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
+Compiles a SQL file (resolving \`--!includes\`, replacing :PLACEHOLDERs, etc) and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
   builder: {
     shadow: {
       type: "boolean",
