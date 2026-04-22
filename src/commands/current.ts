@@ -2,20 +2,22 @@ import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { makeCurrentMigrationRunner } from "../currentRunner";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
-import { CommonArgv, getSettings } from "./_common";
+import { parseSettings, Settings } from "../settings";
+import type { CommonArgv } from "./_common";
+import { getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
 interface CurrentArgv extends CommonArgv {
-  shadow: boolean;
-  forceActions: boolean;
+  shadow?: boolean;
+  forceActions?: boolean;
 }
 
-export async function _current(
-  parsedSettings: ParsedSettings,
-  options: Partial<CurrentArgv>,
+export async function current(
+  settings: Settings,
+  options: Partial<CurrentArgv> = {},
 ): Promise<void> {
   const { shadow = false, forceActions = false } = options;
+  const parsedSettings = await parseSettings(settings, shadow);
   await _migrate(parsedSettings, shadow);
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -33,14 +35,6 @@ export async function _current(
     forceActions,
   });
   return run();
-}
-
-export async function current(
-  settings: Settings,
-  options: Partial<CurrentArgv> = {},
-): Promise<void> {
-  const parsedSettings = await parseSettings(settings, options.shadow);
-  return _current(parsedSettings, options);
 }
 
 export const currentCommand: CommandModule<
@@ -65,6 +59,7 @@ export const currentCommand: CommandModule<
     },
   },
   handler: async (argv) => {
-    await current(await getSettings({ configFile: argv.config }), argv);
+    const settings = await getSettings({ configFile: argv.config });
+    await current(settings, argv);
   },
 };
