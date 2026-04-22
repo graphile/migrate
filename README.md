@@ -302,9 +302,13 @@ Runs any un-executed committed migrations, as well as the current migration. For
 development.
 
 Options:
-      --help    Show help                                              [boolean]
-  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
-      --shadow  Apply migrations to the shadow DB (for development).
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --shadow        Apply migrations to the shadow DB (for development).
+                                                      [boolean] [default: false]
+      --forceActions  Run beforeAllMigrations and afterAllMigrations actions
+                      even if no migration was necessary.
                                                       [boolean] [default: false]
 ```
 
