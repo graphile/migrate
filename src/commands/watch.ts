@@ -32,7 +32,7 @@ export async function _watch(
     );
   }
 
-  const run = makeCurrentMigrationRunner(parsedSettings, once, shadow);
+  const run = makeCurrentMigrationRunner(parsedSettings, { once, shadow });
   if (once) {
     return run();
   } else {

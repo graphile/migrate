@@ -27,11 +27,7 @@ it("doesn't run current.sql if it's already up to date", async () => {
     ...settings,
   });
   await setup(parsedSettings);
-  const migrationRunner = makeCurrentMigrationRunner(
-    parsedSettings,
-    false,
-    false,
-  );
+  const migrationRunner = makeCurrentMigrationRunner(parsedSettings);
 
   expect(getActionCalls()).toEqual([]);
   mockCurrentSqlContentOnce(
@@ -78,11 +74,7 @@ it("watches symlinked files", async () => {
     ...settings,
   });
   await setup(parsedSettings);
-  const migrationRunner = makeCurrentMigrationRunner(
-    parsedSettings,
-    false,
-    false,
-  );
+  const migrationRunner = makeCurrentMigrationRunner(parsedSettings);
 
   expect(getActionCalls()).toEqual([]);
   mockFs({

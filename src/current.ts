@@ -337,9 +337,12 @@ export async function writeCurrentMigration(
 
 export function makeCurrentMigrationRunner(
   parsedSettings: ParsedSettings,
-  _once = false,
-  shadow = false,
+  options: {
+    once?: boolean;
+    shadow?: boolean;
+  } = {},
 ): () => Promise<void> {
+  const { shadow = false } = options;
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);
