@@ -1,20 +1,34 @@
-import * as fsp from "fs/promises";
 import { CommandModule } from "yargs";
 
-import { compilePlaceholders } from "../migration";
+import { compileIncludes, compilePlaceholders } from "../migration";
 import { parseSettings, Settings } from "../settings";
-import { CommonArgv, getSettings, readStdin } from "./_common";
+import { CommonArgv, getSettings, readFileOrStdin } from "./_common";
 
 interface CompileArgv extends CommonArgv {
   shadow?: boolean;
 }
 
+interface CompileOptions {
+  shadow?: boolean;
+  filename?: string;
+}
+
+function resolveOptions(options: CompileOptions | boolean) {
+  return typeof options === "boolean" ? { shadow: options } : options;
+}
+
 export async function compile(
   settings: Settings,
-  content: string,
-  shadow = false,
+  rawContent: string,
+  options: boolean | CompileOptions = false,
 ): Promise<string> {
+  const { shadow = false, filename = "unknown" } = resolveOptions(options);
   const parsedSettings = await parseSettings(settings, shadow);
+  const content = await compileIncludes(
+    parsedSettings,
+    rawContent,
+    new Set([filename]),
+  );
   return compilePlaceholders(parsedSettings, content, shadow);
 }
 
@@ -25,7 +39,7 @@ export const compileCommand: CommandModule<
   command: "compile [file]",
   aliases: [],
   describe: `\
-Compiles a SQL file, inserting all the placeholders and returning the result to STDOUT`,
+Compiles a SQL file (resolving \`--!includes\`, replacing :PLACEHOLDERs, etc) and outputs the result to STDOUT`,
   builder: {
     shadow: {
       type: "boolean",
@@ -35,13 +49,11 @@ Compiles a SQL file, inserting all the placeholders and returning the result to 
   },
   handler: async (argv) => {
     const settings = await getSettings({ configFile: argv.config });
-    const content =
-      typeof argv.file === "string"
-        ? await fsp.readFile(argv.file, "utf8")
-        : await readStdin();
-
-    const compiled = await compile(settings, content, argv.shadow);
-
+    const { content, filename } = await readFileOrStdin(argv.file);
+    const compiled = await compile(settings, content, {
+      shadow: argv.shadow,
+      filename,
+    });
     // eslint-disable-next-line no-console
     console.log(compiled);
   },

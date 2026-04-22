@@ -1,17 +1,17 @@
-import * as fsp from "fs/promises";
 import { QueryResultRow } from "pg";
 import { CommandModule } from "yargs";
 
 import { DO_NOT_USE_DATABASE_URL } from "../actions";
 import { runQueryWithErrorInstrumentation } from "../instrumentation";
-import { compilePlaceholders } from "../migration";
+import { compileIncludes, compilePlaceholders } from "../migration";
 import { withClient } from "../pgReal";
 import {
   makeRootDatabaseConnectionString,
   parseSettings,
   Settings,
 } from "../settings";
-import { CommonArgv, getDatabaseName, getSettings, readStdin } from "./_common";
+import type { CommonArgv } from "./_common";
+import { getDatabaseName, getSettings, readFileOrStdin } from "./_common";
 
 interface RunArgv extends CommonArgv {
   shadow?: boolean;
@@ -22,7 +22,7 @@ interface RunArgv extends CommonArgv {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: Settings,
-  content: string,
+  rawContent: string,
   filename: string,
   {
     shadow = false,
@@ -35,6 +35,11 @@ export async function run<T extends QueryResultRow = QueryResultRow>(
   } = {},
 ): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
+  const content = await compileIncludes(
+    parsedSettings,
+    rawContent,
+    new Set([filename]),
+  );
   const sql = compilePlaceholders(parsedSettings, content, shadow);
   const baseConnectionString = rootDatabase
     ? parsedSettings.rootConnectionString
@@ -62,7 +67,7 @@ export const runCommand: CommandModule<Record<string, never>, RunArgv> = {
   command: "run [file]",
   aliases: [],
   describe: `\
-Compiles a SQL file, inserting all the placeholders, and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
+Compiles a SQL file (resolving \`--!includes\`, replacing :PLACEHOLDERs, etc) and then runs it against the database. Useful for seeding. If called from an action will automatically run against the same database (via GM_DBURL envvar) unless --shadow or --rootDatabase are supplied.`,
   builder: {
     shadow: {
       type: "boolean",
@@ -102,14 +107,7 @@ Compiles a SQL file, inserting all the placeholders, and then runs it against th
             connectionString: process.env.GM_DBURL,
           };
 
-    const { content, filename } =
-      typeof argv.file === "string"
-        ? {
-            filename: argv.file,
-            content: await fsp.readFile(argv.file, "utf8"),
-          }
-        : { filename: "stdin", content: await readStdin() };
-
+    const { content, filename } = await readFileOrStdin(argv.file);
     const rows = await run(settings, content, filename, argv);
 
     if (rows) {
