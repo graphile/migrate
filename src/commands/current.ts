@@ -9,15 +9,16 @@ import { _migrate } from "./migrate";
 
 interface CurrentArgv extends CommonArgv {
   shadow?: boolean;
+  forceActions?: boolean;
 }
 
 export async function current(
   settings: Settings,
   options: Partial<CurrentArgv> = {},
 ): Promise<void> {
-  const { shadow = false } = options;
+  const { shadow = false, forceActions = false } = options;
   const parsedSettings = await parseSettings(settings, shadow);
-  await _migrate(parsedSettings, shadow);
+  await _migrate(parsedSettings, shadow, forceActions);
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   if (!currentLocation.exists) {
@@ -31,6 +32,7 @@ export async function current(
   const run = makeCurrentMigrationRunner(parsedSettings, {
     once: true,
     shadow,
+    forceActions,
   });
   return run();
 }
@@ -48,6 +50,12 @@ export const currentCommand: CommandModule<
       type: "boolean",
       default: false,
       description: "Apply migrations to the shadow DB (for development).",
+    },
+    forceActions: {
+      type: "boolean",
+      default: false,
+      description:
+        "Run beforeAllMigrations, afterAllMigrations, beforeCurrent, and afterCurrent actions even if no migration was necessary.",
     },
   },
   handler: async (argv) => {

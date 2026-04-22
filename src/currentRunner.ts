@@ -13,9 +13,10 @@ export function makeCurrentMigrationRunner(
   options: {
     once?: boolean;
     shadow?: boolean;
+    forceActions?: boolean;
   } = {},
 ): () => Promise<void> {
-  const { shadow = false } = options;
+  const { shadow = false, forceActions = false } = options;
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);
@@ -74,14 +75,17 @@ export function makeCurrentMigrationRunner(
             migrationsAreEquivalent =
               currentBodyMinified === previousBodyMinified;
 
-            // 4: if different
-            if (!migrationsAreEquivalent) {
+            // 3a: Run actions if the migrations are different OR if forced.
+            if (forceActions || !migrationsAreEquivalent) {
               await executeActions(
                 parsedSettings,
                 shadow,
                 parsedSettings.beforeCurrent,
               );
+            }
 
+            // 4: if different
+            if (!migrationsAreEquivalent) {
               // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
               if (previousBody) {
                 await reverseMigration(lockingPgClient, previousBody);
@@ -135,7 +139,7 @@ export function makeCurrentMigrationRunner(
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
-      if (!migrationsAreEquivalent) {
+      if (forceActions || !migrationsAreEquivalent) {
         await executeActions(
           parsedSettings,
           shadow,
