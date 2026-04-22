@@ -39,7 +39,6 @@ CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 COMMIT;
 `,
-      "stdin",
     ),
   ).toEqual(`\
 BEGIN;
@@ -68,7 +67,7 @@ select 1;
 --!include foo.sql
 select 2;
 `,
-      `${process.cwd()}/migrations/current.sql`,
+      { filename: `${process.cwd()}/migrations/current.sql` },
     ),
   ).toEqual(`\
 select 1;

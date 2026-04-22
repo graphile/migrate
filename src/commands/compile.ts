@@ -22,7 +22,7 @@ export async function compile(
   rawContent: string,
   options: boolean | CompileOptions = false,
 ): Promise<string> {
-  const { shadow = false, filename = "stdin" } = resolveOptions(options);
+  const { shadow = false, filename = "unknown" } = resolveOptions(options);
   const parsedSettings = await parseSettings(settings, shadow);
   const content = await compileIncludes(
     parsedSettings,
