@@ -11,20 +11,16 @@ Opinionated SQL-powered productive roll-forward migration tool for PostgreSQL.
 
 ## Crowd-funded open-source software
 
-To help us develop this software sustainably under the MIT license, we ask all
-individuals and businesses that use it to help support its ongoing maintenance
-and development via sponsorship.
+To help us develop this software sustainably, we ask all individuals and
+businesses that use it to help support its ongoing maintenance and development
+via sponsorship.
 
 ### [Click here to find out more about sponsors and sponsorship.](https://www.graphile.org/sponsor/)
 
 And please give some love to our featured sponsors 🤩:
 
 <table><tr>
-<td align="center"><a href="https://storyscript.com/?utm_source=postgraphile"><img src="https://graphile.org/images/sponsors/storyscript.png" width="90" height="90" alt="Story.ai" /><br />Story.ai</a> *</td>
-<td align="center"><a href="https://surge.io/"><img src="https://graphile.org/images/sponsors/surge.png" width="90" height="90" alt="Surge" /><br />Surge</a> *</td>
-<td align="center"><a href="http://chads.website"><img src="https://graphile.org/images/sponsors/chadf.png" width="90" height="90" alt="Chad Furman" /><br />Chad Furman</a> *</td>
-<td align="center"><a href="https://postlight.com/?utm_source=graphile"><img src="https://graphile.org/images/sponsors/postlight.jpg" width="90" height="90" alt="Postlight" /><br />Postlight</a> *</td>
-<td align="center"><a href="https://openbase.com/"><img src="https://graphile.org/images/sponsors/openbase.png" width="90" height="90" alt="Openbase" /><br />Openbase</a> *</td>
+<td align="center"><a href="https://gosteelhead.com/"><img src="https://graphile.org/images/sponsors/steelhead.svg" width="90" height="90" alt="Steelhead" /><br />Steelhead</a> *</td>
 </tr></table>
 
 <em>\* Sponsors the entire Graphile suite</em>
@@ -106,10 +102,14 @@ unaffected by the iteration you've been applying to your development database
 Create your database role (if desired), database and shadow database:
 
 ```bash
-createuser --pwprompt appuser
-createdb myapp --owner=appuser
-createdb myapp_shadow --owner=appuser
+createuser --pwprompt dbowner
+createdb myapp --owner=dbowner
+createdb myapp_shadow --owner=dbowner
 ```
+
+> For an in depth-discussion on the different users and roles typically involved
+> in database and migration management, please see issue
+> [#215](https://github.com/graphile/migrate/issues/215).
 
 Export your database URL, shadow database URL, and a "root" database URL which
 should be a superuser account connection to any **other** database (most
@@ -117,8 +117,8 @@ PostgreSQL servers have a default database called `postgres` which is a good
 choice for this).
 
 ```bash
-export DATABASE_URL="postgres://appuser:password@localhost/myapp"
-export SHADOW_DATABASE_URL="postgres://appuser:password@localhost/myapp_shadow"
+export DATABASE_URL="postgres://dbowner:password@localhost/myapp"
+export SHADOW_DATABASE_URL="postgres://dbowner:password@localhost/myapp_shadow"
 
 export ROOT_DATABASE_URL="postgres://postgres:postgres@localhost/postgres"
 ```
@@ -220,22 +220,23 @@ Commands:
   graphile-migrate reset           Drops and re-creates the database, re-running
                                    all committed migrations from the start.
                                    **HIGHLY DESTRUCTIVE**.
-  graphile-migrate compile [file]  Compiles a SQL file, inserting all the
-                                   placeholders and returning the result to
-                                   STDOUT
-  graphile-migrate run [file]      Compiles a SQL file, inserting all the
-                                   placeholders, and then runs it against the
-                                   database. Useful for seeding. If called from
-                                   an action will automatically run against the
-                                   same database (via GM_DBURL envvar) unless
-                                   --shadow or --rootDatabase are supplied.
+  graphile-migrate compile [file]  Compiles a SQL file (resolving `--!includes`,
+                                   replacing :PLACEHOLDERs, etc) and outputs the
+                                   result to STDOUT
+  graphile-migrate run [file]      Compiles a SQL file (resolving `--!includes`,
+                                   replacing :PLACEHOLDERs, etc) and then runs
+                                   it against the database. Useful for seeding.
+                                   If called from an action will automatically
+                                   run against the same database (via GM_DBURL
+                                   envvar) unless --shadow or --rootDatabase are
+                                   supplied.
   graphile-migrate completion      Generate shell completion script.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
 
-You are running graphile-migrate v1.2.0.
+You are running graphile-migrate v2.0.0-rc.2.
 ```
 
 
@@ -248,9 +249,9 @@ Initializes a graphile-migrate project by creating a `.gmrc` file and
 `migrations` folder.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
-  --folder      Use a folder rather than a file for the current migration.
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --folder  Use a folder rather than a file for the current migration.
                                                       [boolean] [default: false]
 ```
 
@@ -264,12 +265,14 @@ Runs any un-executed committed migrations. Does NOT run the current migration.
 For use in production and development.
 
 Options:
-  --help          Show help                                            [boolean]
-  --config, -c    Optional path to gmrc file      [string] [default: .gmrc[.js]]
-  --shadow        Apply migrations to the shadow DB (for development).
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
-  --forceActions  Run beforeAllMigrations and afterAllMigrations actions even if
-                  no migration was necessary.         [boolean] [default: false]
+      --forceActions  Run beforeAllMigrations and afterAllMigrations actions
+                      even if no migration was necessary.
+                                                      [boolean] [default: false]
 ```
 
 
@@ -282,11 +285,11 @@ Runs any un-executed committed migrations and then runs and watches the current
 migration, re-running it on any change. For development.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
-  --once        Runs the current migration and then exits.
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --once    Runs the current migration and then exits.
                                                       [boolean] [default: false]
-  --shadow      Applies changes to shadow DB.         [boolean] [default: false]
+      --shadow  Applies changes to shadow DB.         [boolean] [default: false]
 ```
 
 
@@ -317,9 +320,9 @@ Commits the current migration into the `committed/` folder, resetting the
 current migration. Resets the shadow database.
 
 Options:
-  --help         Show help                                             [boolean]
-  --config, -c   Optional path to gmrc file       [string] [default: .gmrc[.js]]
-  --message, -m  Optional commit message to label migration, must not contain
+      --help     Show help                                             [boolean]
+  -c, --config   Optional path to gmrc file  [string] [default: .gmrc[.js|.cjs]]
+  -m, --message  Optional commit message to label migration, must not contain
                  newlines.                                              [string]
 ```
 
@@ -341,8 +344,8 @@ should result in the exact same hash. Development only, and liable to cause
 conflicts with other developers - be careful.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
 ```
 
 
@@ -355,10 +358,10 @@ Drops and re-creates the database, re-running all committed migrations from the
 start. **HIGHLY DESTRUCTIVE**.
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
-  --shadow      Applies migrations to shadow DB.      [boolean] [default: false]
-  --erase       This is your double opt-in to make it clear this DELETES
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --shadow  Applies migrations to shadow DB.      [boolean] [default: false]
+      --erase   This is your double opt-in to make it clear this DELETES
                 EVERYTHING.                           [boolean] [default: false]
 ```
 
@@ -379,9 +382,10 @@ are true, exit status will be 0 (success). Additional messages may also be
 output.
 
 Options:
-  --help          Show help                                            [boolean]
-  --config, -c    Optional path to gmrc file      [string] [default: .gmrc[.js]]
-  --skipDatabase  Skip checks that require a database connection.
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --skipDatabase  Skip checks that require a database connection.
                                                       [boolean] [default: false]
 ```
 
@@ -391,13 +395,13 @@ Options:
 ```
 graphile-migrate compile [file]
 
-Compiles a SQL file, inserting all the placeholders and returning the result to
-STDOUT
+Compiles a SQL file (resolving `--!includes`, replacing :PLACEHOLDERs, etc) and
+outputs the result to STDOUT
 
 Options:
-  --help        Show help                                              [boolean]
-  --config, -c  Optional path to gmrc file        [string] [default: .gmrc[.js]]
-  --shadow      Apply shadow DB placeholders (for development).
+      --help    Show help                                              [boolean]
+  -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
+      --shadow  Apply shadow DB placeholders (for development).
                                                       [boolean] [default: false]
 ```
 
@@ -407,20 +411,22 @@ Options:
 ```
 graphile-migrate run [file]
 
-Compiles a SQL file, inserting all the placeholders, and then runs it against
-the database. Useful for seeding. If called from an action will automatically
-run against the same database (via GM_DBURL envvar) unless --shadow or
---rootDatabase are supplied.
+Compiles a SQL file (resolving `--!includes`, replacing :PLACEHOLDERs, etc) and
+then runs it against the database. Useful for seeding. If called from an action
+will automatically run against the same database (via GM_DBURL envvar) unless
+--shadow or --rootDatabase are supplied.
 
 Options:
-  --help          Show help                                            [boolean]
-  --config, -c    Optional path to gmrc file      [string] [default: .gmrc[.js]]
-  --shadow        Apply to the shadow database (for development).
+      --help          Show help                                        [boolean]
+  -c, --config        Optional path to gmrc file
+                                             [string] [default: .gmrc[.js|.cjs]]
+      --shadow        Apply to the shadow database (for development).
                                                       [boolean] [default: false]
-  --root          Run the file using the root user (but application database).
+      --root          Run the file using the root user (but application
+                      database).                      [boolean] [default: false]
+      --rootDatabase  Like --root, but also runs against the root database
+                      rather than application database.
                                                       [boolean] [default: false]
-  --rootDatabase  Like --root, but also runs against the root database rather
-                  than application database.          [boolean] [default: false]
 ```
 <!-- CLI_USAGE_END -->
 <!-- prettier-ignore-end -->
@@ -509,7 +515,10 @@ environmental variables being set:
   },
   "afterReset": [
     "afterReset.sql",
-    { "_": "command", "command": "npx --no-install graphile-worker --once" }
+    {
+      "_": "command",
+      "command": "DATABASE_URL=\"$GM_DBURL\" npx --no-install graphile-worker --schema-only"
+    }
   ],
   "afterAllMigrations": [
     {
@@ -622,16 +631,20 @@ When the command is invoked it will have access to the following envvars:
 
 - `GM_DBURL` - the relevant database URL (e.g. the one that was just
   reset/migrated)
-- `GM_DBNAME` - the database name in `GM_DBURL`; you might use this if you need
-  to use separate superuser credentials to install extensions against the
-  database
-- `GM_DBUSER` - the database user in `GM_DBURL`
+- `GM_DBNAME` - the database name in `GM_DBURL`
+- `GM_DBUSER` - the database user in `GM_DBURL` if `root` is `false`.
 - `GM_SHADOW` - set to `1` if we're dealing with the shadow DB, unset otherwise
 
 **IMPORTANT NOTE** the `DATABASE_URL` envvar will be set to the nonsense value
 `postgres://PLEASE:USE@GM_DBURL/INSTEAD` to avoid ambiguity - you almost
 certainly mean to use `GM_DBURL` in your scripts since they will want to change
 whichever database was just reset/migrated/etc (which could be the shadow DB).
+
+The `root` property applies to `command` actions with the similar effects as
+`sql` actions (see above). When `true`, the command will be run with GM_DBURL
+envvar set using the superuser role (i.e. the one defined in
+`rootConnectionString`) but with the database name from `connectionString`. When
+`root` is true, `GM_DBUSER` is not set.
 
 ## Collaboration
 
@@ -702,9 +715,7 @@ ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'Admin';
 ```
 
 **IMPORTANT**: `pg` always runs multi-statement queries in a pseudo-transaction,
-so `--! no-transaction` migrations must contain exactly one statement. You might
-be able to work around this with a `DO $$` block? (If this works, please send a
-PR to this paragraph.)
+so `--! no-transaction` migrations must contain exactly one statement.
 
 ## Editing a committed migration
 
@@ -736,6 +747,60 @@ The file (or files) in which the non-committed migration that would be executed
 by `graphile-migrate watch` is defined. By default this is in the
 `migrations/current.sql` file, but it might be `migrations/current/*.sql` if
 you're using folder mode.
+
+#### Including external files in the current migration
+
+You can include external files in your `current.sql` to better assist in source
+control. These includes are identified by paths within the `migrations/fixtures`
+folder.
+
+For example. Given the following directory structure:
+
+```
+/- migrate
+ - migrations
+   |
+   - current.sql
+   - fixtures
+     |
+     - functions
+       |
+       - myfunction.sql
+```
+
+and the contents of `myfunction.sql`:
+
+```sql
+create or replace function myfunction(a int, b int)
+returns int as $$
+  select a + b;
+$$ language sql stable;
+```
+
+When you make changes to `myfunction.sql`, include it in your current migration
+by adding `--!include functions/myfunction.sql` to your `current.sql` (or any
+`current/*.sql`). This statement doesn't need to be at the top of the file,
+wherever it is will be replaced by the content of
+`migrations/fixtures/functions/myfunction.sql` when the migration is committed.
+
+```sql
+--!include functions/myfunction.sql
+drop policy if exists access_by_numbers on mytable;
+create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
+```
+
+and when the migration is committed, watched, run, or compiled, the contents of
+`myfunction.sql` will be included in the result, such that the following SQL is
+executed:
+
+```sql
+create or replace function myfunction(a int, b int)
+returns int as $$
+  select a + b;
+$$ language sql stable;
+drop policy if exists access_by_numbers on mytable;
+create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
+```
 
 ### Committed migration(s)
 
@@ -792,8 +857,9 @@ diverse) projects:
 
 We only support LTS versions of Node.js; the currently supported versions are:
 
-- Node v12.x
 - Node v14.x
+- Node v16.x
+- Node v18.x
 
 Other versions of Node may work, but are not officially supported.
 

@@ -1,4 +1,5 @@
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
+import { relative } from "path";
 
 import { VALID_FILE_REGEX } from "./current";
 import { calculateHash } from "./hash";
@@ -87,11 +88,7 @@ export const slowGeneratePlaceholderReplacement = (
   );
 
   const regexp = new RegExp(
-    "(?:" +
-      Object.keys(placeholders)
-        .map(escapeRegexp)
-        .join("|") +
-      ")\\b",
+    "(?:" + Object.keys(placeholders).map(escapeRegexp).join("|") + ")\\b",
     "g",
   );
   return (str: string): string =>
@@ -103,7 +100,7 @@ export const generatePlaceholderReplacement = memoize(
 );
 
 // So memoization above holds from compilePlaceholders
-const contextObj = memoize(database => ({ database }));
+const contextObj = memoize((database: string) => ({ database }));
 
 export function compilePlaceholders(
   parsedSettings: ParsedSettings,
@@ -122,6 +119,102 @@ export function compilePlaceholders(
   )(content);
 }
 
+async function realpathOrNull(path: string): Promise<string | null> {
+  try {
+    return await fsp.realpath(path);
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function compileIncludes(
+  parsedSettings: ParsedSettings,
+  content: string,
+  processedFiles: ReadonlySet<string>,
+): Promise<string> {
+  const regex = /^--![ \t]*include[ \t]+(.*\.sql)[ \t]*$/gm;
+
+  // Find all includes in this `content`
+  const matches = [...content.matchAll(regex)];
+
+  // There's no includes
+  if (matches.length === 0) {
+    return content;
+  }
+
+  // Since there's at least one include, we need the fixtures path:
+  const rawFixturesPath = `${parsedSettings.migrationsFolder}/fixtures`;
+  const fixturesPath = await realpathOrNull(rawFixturesPath);
+  if (!fixturesPath) {
+    throw new Error(
+      `File contains '--!include' but fixtures folder '${rawFixturesPath}' doesn't exist?`,
+    );
+  }
+
+  // Go through these matches and resolve their full paths, checking they are allowed
+  const sqlPathByRawSqlPath = Object.create(null) as Record<string, string>;
+  for (const match of matches) {
+    const [line, rawSqlPath] = match;
+    const sqlPath = await realpathOrNull(`${fixturesPath}/${rawSqlPath}`);
+
+    if (!sqlPath) {
+      throw new Error(
+        `Include of '${rawSqlPath}' failed because '${fixturesPath}/${rawSqlPath}' doesn't seem to exist?`,
+      );
+    }
+
+    if (processedFiles.has(sqlPath)) {
+      throw new Error(
+        `Circular include detected - '${sqlPath}' is included again! Import statement: \`${line}\`; trace:\n  ${[...processedFiles].reverse().join("\n  ")}`,
+      );
+    }
+
+    const relativePath = relative(fixturesPath, sqlPath);
+    if (relativePath.startsWith("..")) {
+      throw new Error(
+        `Forbidden: cannot include path '${sqlPath}' because it's not inside '${fixturesPath}'`,
+      );
+    }
+
+    // Looks good to me
+    sqlPathByRawSqlPath[rawSqlPath] = sqlPath;
+  }
+
+  // For the unique set of paths, load the file and then recursively do its own includes
+  const distinctSqlPaths = [...new Set(Object.values(sqlPathByRawSqlPath))];
+  const contentsForDistinctSqlPaths = await Promise.all(
+    distinctSqlPaths.map(async (sqlPath) => {
+      const fileContents = await fsp.readFile(sqlPath, "utf8");
+      const processed = await compileIncludes(
+        parsedSettings,
+        fileContents,
+        new Set([...processedFiles, sqlPath]),
+      );
+      return processed;
+    }),
+  );
+
+  // Turn the results into a map for ease of lookup
+  const contentBySqlPath = Object.create(null) as Record<string, string>;
+  for (let i = 0, l = distinctSqlPaths.length; i < l; i++) {
+    const sqlPath = distinctSqlPaths[i];
+    const content = contentsForDistinctSqlPaths[i];
+    contentBySqlPath[sqlPath] = content;
+  }
+
+  // Simple string replacement for each path matched
+  const compiledContent = content.replace(
+    regex,
+    (_match, rawSqlPath: string) => {
+      const sqlPath = sqlPathByRawSqlPath[rawSqlPath];
+      const content = contentBySqlPath[sqlPath];
+      return content;
+    },
+  );
+
+  return compiledContent;
+}
+
 const TABLE_CHECKS = {
   migrations: {
     columnCount: 4,
@@ -135,7 +228,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
   // Verify that graphile_migrate schema exists
   const {
     rows: [graphileMigrateSchema],
-  } = await pgClient.query(
+  } = await pgClient.query<{ oid: string }>(
     `select oid from pg_namespace where nspname = 'graphile_migrate';`,
   );
   if (!graphileMigrateSchema) {
@@ -148,7 +241,7 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     // Check that table exists
     const {
       rows: [table],
-    } = await pgClient.query(
+    } = await pgClient.query<{ oid: string }>(
       `select oid from pg_class where relnamespace = ${graphileMigrateSchema.oid} and relname = '${tableName}'  and relkind = 'r'`,
     );
     if (!table) {
@@ -158,7 +251,10 @@ async function verifyGraphileMigrateSchema(pgClient: Client): Promise<null> {
     }
 
     // Check that it has the right number of columns
-    const { rows: columns } = await pgClient.query(
+    const { rows: columns } = await pgClient.query<{
+      attrelid: string;
+      attname: string;
+    }>(
       `select attrelid, attname from pg_attribute where attrelid = ${table.oid} and attnum > 0`,
     );
     if (columns.length !== expected.columnCount) {
@@ -236,17 +332,23 @@ export function parseMigrationText(
     headers[key] = value ? value.trim() : value;
   }
 
+  // The `\r\n` should never exist; however Windows users may be having git convert LF to CRLF, corrupting migrations.
   if (strict && lines[headerLines] !== "") {
-    throw new Error(
-      `Invalid migration '${fullPath}': there should be two newlines after the headers section`,
-    );
+    if (lines[headerLines] === "\r") {
+      throw new Error(
+        `Invalid migration '${fullPath}': it looks like the line endings have been corrupted - perhaps you have configured git to replace LF with CRLF? Here's a couple potential solutions:
+Option 1: Add \`path/to/migrations/committed/*.sql -text\` to \`.gitattributes\` in your repository
+Option 2: Globally reconfigure git to convert CRLF to LF on commit, but never convert LF back to CRLF: \`git config --global core.autocrlf input\`
+`,
+      );
+    } else {
+      throw new Error(
+        `Invalid migration '${fullPath}': there should be two newlines after the headers section`,
+      );
+    }
   }
 
-  const body =
-    lines
-      .slice(headerLines)
-      .join("\n")
-      .trim() + "\n";
+  const body = lines.slice(headerLines).join("\n").trim() + "\n";
   return { headers, body };
 }
 
@@ -286,7 +388,12 @@ export async function getLastMigration(
 
   const {
     rows: [row],
-  } = await pgClient.query(
+  } = await pgClient.query<{
+    filename: string;
+    previousHash: string | null;
+    hash: string;
+    date: Date;
+  }>(
     `select filename, previous_hash as "previousHash", hash, date from graphile_migrate.migrations order by filename desc limit 1`,
   );
   return (row as DbMigration) || null;
@@ -312,56 +419,51 @@ export async function getAllMigrations(
     files
       .map(isMigrationFilename)
       .filter((matches): matches is RegExpMatchArray => !!matches)
-      .map(
-        async (matches): Promise<FileMigration> => {
-          const [
-            realFilename,
-            migrationNumberString,
-            messageSlug = null,
-          ] = matches;
-          const fullPath = `${committedMigrationsFolder}/${realFilename}`;
-          const contents = await fsp.readFile(fullPath, "utf8");
+      .map(async (matches): Promise<FileMigration> => {
+        const [realFilename, migrationNumberString, messageSlug = null] =
+          matches;
+        const fullPath = `${committedMigrationsFolder}/${realFilename}`;
+        const contents = await fsp.readFile(fullPath, "utf8");
 
-          const { headers, body } = parseMigrationText(fullPath, contents);
+        const { headers, body } = parseMigrationText(fullPath, contents);
 
-          // --! Previous:
-          const previousHashRaw = headers["Previous"];
-          if (!previousHashRaw) {
-            throw new Error(
-              `Invalid committed migration '${fullPath}': no 'Previous' comment`,
-            );
-          }
-          const previousHash =
-            previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
+        // --! Previous:
+        const previousHashRaw = headers["Previous"];
+        if (!previousHashRaw) {
+          throw new Error(
+            `Invalid committed migration '${fullPath}': no 'Previous' comment`,
+          );
+        }
+        const previousHash =
+          previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
 
-          // --! Hash:
-          const hash = headers["Hash"];
-          if (!hash) {
-            throw new Error(
-              `Invalid committed migration '${fullPath}': no 'Hash' comment`,
-            );
-          }
+        // --! Hash:
+        const hash = headers["Hash"];
+        if (!hash) {
+          throw new Error(
+            `Invalid committed migration '${fullPath}': no 'Hash' comment`,
+          );
+        }
 
-          // --! Message:
-          const message = headers["Message"];
+        // --! Message:
+        const message = headers["Message"];
 
-          // --! AllowInvalidHash
-          const allowInvalidHash = "AllowInvalidHash" in headers;
+        // --! AllowInvalidHash
+        const allowInvalidHash = "AllowInvalidHash" in headers;
 
-          return {
-            realFilename,
-            filename: migrationNumberString + ".sql",
-            message,
-            messageSlug,
-            fullPath,
-            hash,
-            previousHash,
-            allowInvalidHash,
-            body,
-            previous: null,
-          };
-        },
-      ),
+        return {
+          realFilename,
+          filename: migrationNumberString + ".sql",
+          message,
+          messageSlug,
+          fullPath,
+          hash,
+          previousHash,
+          allowInvalidHash,
+          body,
+          previous: null,
+        };
+      }),
   );
   migrations.sort((a, b) => a.filename.localeCompare(b.filename, "en"));
   // Validate and link
@@ -392,7 +494,7 @@ export async function getMigrationsAfter(
 ): Promise<Array<FileMigration>> {
   const allMigrations = await getAllMigrations(parsedSettings);
   return allMigrations.filter(
-    m => !previousMigration || m.filename > previousMigration.filename,
+    (m) => !previousMigration || m.filename > previousMigration.filename,
   );
 }
 
@@ -424,8 +526,7 @@ export async function runStringMigration(
         const { hash, previousHash, filename } = committedMigration;
         await pgClient.query({
           name: "migration-insert",
-          text:
-            "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
+          text: "insert into graphile_migrate.migrations(hash, previous_hash, filename) values ($1, $2, $3)",
           values: [hash, previousHash, filename],
         });
       }
@@ -450,7 +551,7 @@ export async function undoMigration(
   await withClient(
     parsedSettings.connectionString,
     parsedSettings,
-    async pgClient => {
+    async (pgClient) => {
       await pgClient.query({
         name: "migration-delete",
         text: "delete from graphile_migrate.migrations where hash = $1",
@@ -467,14 +568,8 @@ export async function runCommittedMigration(
   committedMigration: FileMigration,
   logSuffix: string,
 ): Promise<void> {
-  const {
-    hash,
-    realFilename,
-    filename,
-    body,
-    previousHash,
-    allowInvalidHash,
-  } = committedMigration;
+  const { hash, realFilename, filename, body, previousHash, allowInvalidHash } =
+    committedMigration;
   // Check the hash
   const newHash = calculateHash(body, previousHash);
   const hashIsInvalid = newHash !== hash;

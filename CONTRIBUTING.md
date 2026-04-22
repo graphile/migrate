@@ -36,6 +36,15 @@ volumes:
     driver: local
 ```
 
+### Creating the database
+
+You'll then need to connect to the database and issue the following commands:
+
+```sql
+create role gmtestuser with login password 'gmtestpass';
+create database graphile_migrate_test owner gmtestuser;
+```
+
 ## ASK FIRST!
 
 There's nothing worse than having your PR with 3 days of work in it rejected

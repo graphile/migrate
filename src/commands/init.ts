@@ -1,11 +1,9 @@
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import { CommandModule } from "yargs";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { version } from "../../package.json";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
+import { version } from "../version";
 import {
   CommonArgv,
   DEFAULT_GMRC_PATH,
@@ -48,7 +46,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
    *
    * RECOMMENDATION: use \`DATABASE_URL\` envvar instead.
    */
-  // "connectionString": "postgres://appuser:apppassword@host:5432/appdb",
+  // "connectionString": "postgres://dbowner:password@host:5432/appdb",
 
   /*
    * shadowConnectionString: like connectionString, but this is used for the
@@ -56,7 +54,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
    *
    * RECOMMENDATION: use \`SHADOW_DATABASE_URL\` envvar instead.
    */
-  // "shadowConnectionString": "postgres://appuser:apppassword@host:5432/appdb_shadow",
+  // "shadowConnectionString": "postgres://dbowner:password@host:5432/appdb_shadow",
 
   /*
    * rootConnectionString: like connectionString, but this is used for
@@ -223,7 +221,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
   );
 }
 
-export const initCommand: CommandModule<{}, InitArgv> = {
+export const initCommand: CommandModule<Record<string, never>, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\

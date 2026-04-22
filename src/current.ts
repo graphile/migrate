@@ -2,7 +2,12 @@ import * as assert from "assert";
 import { promises as fsp, Stats } from "fs";
 
 import { isNoTransactionDefined } from "./header";
-import { parseMigrationText, serializeHeader } from "./migration";
+import { errorCode } from "./lib";
+import {
+  compileIncludes,
+  parseMigrationText,
+  serializeHeader,
+} from "./migration";
 import { ParsedSettings } from "./settings";
 
 export const VALID_FILE_REGEX = /^([0-9]+)(-[-_a-zA-Z0-9]*)?\.sql$/;
@@ -11,7 +16,7 @@ async function statOrNull(path: string): Promise<Stats | null> {
   try {
     return await fsp.stat(path);
   } catch (e) {
-    if (e.code === "ENOENT") {
+    if (errorCode(e) === "ENOENT") {
       return null;
     }
     throw e;
@@ -22,7 +27,7 @@ async function readFileOrNull(path: string): Promise<string | null> {
   try {
     return await fsp.readFile(path, "utf8");
   } catch (e) {
-    if (e.code === "ENOENT") {
+    if (errorCode(e) === "ENOENT") {
       return null;
     }
     throw e;
@@ -32,7 +37,9 @@ async function readFileOrError(path: string): Promise<string> {
   try {
     return await fsp.readFile(path, "utf8");
   } catch (e) {
-    throw new Error(`Failed to read file at '${path}': ${e.message}`);
+    throw new Error(
+      `Failed to read file at '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 
@@ -96,14 +103,18 @@ function idFromFilename(file: string): number {
 }
 
 export async function readCurrentMigration(
-  _parsedSettings: ParsedSettings,
+  parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
 ): Promise<string> {
   if (location.isFile) {
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return content || "";
+    return compileIncludes(
+      parsedSettings,
+      content || "",
+      new Set([location.path]),
+    );
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
@@ -153,7 +164,12 @@ export async function readCurrentMigration(
     for (const id of ids) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { file, filePath, bodyPromise } = parts.get(id)!;
-      const contents = await bodyPromise;
+      const rawContents = await bodyPromise;
+      const contents = await compileIncludes(
+        parsedSettings,
+        rawContents,
+        new Set([filePath]),
+      );
       const { body, headers } = parseMigrationText(filePath, contents, false);
       headerses.push(headers);
       if (isNoTransactionDefined(body)) {
@@ -178,6 +194,7 @@ export async function readCurrentMigration(
     if (headerLines.length) {
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
+
     return wholeBody;
   }
 }
@@ -283,7 +300,7 @@ export async function writeCurrentMigration(
 
     if (writePromises.length === 0) {
       // Body must have been empty, so no files were written.
-      assert.equal(body.length, 0);
+      assert.strictEqual(body.length, 0);
 
       // Lets write out just the one empty file.
       const filename = `001.sql`;

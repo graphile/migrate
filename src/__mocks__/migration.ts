@@ -14,7 +14,7 @@ export const getLastMigration = jest.fn((_client, _settings) =>
   Promise.resolve(null),
 );
 
-export const getAllMigrations = jest.fn(_settings => Promise.resolve([]));
+export const getAllMigrations = jest.fn((_settings) => Promise.resolve([]));
 
 export const getMigrationsAfter = jest.fn((_settings, _previousMigration) =>
   Promise.resolve([]),
@@ -36,3 +36,7 @@ export const runStringMigration = jest.fn(
 export const runCommittedMigration = jest.fn(
   (_client, _settings, _context, _committedMigration, _logSuffix) => {},
 );
+
+export const compileIncludes = jest.fn((parsedSettings, content) => {
+  return content;
+});

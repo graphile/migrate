@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { promises: fsp } = require("fs");
+const fsp = require("fs/promises");
 const { spawnSync } = require("child_process");
 
 async function main() {
@@ -17,7 +17,7 @@ async function main() {
   );
 }
 
-main().catch(e => {
+main().catch((e) => {
   // eslint-disable-next-line no-console
   console.error(e);
   process.exit(1);

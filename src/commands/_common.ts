@@ -1,12 +1,15 @@
-import { constants, promises as fsp } from "fs";
+import { constants } from "fs";
+import * as fsp from "fs/promises";
 import * as JSON5 from "json5";
 import { resolve } from "path";
 import { parse } from "pg-connection-string";
+import { pathToFileURL } from "url";
 
 import { Settings } from "../settings";
 
 export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
+export const DEFAULT_GMRC_COMMONJS_PATH = `${DEFAULT_GMRC_PATH}.cjs`;
 
 /**
  * Represents the option flags that are valid for all commands (see
@@ -33,12 +36,16 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   try {
     data = await fsp.readFile(path, "utf8");
   } catch (e) {
-    throw new Error(`Failed to read '${path}': ${e.message}`);
+    throw new Error(
+      `Failed to read '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
   try {
     return JSON5.parse(data);
   } catch (e) {
-    throw new Error(`Failed to parse '${path}': ${e.message}`);
+    throw new Error(
+      `Failed to parse '${path}': ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 
@@ -63,20 +70,22 @@ interface Options {
  */
 export async function getSettings(options: Options = {}): Promise<Settings> {
   const { configFile } = options;
-  const tryRequire = (path: string): Settings => {
+  const tryRequire = async (path: string): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
     // path.
-    const relativePath = resolve(process.cwd(), path);
+    const relativePath = pathToFileURL(resolve(process.cwd(), path)).href;
 
     try {
-      return require(relativePath);
+      const module = (await import(relativePath)) as Record<string, unknown>;
+      return (module.default ?? module) as Settings;
     } catch (e) {
       throw new Error(
-        `Failed to import '${relativePath}'; error:\n    ${e.stack.replace(
-          /\n/g,
-          "\n    ",
-        )}`,
+        `Failed to import '${relativePath}'; error:\n    ${
+          e instanceof Error && e.stack
+            ? e.stack.replace(/\n/g, "\n    ")
+            : String(e)
+        }`,
       );
     }
   };
@@ -86,7 +95,13 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       throw new Error(`Failed to import '${configFile}': file not found`);
     }
 
-    if (configFile.endsWith(".js")) {
+    if (configFile.endsWith(".mjs")) {
+      throw new Error(
+        `ES module imports aren't currently supported, change your config extension to .cjs.`,
+      );
+    }
+
+    if (configFile.endsWith(".js") || configFile.endsWith(".cjs")) {
       return tryRequire(configFile);
     } else {
       return await getSettingsFromJSON(configFile);
@@ -95,10 +110,29 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
   } else if (await exists(DEFAULT_GMRCJS_PATH)) {
     return tryRequire(DEFAULT_GMRCJS_PATH);
+  } else if (await exists(DEFAULT_GMRC_COMMONJS_PATH)) {
+    return tryRequire(DEFAULT_GMRC_COMMONJS_PATH);
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
     );
+  }
+}
+
+export async function readFileOrStdin(file: unknown): Promise<{
+  filename: string;
+  content: string;
+}> {
+  if (file != null) {
+    if (typeof file === "string") {
+      const filename = resolve(file);
+      const content = await fsp.readFile(filename, "utf8");
+      return { filename, content };
+    } else {
+      throw new Error(`Unexpected value for "file" flag`);
+    }
+  } else {
+    return { filename: "stdin", content: await readStdin() };
   }
 }
 
@@ -111,7 +145,7 @@ export function readStdin(): Promise<string> {
     process.stdin.on("readable", () => {
       let chunk;
       // Use a loop to make sure we read all available data.
-      while ((chunk = process.stdin.read()) !== null) {
+      while ((chunk = process.stdin.read() as string | null) !== null) {
         data += chunk;
       }
     });

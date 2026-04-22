@@ -1,8 +1,9 @@
 import "./helpers"; // Has side-effects; must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import { migrate } from "../src";
+import { logDbError } from "../src/instrumentation";
 import { withClient } from "../src/pg";
 import { ParsedSettings, parseSettings } from "../src/settings";
 import { makeMigrations, resetDb, settings } from "./helpers";
@@ -69,35 +70,11 @@ it("runs migrations", async () => {
     const { migrations, tables, enums } = await getStuff(parsedSettings);
 
     expect(migrations).toHaveLength(2);
-    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "filename": "000001.sql",
-          "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-          "previous_hash": null,
-        },
-        Object {
-          "filename": "000002.sql",
-          "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-          "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-        },
-      ]
-    `);
+    expect(migrations.map(({ date, ...rest }) => rest)).toMatchSnapshot();
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
-      Array [
-        "foo",
-      ]
-    `);
+    expect(tables.map((t) => t.relname)).toMatchSnapshot();
     expect(enums).toHaveLength(1);
-    expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "1",
-  },
-]
-`);
+    expect(enums).toMatchSnapshot();
   }
 
   mockFs({
@@ -113,40 +90,13 @@ Array [
     const { migrations, tables, enums } = await getStuff(parsedSettings);
 
     expect(migrations).toHaveLength(3);
-    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "filename": "000001.sql",
-          "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-          "previous_hash": null,
-        },
-        Object {
-          "filename": "000002.sql",
-          "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-          "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-        },
-        Object {
-          "filename": "000003.sql",
-          "hash": "sha1:2d248344ac299ebbad2aeba5bfec2ae3c3cb0a4f",
-          "previous_hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-        },
-      ]
-    `);
+    const mappedMigrations = migrations.map(({ date, ...rest }) => rest);
+    expect(mappedMigrations).toMatchSnapshot();
     expect(tables).toHaveLength(1);
-    expect(tables.map(t => t.relname)).toMatchInlineSnapshot(`
-      Array [
-        "foo",
-      ]
-    `);
+    const mappedTables = tables.map((t) => t.relname);
+    expect(mappedTables).toMatchSnapshot();
     expect(enums).toHaveLength(1);
-    expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "2",
-  },
-]
-`);
+    expect(enums).toMatchSnapshot();
   }
 });
 
@@ -160,9 +110,7 @@ it("refuses to run migration with invalid hash", async () => {
     "migrations/current.sql": "",
   });
 
-  await expect(migrate(settings)).rejects.toThrowErrorMatchingInlineSnapshot(
-    `"Hash for 000002.sql does not match - sha1:cbed240dda7dfa510ff785783bbe6af7743b3a11 !== sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b; has the file been tampered with?"`,
-  );
+  await expect(migrate(settings)).rejects.toThrowErrorMatchingSnapshot();
 });
 
 it("will run a migration with invalid hash if told to do so", async () => {
@@ -184,33 +132,55 @@ it("will run a migration with invalid hash if told to do so", async () => {
     const { migrations, enums } = await getStuff(parsedSettings);
 
     expect(migrations).toHaveLength(3);
-    expect(migrations.map(({ date, ...rest }) => rest)).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "filename": "000001.sql",
-    "hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-    "previous_hash": null,
-  },
-  Object {
-    "filename": "000002.sql",
-    "hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-    "previous_hash": "sha1:e00ec93314a423ee5cc68d1182ad52f16442d7df",
-  },
-  Object {
-    "filename": "000003.sql",
-    "hash": "sha1:2d248344ac299ebbad2aeba5bfec2ae3c3cb0a4f",
-    "previous_hash": "sha1:bddc1ead3310dc1c42cdc7f63537ebdff2e9fd7b",
-  },
-]
-`);
+    const mappedMigrations = migrations.map(({ date, ...rest }) => rest);
+    expect(mappedMigrations).toMatchSnapshot();
     expect(enums).toHaveLength(1);
-    expect(enums).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "typname": "user_role",
-    "value_count": "2",
-  },
-]
-`);
+    expect(enums).toMatchSnapshot();
   }
+});
+
+it("handles errors during migration gracefully", async () => {
+  mockFs({
+    "migrations/current.sql": ``,
+    "migrations/committed/000001.sql": `\
+--! Previous: -
+--! Hash: sha1:2fd4e1c67a2d28fced849ee1bb76e7391b93eb12
+--! AllowInvalidHash
+
+drop table if exists frogs;
+
+create table frogs (
+  id serial primary key,
+  name text not null,
+  speckled bool not null
+);
+
+select 1/0;
+
+comment on table frogs is 'Ribbit';
+`,
+  });
+
+  let err: any;
+  try {
+    await migrate(settings);
+  } catch (e) {
+    err = e;
+  }
+  expect(err).toBeTruthy();
+  expect(err.message).toMatch(/division by zero/);
+  expect(err).toMatchSnapshot();
+
+  const parsedSettings = await parseSettings(settings);
+  const mock = jest.fn();
+  parsedSettings.logger.error = mock;
+
+  logDbError(parsedSettings, err);
+  expect(mock).toHaveBeenCalledTimes(1);
+  const call = mock.mock.calls[0];
+  expect(
+    String(call)
+      .replaceAll(process.cwd(), "~")
+      .replace(/:[0-9]+:[0-9]+($|\))/gm, ":[LINE]:[COL]$1"),
+  ).toMatchSnapshot();
 });

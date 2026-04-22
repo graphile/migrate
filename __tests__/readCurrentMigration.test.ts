@@ -1,6 +1,6 @@
 import "./helpers"; // Has side-effects; must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 
 import {
   getCurrentMigrationLocation,
@@ -101,4 +101,15 @@ With multiple lines
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const content = await readCurrentMigration(parsedSettings, currentLocation);
   expect(content).toEqual(contentWithSplits);
+});
+
+it("reads from current.sql, and processes included files", async () => {
+  mockFs({
+    "migrations/current.sql": "--!include foo_current.sql",
+    "migrations/fixtures/foo_current.sql": "-- TEST from foo",
+  });
+
+  const currentLocation = await getCurrentMigrationLocation(parsedSettings);
+  const content = await readCurrentMigration(parsedSettings, currentLocation);
+  expect(content).toEqual("-- TEST from foo");
 });

@@ -6,58 +6,53 @@ Graphile ecosystem. Find out
 
 ## Featured
 
-- Story.ai
-- Surge
-- Chad Furman
-- Postlight
-- Openbase
+- Steelhead
 
 ## Leaders
 
-- Qwick
-- Joe Dennis
 - Robert Claypool
-- domonda
-- Jack Dinker
 - nigelrmtaylor
-- DocIQ
-- Politics Rewired
 - Principia Mentis
-- Cameron Ellis
-- HR-ON
-- Ian Stewart
-- Luxor Labs
-- Qloo
 - Axinom
 - Taiste
-- William Baxter
-- PostHog
-- Notably
-- Nathanael Beisiegel
+- Trigger.dev
+- Apollo
+- Cintra
+- BairesDev
+- Two Bit Solutions
+- Dimply
+- Ndustrial
+- Beacon
+- Ravio
+- Outbank
+- prodready
+- Carvajal Consultants, Inc.
+- Constructive
+- Seaber
 
 ## Supporters
 
-- Sam Levin
-- Matt Bretl
-- Philipp Litzenberger
-- Chris Watland
-- Mark
-- innovation.rocks
-- James Rascoe
+- HR-ON
+- stlbucket
 - Simon Elliott
-- CJ Lazell
-- Mansoor Razzaq
-- Alvin Ali Khaled
-- Andrew Poland
 - Keith Layne
-- Olli Selamaa
-- Paul Melnikow
-- Dani Kenan
-- Benjamin Berman
-- Jimmy Liu
-- Splitgraph
-- Kadi Kraman
-- Stéphane Klein
-- OnThisSpot
+- Alvin Ali Khaled
+- nullachtvierzehn
 - Zymego
-- ARK
+- garpulon
+- Ether
+- Vizcom
+- The Outbound Collective
+- Kiron Open Higher Education
+- Andrew Joseph
+- Peter C. Romano
+- mateo
+- kontakto-fi
+- Tailos, Inc.
+- Jody Hoon-Starr
+- WorkOS
+- Justin Carrus
+- Malachi Bergman
+- ProbablyBrianBurgess
+- Keweiqu
+- jjcroftiv

@@ -14,6 +14,8 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { DbCurrent } from "../interfaces";
+import { isLoggedError } from "../lib";
 import { CommonArgv, getSettings } from "./_common";
 
 interface WatchArgv extends CommonArgv {
@@ -58,7 +60,7 @@ export function _makeCurrentMigrationRunner(
             // 2: Get last current.sql from graphile_migrate.current
             const {
               rows: [previousCurrent],
-            } = await lockingPgClient.query(
+            } = await lockingPgClient.query<DbCurrent>(
               `
               select *
               from graphile_migrate.current
@@ -162,7 +164,8 @@ export function _makeCurrentMigrationRunner(
             : ""
         })`,
       );
-    } catch (e) {
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
       logDbError(parsedSettings, e);
       throw e;
     }
@@ -199,10 +202,10 @@ export async function _watch(
       running = true;
 
       run()
-        .catch(error => {
-          if (!error["_gmlogged"]) {
+        .catch((error: unknown) => {
+          if (!isLoggedError(error)) {
             parsedSettings.logger.error(
-              `Error occurred whilst processing migration: ${error.message}`,
+              `Error occurred whilst processing migration: ${error instanceof Error ? error.message : String(error)}`,
               { error },
             );
           }
@@ -215,29 +218,32 @@ export async function _watch(
           }
         });
     };
-    const watcher = chokidar.watch(currentLocation.path, {
-      /*
-       * Without `usePolling`, on Linux, you can prevent the watching from
-       * working by issuing `git stash && sleep 2 && git stash pop`. This is
-       * annoying.
-       */
-      usePolling: true,
+    const watcher = chokidar.watch(
+      [currentLocation.path, `${parsedSettings.migrationsFolder}/fixtures`],
+      {
+        /*
+         * Without `usePolling`, on Linux, you can prevent the watching from
+         * working by issuing `git stash && sleep 2 && git stash pop`. This is
+         * annoying.
+         */
+        usePolling: true,
 
-      /*
-       * Some editors stream the writes out a little at a time, we want to wait
-       * for the write to finish before triggering.
-       */
-      awaitWriteFinish: {
-        stabilityThreshold: 200,
-        pollInterval: 100,
+        /*
+         * Some editors stream the writes out a little at a time, we want to wait
+         * for the write to finish before triggering.
+         */
+        awaitWriteFinish: {
+          stabilityThreshold: 200,
+          pollInterval: 100,
+        },
+
+        /*
+         * We don't want to run the queue too many times during startup; so we
+         * call it once on the 'ready' event.
+         */
+        ignoreInitial: true,
       },
-
-      /*
-       * We don't want to run the queue too many times during startup; so we
-       * call it once on the 'ready' event.
-       */
-      ignoreInitial: true,
-    });
+    );
     watcher.on("add", queue);
     watcher.on("change", queue);
     watcher.on("unlink", queue);
@@ -255,7 +261,7 @@ export async function watch(
   return _watch(parsedSettings, once, shadow);
 }
 
-export const watchCommand: CommandModule<never, WatchArgv> = {
+export const watchCommand: CommandModule<Record<string, never>, WatchArgv> = {
   command: "watch",
   aliases: [],
   describe:
@@ -272,7 +278,7 @@ export const watchCommand: CommandModule<never, WatchArgv> = {
       description: "Applies changes to shadow DB.",
     },
   },
-  handler: async argv => {
+  handler: async (argv) => {
     await watch(
       await getSettings({ configFile: argv.config }),
       argv.once,

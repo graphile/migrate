@@ -14,9 +14,8 @@ export const withClient = jest.fn(
   },
 );
 
-const { withTransaction: originalWithTransaction } = jest.requireActual(
-  "../migration",
-);
+const { withTransaction: originalWithTransaction } =
+  jest.requireActual("../migration");
 
 export const withTransaction = jest.fn(originalWithTransaction);
 export const withAdvisoryLock = jest.fn((pgClient, callback) =>

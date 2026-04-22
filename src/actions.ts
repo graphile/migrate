@@ -1,8 +1,8 @@
 import { Logger } from "@graphile/logger";
 import { exec as rawExec } from "child_process";
-import { promises as fsp } from "fs";
+import * as fsp from "fs/promises";
 import { parse } from "pg-connection-string";
-import { promisify } from "util";
+import { inspect, promisify } from "util";
 
 import { mergeWithoutClobbering } from "./lib";
 import { generatePlaceholderReplacement } from "./migration";
@@ -18,13 +18,6 @@ import {
 interface ActionSpecBase {
   _: string;
   shadow?: boolean;
-}
-
-export const DO_NOT_USE_DATABASE_URL = "postgres://PLEASE:USE@GM_DBURL/INSTEAD";
-
-export interface SqlActionSpec extends ActionSpecBase {
-  _: "sql";
-  file: string;
 
   /**
    * USE THIS WITH CARE! Currently only supported by the afterReset hook, all
@@ -33,6 +26,13 @@ export interface SqlActionSpec extends ActionSpecBase {
    * connectionString), useful for creating extensions.
    */
   root?: boolean;
+}
+
+export const DO_NOT_USE_DATABASE_URL = "postgres://PLEASE:USE@GM_DBURL/INSTEAD";
+
+export interface SqlActionSpec extends ActionSpecBase {
+  _: "sql";
+  file: string;
 }
 
 export interface CommandActionSpec extends ActionSpecBase {
@@ -60,9 +60,8 @@ export async function executeActions(
       "Could not determine connection string for running commands",
     );
   }
-  const { database: databaseName, user: databaseUser } = parse(
-    connectionString,
-  );
+  const { database: databaseName, user: databaseUser } =
+    parse(connectionString);
   if (!databaseName) {
     throw new Error("Could not extract database name from connection string");
   }
@@ -70,14 +69,14 @@ export async function executeActions(
     if (actionSpec.shadow !== undefined && actionSpec.shadow !== shadow) {
       continue;
     }
+    const hookConnectionString = actionSpec.root
+      ? makeRootDatabaseConnectionString(parsedSettings, databaseName)
+      : connectionString;
     if (actionSpec._ === "sql") {
       const body = await fsp.readFile(
         `${parsedSettings.migrationsFolder}/${actionSpec.file}`,
         "utf8",
       );
-      const hookConnectionString = actionSpec.root
-        ? makeRootDatabaseConnectionString(parsedSettings, databaseName)
-        : connectionString;
       await withClient(
         hookConnectionString,
         parsedSettings,
@@ -93,7 +92,7 @@ export async function executeActions(
       );
     } else if (actionSpec._ === "command") {
       // Run the command
-      const { stdout, stderr } = await exec(actionSpec.command, {
+      const promise = exec(actionSpec.command, {
         env: mergeWithoutClobbering(
           {
             ...process.env,
@@ -101,8 +100,13 @@ export async function executeActions(
           },
           {
             GM_DBNAME: databaseName,
-            GM_DBUSER: databaseUser,
-            GM_DBURL: connectionString,
+            // When `root: true`, GM_DBUSER may be perceived as ambiguous, so we must not set it.
+            ...(actionSpec.root
+              ? null
+              : {
+                  GM_DBUSER: databaseUser,
+                }),
+            GM_DBURL: hookConnectionString,
             ...(shadow
               ? {
                   GM_SHADOW: "1",
@@ -115,11 +119,24 @@ export async function executeActions(
         // 50MB of log data should be enough for any reasonable migration... right?
         maxBuffer: 50 * 1024 * 1024,
       });
-      if (stdout) {
-        parsedSettings.logger.info(stdout);
-      }
-      if (stderr) {
-        parsedSettings.logger.error(stderr);
+      try {
+        const { stdout, stderr } = await promise;
+        if (stdout) {
+          parsedSettings.logger.info(stdout);
+        }
+        if (stderr) {
+          parsedSettings.logger.error(stderr);
+        }
+      } catch (e) {
+        if (typeof e === "object" && e !== null) {
+          if ("stdout" in e && typeof e.stdout === "string" && e.stdout) {
+            parsedSettings.logger.info(e.stdout);
+          }
+          if ("stderr" in e && typeof e.stderr === "string" && e.stderr) {
+            parsedSettings.logger.error(e.stderr);
+          }
+        }
+        throw e;
       }
     }
   }
@@ -130,14 +147,15 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
     const specs: ActionSpec[] = [];
     if (inputValue) {
       const rawSpecArray = Array.isArray(inputValue)
-        ? inputValue
+        ? (inputValue as unknown[])
         : [inputValue];
       for (const trueRawSpec of rawSpecArray) {
         // This fudge is for backwards compatibility with v0.0.3
         const isV003OrBelowCommand =
           typeof trueRawSpec === "object" &&
-          trueRawSpec &&
-          !trueRawSpec["_"] &&
+          trueRawSpec !== null &&
+          !("_" in trueRawSpec && trueRawSpec._) &&
+          "command" in trueRawSpec &&
           typeof trueRawSpec["command"] === "string";
         if (isV003OrBelowCommand) {
           logger.warn(
@@ -152,7 +170,7 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
           const sqlSpec: SqlActionSpec = rawSpec.startsWith("!")
             ? {
                 _: "sql",
-                file: rawSpec.substr(1),
+                file: rawSpec.substring(1),
                 root: true,
               }
             : {
@@ -165,7 +183,7 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
             specs.push(rawSpec);
           } else {
             throw new Error(
-              `Action spec of type '${rawSpec["_"]}' not supported; perhaps you need to upgrade?`,
+              `Action spec '${inspect(rawSpec)}' not supported; perhaps you need to upgrade?`,
             );
           }
         } else {

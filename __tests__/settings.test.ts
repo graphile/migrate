@@ -1,9 +1,14 @@
 import "./helpers"; // Side effects - must come first
 
-import * as mockFs from "mock-fs";
+import mockFs from "mock-fs";
 import * as path from "path";
 
-import { DEFAULT_GMRC_PATH, getSettings } from "../src/commands/_common";
+import {
+  DEFAULT_GMRC_COMMONJS_PATH,
+  DEFAULT_GMRC_PATH,
+  DEFAULT_GMRCJS_PATH,
+  getSettings,
+} from "../src/commands/_common";
 import {
   makeRootDatabaseConnectionString,
   ParsedSettings,
@@ -79,7 +84,7 @@ it("throws if shadow attempted but no shadow DB", async () => {
 
 it.each([[[]], [{}], ["test"]])(
   "throws error for invalid logger",
-  async invalidLogger => {
+  async (invalidLogger) => {
     await expect(
       parseSettings({
         connectionString: exampleConnectionString,
@@ -178,6 +183,19 @@ describe("makeRootDatabaseConnectionString", () => {
     expect(connectionString).toBe(
       "postgres://root:pass@localhost:5432/modified?ssl=true&sslrootcert=./__tests__/data/amazon-rds-ca-cert.pem",
     );
+  });
+
+  it("handles a standalone DB name that is not a valid URL", async () => {
+    mockFs.restore();
+    const parsedSettings = await parseSettings({
+      connectionString: exampleConnectionString,
+      rootConnectionString: "just_a_db",
+    });
+    const connectionString = makeRootDatabaseConnectionString(
+      parsedSettings,
+      "modified",
+    );
+    expect(connectionString).toBe("modified");
   });
 });
 
@@ -291,9 +309,9 @@ describe("actions", () => {
         ],
       }),
     ).rejects.toMatchInlineSnapshot(`
-            [Error: Errors occurred during settings validation:
-            - Setting 'afterAllMigrations': Action spec of type 'unknown_value' not supported; perhaps you need to upgrade?]
-          `);
+      [Error: Errors occurred during settings validation:
+      - Setting 'afterAllMigrations': Action spec '{ _: 'unknown_value', command: 'pg_dump --schema-only' }' not supported; perhaps you need to upgrade?]
+    `);
   });
 });
 
@@ -302,12 +320,12 @@ describe("gmrc path", () => {
     mockFs.restore();
     mockFs({
       [DEFAULT_GMRC_PATH]: `
-        { "connectionString": "postgres://appuser:apppassword@host:5432/defaultdb" }
+        { "connectionString": "postgres://dbowner:password@host:5432/defaultdb" }
       `,
     });
     const settings = await getSettings();
     expect(settings.connectionString).toEqual(
-      "postgres://appuser:apppassword@host:5432/defaultdb",
+      "postgres://dbowner:password@host:5432/defaultdb",
     );
     mockFs.restore();
   });
@@ -316,15 +334,60 @@ describe("gmrc path", () => {
     mockFs.restore();
     mockFs({
       [DEFAULT_GMRC_PATH]: `
-        { "connectionString": "postgres://appuser:apppassword@host:5432/defaultdb" }
+        { "connectionString": "postgres://dbowner:password@host:5432/defaultdb" }
       `,
       ".other-gmrc": `
-        { "connectionString": "postgres://appuser:apppassword@host:5432/otherdb" }
+        { "connectionString": "postgres://dbowner:password@host:5432/otherdb" }
       `,
     });
     const settings = await getSettings({ configFile: ".other-gmrc" });
     expect(settings.connectionString).toEqual(
-      "postgres://appuser:apppassword@host:5432/otherdb",
+      "postgres://dbowner:password@host:5432/otherdb",
+    );
+    mockFs.restore();
+  });
+});
+
+describe("gmrc from JS", () => {
+  const nodeMajor = parseInt(process.versions.node.split(".")[0], 10);
+  // Only test these on Node20+
+  const node20PlusIt = nodeMajor >= 20 ? it : it.skip.bind(it);
+  node20PlusIt("supports .gmrc.js", async () => {
+    mockFs.restore();
+    // The warmups force all the parts of Node import to be exercised before we
+    // try and import something from our mocked filesystem.
+    // @ts-ignore
+    await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
+
+    mockFs({
+      [DEFAULT_GMRCJS_PATH]: /* JavaScript */ `\
+module.exports = {
+  connectionString: "postgres://dbowner:password@host:5432/gmrcjs_test",
+};`,
+    });
+    const settings = await getSettings();
+    expect(settings.connectionString).toEqual(
+      "postgres://dbowner:password@host:5432/gmrcjs_test",
+    );
+    mockFs.restore();
+  });
+
+  node20PlusIt("supports .gmrc.cjs", async () => {
+    mockFs.restore();
+    // The warmups force all the parts of Node import to be exercised before we
+    // try and import something from our mocked filesystem.
+    // @ts-ignore
+    await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
+
+    mockFs({
+      [DEFAULT_GMRC_COMMONJS_PATH]: /* JavaScript */ `\
+module.exports = {
+  connectionString: "postgres://dbowner:password@host:5432/gmrc_commonjs_test",
+};`,
+    });
+    const settings = await getSettings();
+    expect(settings.connectionString).toEqual(
+      "postgres://dbowner:password@host:5432/gmrc_commonjs_test",
     );
     mockFs.restore();
   });

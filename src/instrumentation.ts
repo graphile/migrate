@@ -1,22 +1,35 @@
-import * as chalk from "chalk";
+import chalk from "chalk";
+import { QueryResultRow } from "pg";
 
 import indent from "./indent";
 import { Client } from "./pg";
 import { ParsedSettings } from "./settings";
 
-export async function runQueryWithErrorInstrumentation(
-  pgClient: Client,
-  body: string,
-  filename: string,
-): Promise<any[] | undefined> {
+export interface InstrumentationError extends Error {
+  severity?: string;
+  code?: string;
+  detail?: string;
+  hint?: string;
+  _gmlogged?: boolean;
+  _gmMessageOverride?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function runQueryWithErrorInstrumentation<
+  T extends QueryResultRow = QueryResultRow,
+>(pgClient: Client, body: string, filename: string): Promise<T[] | undefined> {
   try {
-    const { rows } = await pgClient.query({
+    const { rows } = await pgClient.query<T>({
       text: body,
     });
     return rows;
   } catch (e) {
-    if (e.position) {
-      const p = parseInt(e.position, 10);
+    if (
+      e instanceof Error &&
+      "position" in e &&
+      (typeof e.position === "string" || typeof e.position === "number")
+    ) {
+      const p = parseInt(String(e.position), 10);
       let line = 1;
       let column = 0;
       let idx = 0;
@@ -51,16 +64,19 @@ export async function runQueryWithErrorInstrumentation(
         chalk.reset(indent(indent(snippet, codeIndent), indentString)),
         indentString +
           chalk.red("-".repeat(positionWithinLine - 1 + codeIndent) + "^"),
-        indentString + chalk.red.bold(e.code) + chalk.red(": " + e.message),
+        indentString +
+          chalk.red.bold((e as InstrumentationError).code) +
+          chalk.red(": " + e.message),
       ];
-      e["_gmMessageOverride"] = lines.join("\n");
+      (e as InstrumentationError)["_gmMessageOverride"] = lines.join("\n");
     }
     throw e;
   }
 }
 
-export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
-  e["_gmlogged"] = true;
+export const logDbError = ({ logger }: ParsedSettings, error: Error): void => {
+  const e = error as InstrumentationError;
+  e._gmlogged = true;
   const messages = [""];
   if (e["_gmMessageOverride"]) {
     messages.push(e["_gmMessageOverride"]);
@@ -69,7 +85,7 @@ export const logDbError = ({ logger }: ParsedSettings, e: Error): void => {
       chalk.red.bold(`🛑 Error occurred whilst processing migration`),
     );
   }
-  const { severity, code, detail, hint } = e as any;
+  const { severity, code, detail, hint } = e;
   messages.push(indent(e.stack ? e.stack : e.message, 4));
   messages.push("");
   if (severity) {
