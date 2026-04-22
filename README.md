@@ -307,9 +307,9 @@ Options:
                                              [string] [default: .gmrc[.js|.cjs]]
       --shadow        Apply migrations to the shadow DB (for development).
                                                       [boolean] [default: false]
-      --forceActions  Run beforeAllMigrations and afterAllMigrations actions
-                      even if no migration was necessary.
-                                                      [boolean] [default: false]
+      --forceActions  Run beforeAllMigrations, afterAllMigrations,
+                      beforeCurrent, and afterCurrent actions even if no
+                      migration was necessary.        [boolean] [default: false]
 ```
 
 

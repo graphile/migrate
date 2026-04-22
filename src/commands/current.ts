@@ -18,7 +18,7 @@ export async function current(
 ): Promise<void> {
   const { shadow = false, forceActions = false } = options;
   const parsedSettings = await parseSettings(settings, shadow);
-  await _migrate(parsedSettings, shadow);
+  await _migrate(parsedSettings, shadow, forceActions);
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   if (!currentLocation.exists) {
@@ -55,7 +55,7 @@ export const currentCommand: CommandModule<
       type: "boolean",
       default: false,
       description:
-        "Run beforeAllMigrations and afterAllMigrations actions even if no migration was necessary.",
+        "Run beforeAllMigrations, afterAllMigrations, beforeCurrent, and afterCurrent actions even if no migration was necessary.",
     },
   },
   handler: async (argv) => {
