@@ -1,12 +1,12 @@
 import * as fsp from "fs/promises";
 import { relative } from "path";
 
-import { VALID_FILE_REGEX } from "./current";
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";
 import { mergeWithoutClobbering } from "./lib";
 import memoize from "./memoize";
+import { migrationFilenameMatches } from "./migrationFilename";
 import { Client, Context, withClient } from "./pg";
 import { withAdvisoryLock } from "./pgReal";
 import { ParsedSettings } from "./settings";
@@ -376,10 +376,6 @@ export function serializeMigration(
   }
 }
 
-export const isMigrationFilename = (
-  filename: string,
-): RegExpMatchArray | null => VALID_FILE_REGEX.exec(filename);
-
 export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings,
@@ -417,7 +413,7 @@ export async function getAllMigrations(
   const files = await fsp.readdir(committedMigrationsFolder);
   const migrations: Array<FileMigration> = await Promise.all(
     files
-      .map(isMigrationFilename)
+      .map(migrationFilenameMatches)
       .filter((matches): matches is RegExpMatchArray => !!matches)
       .map(async (matches): Promise<FileMigration> => {
         const [realFilename, migrationNumberString, messageSlug = null] =

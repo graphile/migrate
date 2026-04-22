@@ -5,7 +5,7 @@ import "./helpers"; // Has side-effects; must come first
 
 import { Pool, PoolClient } from "pg";
 
-import { _makeCurrentMigrationRunner, _watch } from "../src/commands/watch";
+import { _watch } from "../src/commands/watch";
 import { _migrateMigrationSchema } from "../src/migration";
 import { ParsedSettings, parseSettings } from "../src/settings";
 import { resetDb, TEST_DATABASE_URL } from "./helpers";
