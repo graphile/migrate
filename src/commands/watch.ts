@@ -1,11 +1,8 @@
 import * as chokidar from "chokidar";
 import { CommandModule } from "yargs";
 
-import {
-  getCurrentMigrationLocation,
-  makeCurrentMigrationRunner,
-  writeCurrentMigration,
-} from "../current";
+import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
+import { makeCurrentMigrationRunner } from "../currentRunner";
 import { isLoggedError } from "../lib";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { CommonArgv, getSettings } from "./_common";

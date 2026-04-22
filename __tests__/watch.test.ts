@@ -5,7 +5,7 @@ import "./helpers"; // Has side-effects; must come first
 import mockFs from "mock-fs";
 
 import { _watch } from "../src/commands/watch";
-import { makeCurrentMigrationRunner } from "../src/current";
+import { makeCurrentMigrationRunner } from "../src/currentRunner";
 import { parseSettings } from "../src/settings";
 import { makeMigrations } from "./helpers";
 import {
