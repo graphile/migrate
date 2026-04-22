@@ -23,7 +23,7 @@ interface RunArgv extends CommonArgv {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: Settings,
-  content: string,
+  rawContent: string,
   filename: string,
   {
     shadow = false,
@@ -36,12 +36,12 @@ export async function run<T extends QueryResultRow = QueryResultRow>(
   } = {},
 ): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
-  const parsedContent = await compileIncludes(
+  const content = await compileIncludes(
     parsedSettings,
-    content,
+    rawContent,
     new Set([filename]),
   );
-  const sql = compilePlaceholders(parsedSettings, parsedContent, shadow);
+  const sql = compilePlaceholders(parsedSettings, content, shadow);
   const baseConnectionString = rootDatabase
     ? parsedSettings.rootConnectionString
     : shadow
