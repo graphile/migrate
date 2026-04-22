@@ -3,6 +3,7 @@ import * as yargs from "yargs";
 
 import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
+import { currentCommand } from "./commands/current";
 import { initCommand } from "./commands/init";
 import { migrateCommand } from "./commands/migrate";
 import { resetCommand } from "./commands/reset";
@@ -67,6 +68,7 @@ const f = yargs
   .command(wrapHandler(initCommand))
   .command(wrapHandler(migrateCommand))
   .command(wrapHandler(watchCommand))
+  .command(wrapHandler(currentCommand))
   .command(wrapHandler(commitCommand))
   .command(wrapHandler(uncommitCommand))
   .command(wrapHandler(statusCommand))

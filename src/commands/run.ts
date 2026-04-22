@@ -24,15 +24,7 @@ export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: Settings,
   rawContent: string,
   filename: string,
-  {
-    shadow = false,
-    root = false,
-    rootDatabase = false,
-  }: {
-    shadow?: boolean;
-    root?: boolean;
-    rootDatabase?: boolean;
-  } = {},
+  { shadow = false, root = false, rootDatabase = false }: RunArgv = {},
 ): Promise<T[] | undefined> {
   const parsedSettings = await parseSettings(settings, shadow);
   const content = await compileIncludes(

@@ -21,6 +21,10 @@ echo -e '## graphile-migrate watch\n\n```'
 $GRAPHILE_MIGRATE watch --help
 echo -e '```\n\n'
 
+echo -e '## graphile-migrate current\n\n```'
+$GRAPHILE_MIGRATE current --help
+echo -e '```\n\n'
+
 echo -e '## graphile-migrate commit\n\n```'
 $GRAPHILE_MIGRATE commit --help
 echo -e '```\n\n'
