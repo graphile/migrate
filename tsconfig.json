@@ -11,6 +11,8 @@
   ],
   "exclude": [],
   "compilerOptions": {
+    "allowJs": true,
+    "types": ["jest", "node"],
     "noEmit": true
   }
 }
