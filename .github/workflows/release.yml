@@ -72,7 +72,7 @@ jobs:
           yarn changeset version --snapshot "${{ github.ref_name }}"
           yarn prepack
           node scripts/update-docs.js
-          node scripts/version.mjs
+          node scripts/version.mts
         env:
           CHANGESETS_NO_COMMIT: "1"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
