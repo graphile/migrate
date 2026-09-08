@@ -11,7 +11,7 @@ module.exports = {
   ],
   plugins: ["jest", "@typescript-eslint", "simple-import-sort", "import"],
   parserOptions: {
-    ecmaVersion: 2018,
+    ecmaVersion: 2024,
     sourceType: "module",
     project: "tsconfig.json",
   },
