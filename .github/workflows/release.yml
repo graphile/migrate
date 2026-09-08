@@ -70,9 +70,9 @@ jobs:
       - name: Calculate snapshot version
         run: |
           yarn changeset version --snapshot "${{ github.ref_name }}"
+          node scripts/version.mts
           yarn prepack
           node scripts/update-docs.js
-          node scripts/version.mts
         env:
           CHANGESETS_NO_COMMIT: "1"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

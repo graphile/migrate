@@ -13,7 +13,7 @@
     "clean": "rm -Rf dist",
     "test": "yarn lint && yarn run lint:deps && FORCE_COLOR=1 yarn run test:only --ci",
     "test:only": "NODE_OPTIONS=\"--experimental-vm-modules\" jest -i",
-    "changeset-version": "yarn changeset version && yarn prepack && ./scripts/update-docs.js && node ./scripts/version.mts",
+    "changeset-version": "yarn changeset version && node ./scripts/version.mts && yarn prepack && ./scripts/update-docs.js",
     "changeset-publish": "yarn prepack && npm stage publish && yarn changeset git-tag",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && npm run tsc --watch"
   },
