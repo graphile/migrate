@@ -91,10 +91,10 @@ export default defineConfig(
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
       "sort-imports": "off",
-      "import/order": "off",
+      "import-x/order": "off",
 
-      "import/no-deprecated": "warn",
-      "import/no-duplicates": "error",
+      "import-x/no-deprecated": "warn",
+      "import-x/no-duplicates": "error",
     },
   },
 
@@ -114,7 +114,7 @@ export default defineConfig(
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-floating-promises": "off",
       "@typescript-eslint/ban-ts-comment": "off",
-      "import/no-duplicates": "off",
+      "import-x/no-duplicates": "off",
     },
   },
 
