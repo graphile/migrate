@@ -38,6 +38,14 @@ export default defineConfig(
       "simple-import-sort": simpleImportSort,
     },
 
+    settings: {
+      "import-x/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+      },
+    },
+
     rules: {
       "object-shorthand": "error",
 
