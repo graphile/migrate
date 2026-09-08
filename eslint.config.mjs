@@ -1,3 +1,4 @@
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier/flat";
@@ -33,17 +34,17 @@ export default defineConfig(
     },
 
     plugins: {
-      import: importPlugin,
       jest,
       "simple-import-sort": simpleImportSort,
     },
 
     settings: {
-      "import-x/resolver": {
-        typescript: {
+      "import-x/resolver-next": [
+        createTypeScriptImportResolver({
+          project: "./tsconfig.json",
           alwaysTryTypes: true,
-        },
-      },
+        }),
+      ],
     },
 
     rules: {
