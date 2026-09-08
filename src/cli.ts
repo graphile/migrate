@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { isPromise } from "node:util/types";
+
 import yargs from "yargs";
 
 import { commitCommand } from "./commands/commit";
@@ -37,7 +39,7 @@ function wrapHandler<T1, T2>(
   };
 }
 
-yargs
+const argv = yargs
   .parserConfiguration({
     "boolean-negation": true,
     "camel-case-expansion": false,
@@ -101,5 +103,12 @@ You are running graphile-migrate v${version}.
   ║     🙏 THANK YOU SPONSORS! 🙏     ║
   ╚═══════════════════════════════════╝
 `,
-  )
-  .parseSync();
+  ).argv;
+
+if (isPromise(argv)) {
+  argv.then(null, (e) => {
+    // eslint-disable-next-line no-console
+    console.error(e);
+    process.exit(1);
+  });
+}
