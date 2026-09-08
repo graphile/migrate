@@ -1,5 +1,14 @@
 # graphile-migrate
 
+## 2.0.0-rc.5
+
+### Patch Changes
+
+- [#260](https://github.com/graphile/migrate/pull/260)
+  [`16d5835`](https://github.com/graphile/migrate/commit/16d5835fd4ece7fe5bf15dcbe587964b25ed1050)
+  Thanks [@benjie](https://github.com/benjie)! - parseSync can't work with
+  subcommands; revert to argv/isPromise
+
 ## 2.0.0-rc.4
 
 ### Major Changes
