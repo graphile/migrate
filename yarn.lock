@@ -1134,10 +1134,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node18@npm:^18.2.2":
-  version: 18.2.2
-  resolution: "@tsconfig/node18@npm:18.2.2"
-  checksum: 10/1c4b04b570e33de14bf518492e077079db2dcfba738c8d40c6ff916d94c9410246f4cb56f0802d9771423862140bf714c35d4a5f6cec2446d851cf61d3f8f9df
+"@tsconfig/node22@npm:^22.0.0":
+  version: 22.0.6
+  resolution: "@tsconfig/node22@npm:22.0.6"
+  checksum: 10/a74c1bf95086b80e8436da7e3e710bebab4c35ab7cf99348ae68c8fab6032387516e9e9b80a868908c570c5af937e0a75821fc994e14a0495e04c5fab04d3c63
   languageName: node
   linkType: hard
 
@@ -3210,7 +3210,7 @@ __metadata:
     "@changesets/cli": "npm:^3.0.1"
     "@graphile/logger": "npm:^0.2.0"
     "@localrepo/prettier2-for-jest": "npm:prettier@^2"
-    "@tsconfig/node18": "npm:^18.2.2"
+    "@tsconfig/node22": "npm:^22.0.0"
     "@types/jest": "npm:^29.5.11"
     "@types/json5": "npm:^2.2.0"
     "@types/mock-fs": "npm:^4.13.4"

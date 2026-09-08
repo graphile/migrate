@@ -57,7 +57,7 @@
     "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.1",
     "@localrepo/prettier2-for-jest": "npm:prettier@^2",
-    "@tsconfig/node18": "^18.2.2",
+    "@tsconfig/node22": "^22.0.0",
     "@types/jest": "^29.5.11",
     "@types/mock-fs": "^4.13.4",
     "@types/yargs": "^17.0.32",
