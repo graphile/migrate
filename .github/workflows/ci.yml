@@ -19,8 +19,11 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
-        postgres-version: [12, 15]
+        node-version: [24.x]
+        postgres-version: [14, 15, 16, 17, 18]
+        include:
+          - node-version: 22.x
+            postgres-version: 14
 
     services:
       postgres:
@@ -37,9 +40,9 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v7
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn --frozen-lockfile

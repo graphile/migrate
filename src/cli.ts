@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import * as yargs from "yargs";
+import yargs from "yargs";
 
 import { commitCommand } from "./commands/commit";
 import { compileCommand } from "./commands/compile";
@@ -37,7 +37,7 @@ function wrapHandler<T1, T2>(
   };
 }
 
-const f = yargs
+yargs
   .parserConfiguration({
     "boolean-negation": true,
     "camel-case-expansion": false,
@@ -101,11 +101,5 @@ You are running graphile-migrate v${version}.
   ║     🙏 THANK YOU SPONSORS! 🙏     ║
   ╚═══════════════════════════════════╝
 `,
-  ).argv;
-
-if ("then" in f && typeof f.then === "function") {
-  f.then(null, (e: Error) => {
-    // eslint-disable-next-line no-console
-    console.error(e);
-  });
-}
+  )
+  .parseSync();
