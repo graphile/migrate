@@ -1,4 +1,4 @@
-import pgMinify = require("pg-minify");
+import pgMinify from "pg-minify";
 
 import { executeActions } from "./actions";
 import { getCurrentMigrationLocation, readCurrentMigration } from "./current";

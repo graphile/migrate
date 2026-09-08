@@ -26,7 +26,7 @@ export async function exists(path: string): Promise<boolean> {
   try {
     await fsp.access(path, constants.F_OK /* visible to us */);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -38,13 +38,17 @@ export async function getSettingsFromJSON(path: string): Promise<Settings> {
   } catch (e) {
     throw new Error(
       `Failed to read '${path}': ${e instanceof Error ? e.message : String(e)}`,
+      { cause: e },
     );
   }
   try {
     return JSON5.parse(data);
   } catch (e) {
     throw new Error(
-      `Failed to parse '${path}': ${e instanceof Error ? e.message : String(e)}`,
+      `Failed to parse '${path}': ${
+        e instanceof Error ? e.message : String(e)
+      }`,
+      { cause: e },
     );
   }
 }
@@ -78,7 +82,7 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
 
     try {
       const module = (await import(relativePath)) as Record<string, unknown>;
-      return (module.default ?? module) as Settings;
+      return module.default ?? module;
     } catch (e) {
       throw new Error(
         `Failed to import '${relativePath}'; error:\n    ${
@@ -86,6 +90,7 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
             ? e.stack.replace(/\n/g, "\n    ")
             : String(e)
         }`,
+        { cause: e },
       );
     }
   };

@@ -37,7 +37,10 @@ async function readFileOrError(path: string): Promise<string> {
     return await fsp.readFile(path, "utf8");
   } catch (e) {
     throw new Error(
-      `Failed to read file at '${path}': ${e instanceof Error ? e.message : String(e)}`,
+      `Failed to read file at '${path}': ${
+        e instanceof Error ? e.message : String(e)
+      }`,
+      { cause: e },
     );
   }
 }
@@ -143,7 +146,6 @@ export async function readCurrentMigration(
     const headerses: Array<{ [key: string]: string | null }> = [];
 
     for (const id of ids) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { file, filePath, bodyPromise } = parts.get(id)!;
       const rawContents = await bodyPromise;
       const contents = await compileIncludes(

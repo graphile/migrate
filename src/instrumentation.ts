@@ -14,7 +14,6 @@ export interface InstrumentationError extends Error {
   _gmMessageOverride?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function runQueryWithErrorInstrumentation<
   T extends QueryResultRow = QueryResultRow,
 >(pgClient: Client, body: string, filename: string): Promise<T[] | undefined> {
@@ -102,5 +101,4 @@ export const logDbError = ({ logger }: ParsedSettings, error: Error): void => {
   }
   messages.push("");
   logger.error(messages.join("\n"), { error: e });
-  /* eslint-enable */
 };

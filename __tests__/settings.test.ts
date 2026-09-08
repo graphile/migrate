@@ -90,7 +90,7 @@ it.each([[[]], [{}], ["test"]])(
         connectionString: exampleConnectionString,
         rootConnectionString: "notthesamestring1",
         shadowConnectionString: "notthesamestring2",
-        logger: invalidLogger as any,
+        logger: invalidLogger,
       }),
     ).rejects.toMatchInlineSnapshot(`
           [Error: Errors occurred during settings validation:

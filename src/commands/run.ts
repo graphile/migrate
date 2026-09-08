@@ -19,7 +19,6 @@ interface RunArgv extends CommonArgv {
   rootDatabase?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: Settings,
   rawContent: string,

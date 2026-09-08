@@ -1,4 +1,4 @@
-import pgMinify = require("pg-minify");
+import pgMinify from "pg-minify";
 import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
@@ -112,7 +112,7 @@ are true, exit status will be 0 (success). Additional messages may also be outpu
     }
 
     // ESLint false positive.
-    // eslint-disable-next-line require-atomic-updates
+
     process.exitCode = exitCode;
 
     if (exitCode === 0) {

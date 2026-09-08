@@ -122,7 +122,7 @@ export function compilePlaceholders(
 async function realpathOrNull(path: string): Promise<string | null> {
   try {
     return await fsp.realpath(path);
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -170,7 +170,11 @@ export async function compileIncludes(
 
     if (processedFiles.has(sqlPath)) {
       throw new Error(
-        `Circular include detected - '${sqlPath}' is included again! Import statement: \`${line}\`; trace:\n  ${[...processedFiles].reverse().join("\n  ")}`,
+        `Circular include detected - '${sqlPath}' is included again! Import statement: \`${line}\`; trace:\n  ${[
+          ...processedFiles,
+        ]
+          .reverse()
+          .join("\n  ")}`,
       );
     }
 
@@ -407,12 +411,12 @@ export async function getAllMigrations(
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   try {
     await fsp.mkdir(migrationsFolder);
-  } catch (e) {
+  } catch {
     // noop
   }
   try {
     await fsp.mkdir(committedMigrationsFolder);
-  } catch (e) {
+  } catch {
     // noop
   }
   const files = await fsp.readdir(committedMigrationsFolder);
