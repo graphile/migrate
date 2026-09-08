@@ -6,8 +6,8 @@
   "scripts": {
     "lint": "yarn prettier:check && eslint --ext .js,.jsx,.ts,.tsx,.graphql .",
     "lint:deps": "depcheck --ignores @types/jest,@types/json5,@types/node,@types/mock-fs,@types/pg,@types/yargs,@changesets/changelog-github,eslint_d,mock-fs,tslib",
-    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx,.graphql . --fix; prettier --ignore-path .eslintignore --write '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
-    "prettier:check": "prettier --ignore-path .eslintignore --check '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
+    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx,.graphql . --fix; prettier --ignore-path .gitignore --write '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
+    "prettier:check": "prettier --ignore-path .gitignore --check '**/*.{js,jsx,ts,tsx,graphql,md,json}'",
     "tsc": "tsc -p tsconfig.build.json",
     "prepack": "npm run tsc && chmod +x dist/cli.js",
     "clean": "rm -Rf dist",
