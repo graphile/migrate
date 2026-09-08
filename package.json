@@ -13,7 +13,8 @@
     "clean": "rm -Rf dist",
     "test": "yarn lint && yarn run lint:deps && FORCE_COLOR=1 yarn run test:only --ci",
     "test:only": "NODE_OPTIONS=\"--experimental-vm-modules\" jest -i",
-    "version": "yarn prepack && ./scripts/update-docs.js && node ./scripts/version.mjs && git add README.md src/version.ts",
+    "changeset-version": "yarn changeset version && yarn prepack && ./scripts/update-docs.js && node ./scripts/version.mjs",
+    "changeset-publish": "yarn prepack && npm stage publish && yarn changeset git-tag",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && npm run tsc --watch"
   },
   "bin": {
@@ -55,6 +56,8 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.2",
     "@localrepo/prettier2-for-jest": "npm:prettier@^2",
     "@tsconfig/node18": "^18.2.2",
     "@types/jest": "^29.5.11",
