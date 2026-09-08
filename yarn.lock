@@ -708,6 +708,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@eslint/js@npm:^10.0.1":
+  version: 10.0.1
+  resolution: "@eslint/js@npm:10.0.1"
+  peerDependencies:
+    eslint: ^10.0.0
+  peerDependenciesMeta:
+    eslint:
+      optional: true
+  checksum: 10/27ff77b8f0aab350b2f7a69d974eabb816bb9f4cab986b1538782269d6bfdc29e351803fa7a62c22c0b786341324f1a28b86bc83956ddfa189aa6bead1a87758
+  languageName: node
+  linkType: hard
+
 "@eslint/object-schema@npm:^3.0.5":
   version: 3.0.5
   resolution: "@eslint/object-schema@npm:3.0.5"
@@ -1356,7 +1368,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^8.69.0":
+"@typescript-eslint/eslint-plugin@npm:8.69.0":
   version: 8.69.0
   resolution: "@typescript-eslint/eslint-plugin@npm:8.69.0"
   dependencies:
@@ -1376,7 +1388,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^8.69.0":
+"@typescript-eslint/parser@npm:8.69.0":
   version: 8.69.0
   resolution: "@typescript-eslint/parser@npm:8.69.0"
   dependencies:
@@ -3416,6 +3428,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"globals@npm:^17.6.0":
+  version: 17.12.0
+  resolution: "globals@npm:17.12.0"
+  checksum: 10/833291560517dbb510c6d12359ba87eb8b8f282e9775b0474c6e19e0bea043b61f6b52732d4b1bb275888d1813564e40653e0d5faccef3083dc603cfbf0a3271
+  languageName: node
+  linkType: hard
+
 "globalthis@npm:^1.0.3":
   version: 1.0.3
   resolution: "globalthis@npm:1.0.3"
@@ -3464,6 +3483,7 @@ __metadata:
   dependencies:
     "@changesets/changelog-github": "npm:^1.0.0"
     "@changesets/cli": "npm:^3.0.1"
+    "@eslint/js": "npm:^10.0.1"
     "@graphile/logger": "npm:^0.2.0"
     "@localrepo/prettier2-for-jest": "npm:prettier@^2"
     "@tsconfig/node22": "npm:^22.0.0"
@@ -3473,8 +3493,6 @@ __metadata:
     "@types/node": "npm:^18"
     "@types/pg": "npm:>=6 <9"
     "@types/yargs": "npm:^17.0.32"
-    "@typescript-eslint/eslint-plugin": "npm:^8.69.0"
-    "@typescript-eslint/parser": "npm:^8.69.0"
     chalk: "npm:^4"
     chokidar: "npm:^3.5.3"
     depcheck: "npm:^1.4.7"
@@ -3484,6 +3502,7 @@ __metadata:
     eslint-plugin-jest: "npm:^29.16.6"
     eslint-plugin-simple-import-sort: "npm:^14.0.0"
     eslint_d: "npm:^15.0.3"
+    globals: "npm:^17.6.0"
     jest: "npm:^29.7.0"
     json5: "npm:^2.2.3"
     mock-fs: "npm:^5.2.0"
@@ -3494,6 +3513,7 @@ __metadata:
     ts-jest: "npm:^29.4.12"
     tslib: "npm:^2.8.1"
     typescript: "npm:^5.9.3"
+    typescript-eslint: "npm:^8.69.0"
     yargs: "npm:^17.7.2"
   bin:
     graphile-migrate: ./dist/cli.js
@@ -6487,6 +6507,21 @@ __metadata:
     possible-typed-array-names: "npm:^1.1.0"
     reflect.getprototypeof: "npm:^1.0.10"
   checksum: 10/c044c644eee13fe8814d4c2401146103efd49bfd1e40412104f04c4d67f76b373da7e93026fbd99aaef1fdaa9c81d0886f34772d045472be9704157f4e1d0164
+  languageName: node
+  linkType: hard
+
+"typescript-eslint@npm:^8.69.0":
+  version: 8.69.0
+  resolution: "typescript-eslint@npm:8.69.0"
+  dependencies:
+    "@typescript-eslint/eslint-plugin": "npm:8.69.0"
+    "@typescript-eslint/parser": "npm:8.69.0"
+    "@typescript-eslint/typescript-estree": "npm:8.69.0"
+    "@typescript-eslint/utils": "npm:8.69.0"
+  peerDependencies:
+    eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10/d06d299ec1b5468a9963d57e1e835cf48f2fbf89b301b8a4d1a2438b2d1853e12f97c48ea78f7f27d7da91671c7d8cbb04c3e3cd3d5b1a3f8bc9f7224e73150a
   languageName: node
   linkType: hard
 

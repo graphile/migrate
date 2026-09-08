@@ -56,13 +56,12 @@
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.1",
+    "@eslint/js": "^10.0.1",
     "@localrepo/prettier2-for-jest": "npm:prettier@^2",
     "@tsconfig/node22": "^22.0.0",
     "@types/jest": "^29.5.14",
     "@types/mock-fs": "^4.13.4",
     "@types/yargs": "^17.0.32",
-    "@typescript-eslint/eslint-plugin": "^8.69.0",
-    "@typescript-eslint/parser": "^8.69.0",
     "depcheck": "^1.4.7",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
@@ -70,11 +69,13 @@
     "eslint-plugin-jest": "^29.16.6",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "eslint_d": "^15.0.3",
+    "globals": "^17.6.0",
     "jest": "^29.7.0",
     "mock-fs": "^5.2.0",
     "prettier": "^3.2.4",
     "ts-jest": "^29.4.12",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.69.0"
   },
   "files": [
     "dist"
