@@ -42,7 +42,7 @@
   "dependencies": {
     "@graphile/logger": "^0.2.0",
     "@types/json5": "^2.2.0",
-    "@types/node": "^18",
+    "@types/node": "^22",
     "@types/pg": ">=6 <9",
     "chalk": "^4",
     "chokidar": "^3.5.3",
