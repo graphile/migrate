@@ -1,7 +1,7 @@
-import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier/flat";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import importPlugin from "eslint-plugin-import-x";
 import jest from "eslint-plugin-jest";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
@@ -9,7 +9,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  globalIgnores(["**/dist/**"]),
+  globalIgnores(["**/dist/**", "**/.yarn/**", "**/dummy/**", "**/_LOCAL/**"]),
   {
     files: ["**/*.{js,cjs,mjs,ts,cts,mts}"],
 

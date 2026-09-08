@@ -1,6 +1,14 @@
 {
   "extends": "./tsconfig.build.json",
-  "include": ["src/**/*", "__tests__/**/*", "*.js", "./.*.js"],
+  "include": [
+    "src/**/*",
+    "scripts/**/*",
+    "__tests__/**/*",
+    "*.js",
+    "*.cjs",
+    "*.mjs",
+    "./.*.js"
+  ],
   "exclude": [],
   "compilerOptions": {
     "noEmit": true
