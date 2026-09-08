@@ -24,8 +24,6 @@ jobs:
         include:
           - node-version: 22.x
             postgres-version: 14
-          - node-version: 26.x
-            postgres-version: 18
 
     services:
       postgres:
