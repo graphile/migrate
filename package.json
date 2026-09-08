@@ -17,9 +17,7 @@
     "changeset-publish": "yarn prepack && npm stage publish --tag \"$(jq -r .tag .changeset/pre.json 2>/dev/null || echo 'latest')\" && yarn changeset git-tag",
     "watch": "mkdir -p dist && touch dist/cli.js && chmod +x dist/cli.js && npm run tsc --watch"
   },
-  "bin": {
-    "graphile-migrate": "dist/cli.js"
-  },
+  "bin": "dist/cli.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/graphile/migrate.git"

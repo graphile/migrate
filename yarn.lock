@@ -3068,7 +3068,7 @@ __metadata:
     typescript-eslint: "npm:^8.69.0"
     yargs: "npm:^17.7.2"
   bin:
-    graphile-migrate: ./dist/cli.js
+    graphile-migrate: dist/cli.js
   languageName: unknown
   linkType: soft
 
