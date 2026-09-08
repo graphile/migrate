@@ -78,7 +78,12 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
     // `node_modules`; we don't want this - instead force it to be a relative
     // path.
-    const relativePath = pathToFileURL(resolve(process.cwd(), path)).href;
+    const rawRelativePath = pathToFileURL(resolve(process.cwd(), path)).href;
+
+    // The tests need to not use `file://` URLs otherwise mock-fs doesn't work.
+    const relativePath = rawRelativePath.startsWith("file:///")
+      ? rawRelativePath.slice("file://".length)
+      : rawRelativePath;
 
     try {
       const module = (await import(relativePath)) as Record<string, unknown>;
