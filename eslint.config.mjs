@@ -1,5 +1,5 @@
 import eslint from "@eslint/js";
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier/flat";
 import importPlugin from "eslint-plugin-import-x";
 import jest from "eslint-plugin-jest";
@@ -8,6 +8,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
+  globalIgnores(["**/dist/**"]),
   {
     files: ["**/*.{js,cjs,mjs,ts,cts,mts}"],
 
