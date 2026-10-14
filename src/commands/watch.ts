@@ -3,6 +3,7 @@ import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { makeCurrentMigrationRunner } from "../currentRunner";
+import { clearFixturesCache } from "../fixtures";
 import { isLoggedError } from "../lib";
 import { ParsedSettings, parseSettings, Settings } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
@@ -90,6 +91,17 @@ export async function _watch(
     watcher.on("change", queue);
     watcher.on("unlink", queue);
     watcher.once("ready", queue);
+
+    // When you change branch, clear the fixtures cache
+    const committedWatcher = chokidar.watch(
+      [`${parsedSettings.migrationsFolder}/committed`],
+      CHOKIDAR_OPTIONS,
+    );
+    committedWatcher.on("add", clearFixturesCache);
+    committedWatcher.on("change", clearFixturesCache);
+    committedWatcher.on("unlink", clearFixturesCache);
+    committedWatcher.once("ready", clearFixturesCache);
+
     return Promise.resolve();
   }
 }
