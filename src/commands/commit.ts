@@ -47,6 +47,8 @@ export async function _commit(
 
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
   const allMigrations = await getAllMigrations(parsedSettings);
+  // NOTE: do not use `getPreviousCommittedMigration` here because we want to
+  // check the full chain is valid.
   const lastMigration = allMigrations[allMigrations.length - 1];
   const newMigrationNumber = lastMigration
     ? parseInt(lastMigration.filename, 10) + 1

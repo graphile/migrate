@@ -16,6 +16,31 @@ function escapeRegexp(str: string): string {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 }
 
+export interface FileMigrationListing {
+  /**
+   * The actual filename on disk
+   */
+  realFilename: string;
+
+  /**
+   * The filename without the message slug in it, used for storing to the database.
+   */
+  filename: string;
+
+  /**
+   * The full path to this migration on disk
+   */
+  fullPath: string;
+
+  /**
+   * The slugified message, stored as part of the file name
+   */
+  messageSlug: string | null;
+
+  /** @internal */
+  migrationNumber: number;
+}
+
 export interface Migration {
   /**
    * The filename without the message slug in it, used for storing to the database.
@@ -42,12 +67,7 @@ export interface DbMigration extends Migration {
   date: Date;
 }
 
-export interface FileMigration extends Migration {
-  /**
-   * The actual filename on disk
-   */
-  realFilename: string;
-
+export interface FileMigration extends FileMigrationListing, Migration {
   /**
    * The content of the migration
    */
@@ -57,16 +77,6 @@ export interface FileMigration extends Migration {
    * The message the migration was committed with
    */
   message: string | null;
-
-  /**
-   * The slugified message, stored as part of the file name
-   */
-  messageSlug: string | null;
-
-  /**
-   * The full path to this migration on disk
-   */
-  fullPath: string;
 
   /**
    * If there was a previous migration, that
@@ -377,6 +387,10 @@ export function serializeMigration(
   }
 }
 
+/**
+ * Returns the last migration that you successfully ran against the database.
+ * Not to be confused with `getPreviousCommittedMigration`.
+ */
 export async function getLastMigration(
   pgClient: Client,
   parsedSettings: ParsedSettings,
@@ -396,11 +410,14 @@ export async function getLastMigration(
   return (row as DbMigration) || null;
 }
 
-export async function getAllMigrations(
-  parsedSettings: ParsedSettings,
-): Promise<Array<FileMigration>> {
+const createdDirectoriesForSettings = new WeakSet<ParsedSettings>();
+async function getOrCreateCommittedFolder(parsedSettings: ParsedSettings) {
   const { migrationsFolder } = parsedSettings;
   const committedMigrationsFolder = `${migrationsFolder}/committed`;
+  if (createdDirectoriesForSettings.has(parsedSettings)) {
+    return committedMigrationsFolder;
+  }
+  createdDirectoriesForSettings.add(parsedSettings);
   try {
     await fsp.mkdir(migrationsFolder);
   } catch {
@@ -411,58 +428,91 @@ export async function getAllMigrations(
   } catch {
     // noop
   }
+  return committedMigrationsFolder;
+}
+
+export async function getMigrationListings(
+  parsedSettings: ParsedSettings,
+): Promise<Array<FileMigrationListing>> {
+  const committedMigrationsFolder =
+    await getOrCreateCommittedFolder(parsedSettings);
   const files = await fsp.readdir(committedMigrationsFolder);
+  const listings: Array<FileMigrationListing> = [];
+  for (const file of files) {
+    const matches = migrationFilenameMatches(file);
+    if (!matches) continue;
+    const [realFilename, migrationNumberString, messageSlug = null] = matches;
+    const fullPath = `${committedMigrationsFolder}/${realFilename}`;
+    const filename = migrationNumberString + ".sql";
+    const migrationNumber = parseInt(migrationNumberString, 10);
+    listings.push({
+      realFilename,
+      filename,
+      fullPath,
+      messageSlug,
+      migrationNumber,
+    });
+  }
+  listings.sort((a, z) => a.migrationNumber - z.migrationNumber);
+  return listings;
+}
+
+export async function readMigration(
+  listing: FileMigrationListing,
+): Promise<FileMigration> {
+  const { realFilename, filename, fullPath, messageSlug, migrationNumber } =
+    listing;
+  const contents = await fsp.readFile(fullPath, "utf8");
+
+  const { headers, body } = parseMigrationText(fullPath, contents);
+
+  // --! Previous:
+  const previousHashRaw = headers["Previous"];
+  if (!previousHashRaw) {
+    throw new Error(
+      `Invalid committed migration '${fullPath}': no 'Previous' comment`,
+    );
+  }
+  const previousHash =
+    previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
+
+  // --! Hash:
+  const hash = headers["Hash"];
+  if (!hash) {
+    throw new Error(
+      `Invalid committed migration '${fullPath}': no 'Hash' comment`,
+    );
+  }
+
+  // --! Message:
+  const message = headers["Message"];
+
+  // --! AllowInvalidHash
+  const allowInvalidHash = "AllowInvalidHash" in headers;
+
+  return {
+    migrationNumber,
+    realFilename,
+    filename,
+    message,
+    messageSlug,
+    fullPath,
+    hash,
+    previousHash,
+    allowInvalidHash,
+    body,
+    previous: null,
+  };
+}
+
+export async function getAllMigrations(
+  parsedSettings: ParsedSettings,
+): Promise<Array<FileMigration>> {
+  const listings = await getMigrationListings(parsedSettings);
   const migrations: Array<FileMigration> = await Promise.all(
-    files
-      .map(migrationFilenameMatches)
-      .filter((matches): matches is RegExpMatchArray => !!matches)
-      .map(async (matches): Promise<FileMigration> => {
-        const [realFilename, migrationNumberString, messageSlug = null] =
-          matches;
-        const fullPath = `${committedMigrationsFolder}/${realFilename}`;
-        const contents = await fsp.readFile(fullPath, "utf8");
-
-        const { headers, body } = parseMigrationText(fullPath, contents);
-
-        // --! Previous:
-        const previousHashRaw = headers["Previous"];
-        if (!previousHashRaw) {
-          throw new Error(
-            `Invalid committed migration '${fullPath}': no 'Previous' comment`,
-          );
-        }
-        const previousHash =
-          previousHashRaw && previousHashRaw !== "-" ? previousHashRaw : null;
-
-        // --! Hash:
-        const hash = headers["Hash"];
-        if (!hash) {
-          throw new Error(
-            `Invalid committed migration '${fullPath}': no 'Hash' comment`,
-          );
-        }
-
-        // --! Message:
-        const message = headers["Message"];
-
-        // --! AllowInvalidHash
-        const allowInvalidHash = "AllowInvalidHash" in headers;
-
-        return {
-          realFilename,
-          filename: migrationNumberString + ".sql",
-          message,
-          messageSlug,
-          fullPath,
-          hash,
-          previousHash,
-          allowInvalidHash,
-          body,
-          previous: null,
-        };
-      }),
+    listings.map(readMigration),
   );
-  migrations.sort((a, b) => a.filename.localeCompare(b.filename, "en"));
+
   // Validate and link
   let previous = null;
   for (const migration of migrations) {
@@ -489,10 +539,24 @@ export async function getMigrationsAfter(
   parsedSettings: ParsedSettings,
   previousMigration: Migration | null,
 ): Promise<Array<FileMigration>> {
+  // NOTE: do NOT use getMigrationListings here - we want `getAllMigrations` to
+  // do its chain verification for migrate/status.
   const allMigrations = await getAllMigrations(parsedSettings);
   return allMigrations.filter(
     (m) => !previousMigration || m.filename > previousMigration.filename,
   );
+}
+
+/**
+ * Returns the details of the latest file in `migrations/committed/*` - not
+ * to be confused with `getLastMigration`
+ */
+export async function getPreviousCommittedMigration(
+  parsedSettings: ParsedSettings,
+): Promise<FileMigration | null> {
+  const listings = await getMigrationListings(parsedSettings);
+  const latest = listings.at(-1);
+  return latest == null ? null : readMigration(latest);
 }
 
 export async function runStringMigration(

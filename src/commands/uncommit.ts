@@ -8,7 +8,7 @@ import {
   writeCurrentMigration,
 } from "../current";
 import {
-  getAllMigrations,
+  getPreviousCommittedMigration,
   parseMigrationText,
   serializeMigration,
   undoMigration,
@@ -20,8 +20,7 @@ import { _reset } from "./reset";
 
 export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   // Determine the last migration
-  const allMigrations = await getAllMigrations(parsedSettings);
-  const lastMigration = allMigrations[allMigrations.length - 1];
+  const lastMigration = await getPreviousCommittedMigration(parsedSettings);
   if (!lastMigration) {
     throw new Error("There's no committed migration to uncommit");
   }

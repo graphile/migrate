@@ -78,6 +78,7 @@ it("calls beforeAllMigrations and afterAllMigrations action (only) if we did som
     async (): Promise<FileMigration[]> => {
       return [
         {
+          migrationNumber: 1,
           filename: "000001.sql",
           realFilename: "000001-test-message.sql",
           hash: "TEST_HASH",
