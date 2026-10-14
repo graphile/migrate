@@ -1,8 +1,8 @@
 import * as assert from "assert";
-import { promises as fsp, Stats } from "fs";
+import { promises as fsp } from "fs";
 
 import { isNoTransactionDefined } from "./header";
-import { errorCode } from "./lib";
+import { readFileOrError, readFileOrNull, statOrNull } from "./lib";
 import {
   compileIncludes,
   parseMigrationText,
@@ -10,40 +10,6 @@ import {
 } from "./migration";
 import { idFromFilename, isMigrationFilename } from "./migrationFilename";
 import type { ParsedSettings } from "./settings";
-
-async function statOrNull(path: string): Promise<Stats | null> {
-  try {
-    return await fsp.stat(path);
-  } catch (e) {
-    if (errorCode(e) === "ENOENT") {
-      return null;
-    }
-    throw e;
-  }
-}
-
-async function readFileOrNull(path: string): Promise<string | null> {
-  try {
-    return await fsp.readFile(path, "utf8");
-  } catch (e) {
-    if (errorCode(e) === "ENOENT") {
-      return null;
-    }
-    throw e;
-  }
-}
-async function readFileOrError(path: string): Promise<string> {
-  try {
-    return await fsp.readFile(path, "utf8");
-  } catch (e) {
-    throw new Error(
-      `Failed to read file at '${path}': ${
-        e instanceof Error ? e.message : String(e)
-      }`,
-      { cause: e },
-    );
-  }
-}
 
 export interface CurrentMigrationLocation {
   isFile: boolean;

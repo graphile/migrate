@@ -4,7 +4,7 @@ import { relative } from "path";
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
 import { runQueryWithErrorInstrumentation } from "./instrumentation";
-import { mergeWithoutClobbering } from "./lib";
+import { mergeWithoutClobbering, realpathOrNull } from "./lib";
 import memoize from "./memoize";
 import { migrationFilenameMatches } from "./migrationFilename";
 import { Client, Context, withClient } from "./pg";
@@ -117,14 +117,6 @@ export function compilePlaceholders(
     parsedSettings,
     contextObj(database),
   )(content);
-}
-
-async function realpathOrNull(path: string): Promise<string | null> {
-  try {
-    return await fsp.realpath(path);
-  } catch {
-    return null;
-  }
 }
 
 export async function compileIncludes(
