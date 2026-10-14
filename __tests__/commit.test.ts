@@ -29,6 +29,20 @@ it("aborts if current.sql is empty", async () => {
   );
 });
 
+it("restores migration headers after a failed commit", async () => {
+  const original = "--! Message: test-migration\n\nselect 1 + ;\n";
+  mockFs({
+    "migrations/current.sql": original,
+  });
+
+  await expect(commit(settings)).rejects.toThrow();
+
+  expect(await fsp.readFile("migrations/current.sql", "utf8")).toEqual(
+    original,
+  );
+  expect(await fsp.readdir("migrations/committed")).toEqual([]);
+});
+
 describe.each([[undefined], ["My Commit Message"]])(
   "commit message '%s'",
   (commitMessage) => {
