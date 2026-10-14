@@ -119,8 +119,7 @@ export async function _commit(
     logDbError(parsedSettings, e);
 
     parsedSettings.logger.error("ABORTING...");
-    const completeBody = serializeMigration(body, headers);
-    await writeCurrentMigration(parsedSettings, currentLocation, completeBody);
+    await writeCurrentMigration(parsedSettings, currentLocation, contents);
     await fsp.unlink(newMigrationFilepath);
     parsedSettings.logger.error("ABORTED AND ROLLED BACK");
     throw e;
