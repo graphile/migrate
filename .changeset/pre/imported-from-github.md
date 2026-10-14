@@ -6,8 +6,8 @@ Adds fixtures for reusable, version-controlled migration definitions.
 
 The major new feature in this release is `fixtures`. The reason this is a major
 version is because we've upgraded all the dependencies and the minimum supported
-Node version is now Node 18, which Migrate will only support until its "end of
-life" (EOL) date in 2025. Reminder: once a Node.js or PostgreSQL version goes
+Node version is now Node 22, which Migrate will only support until its "end of
+life" (EOL) date in Q2 2027. Reminder: once a Node.js or PostgreSQL version goes
 EOL, we no longer support that version, and we may break compatibility with it
 in a patch release. We only support LTS versions of Node.js and PostgreSQL.
 
@@ -24,22 +24,26 @@ Fixtures can use placeholders such as `:DATABASE_VISITOR` just like the
 Fixtures can also `--!include` other fixtures, though be sure not to create a
 cycle! (We will throw an error if you do.)
 
-IMPORTANT: fixtures must only affect stateless resources. It would not make
-sense to add `DROP TABLE posts; CREATE TABLE posts (...);` into a fixture, as
-that would result in the table being dropped and recreated each time you
-`--!include` it, destroying all your data. Similarly we strongly recommend that
-you do not use `CASCADE` in any `DROP` statements - if a stack of resources
-needs to be dropped and recreated then do that explicitly to ensure only things
-you expect to be affected are affected.
+**IMPORTANT**: fixtures must only relate to database entities that do not store
+application data, and should only relate to database entities that are cheap to
+rebuild (stateless entities). It would not make sense to add
+`DROP TABLE posts; CREATE TABLE posts (...);` into a fixture, as that would
+result in the table being dropped and recreated each time you `--!include` it,
+destroying all your data. Similarly we strongly recommend that you do not use
+`CASCADE` in any `DROP` statements - if a stack of entities needs to be dropped
+and recreated then do that explicitly to ensure only things you expect to be
+affected are affected. If you put things like materialized views, indexes and
+constraints in fixtures then you may cause your migrations to run long as the
+entities are recreated/revalidated, potentially causing availability issues.
 
-Stateless resources: functions, triggers, grants, policies, views, constraints,
-indexes, etc
+Stateless entities (cheap to recreate): functions, triggers, grants, policies,
+views, comments, etc
 
-Stateless but expensive resources: materialized views, indexes, some
-constraints, etc
+Rebuildable entities (potentially expensive to recreate/recheck): materialized
+views, indexes, constraints, etc
 
-Stateful resources: tables, some operations on composite types used in table
-columns, etc
+Data-bearing entities (recreating would result in data loss): tables and
+columns. Certain operations on types can also result in lossy transforms.
 
 Thank you to @jnbarlow for working with me to develop this feature!
 
