@@ -1,4 +1,6 @@
-import { promises as fsp, Stats } from "fs";
+import type { Dirent, Stats } from "fs";
+import * as fsp from "fs/promises";
+import { sep } from "path";
 
 export function mergeWithoutClobbering(
   original: { [key: string]: string | undefined },
@@ -78,4 +80,40 @@ export async function realpathOrNull(path: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+export async function walk(
+  root: string,
+  callback: (relativePath: string, ent: Dirent<string>) => Promise<void>,
+): Promise<void> {
+  return _walk(
+    root,
+    [],
+    { walkHiddenFolders: false, callbackHiddenFiles: false },
+    callback,
+  );
+}
+
+async function _walk(
+  root: string,
+  paths: readonly string[],
+  options: {
+    walkHiddenFolders: boolean;
+    callbackHiddenFiles: boolean;
+  },
+  callback: (relativePath: string, ent: Dirent<string>) => Promise<void>,
+): Promise<void> {
+  const directory = [root, ...paths].join(sep);
+  const entries = await fsp.readdir(directory, { withFileTypes: true });
+  await Promise.all(
+    entries.map(async (entry) => {
+      if (entry.isDirectory()) {
+        if (!options.walkHiddenFolders && entry.name.startsWith(".")) return;
+        await _walk(root, [...paths, entry.name], options, callback);
+      } else {
+        if (!options.callbackHiddenFiles && entry.name.startsWith(".")) return;
+        await callback([...paths, entry.name].join("/"), entry);
+      }
+    }),
+  );
 }

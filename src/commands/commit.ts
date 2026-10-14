@@ -7,6 +7,7 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { clearFixturesCache } from "../fixtures";
 import { calculateHash } from "../hash";
 import { logDbError } from "../instrumentation";
 import {
@@ -100,6 +101,7 @@ export async function _commit(
   await _reset(parsedSettings, true);
   const newMigrationFilepath = `${committedMigrationsFolder}/${newMigrationFilename}`;
   await fsp.writeFile(newMigrationFilepath, finalBody);
+  clearFixturesCache();
   await fsp.chmod(newMigrationFilepath, "440");
 
   parsedSettings.logger.info(
