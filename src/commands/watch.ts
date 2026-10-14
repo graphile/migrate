@@ -38,6 +38,7 @@ export async function _watch(
     const queue = (): void => {
       if (running) {
         runAgain = true;
+        return;
       }
       running = true;
 
