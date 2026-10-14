@@ -1,5 +1,40 @@
 # graphile-migrate
 
+## 2.0.0-rc.6
+
+### Patch Changes
+
+- [#265](https://github.com/graphile/migrate/pull/265)
+  [`9348e85`](https://github.com/graphile/migrate/commit/9348e85dea90c75d32bdb2cd27e5cf35009fa5ec)
+  Thanks [@benjie](https://github.com/benjie)! - Fix a bug in the chokidar queue
+  where concurrent events did not wait for migration to finish running.
+
+- [#273](https://github.com/graphile/migrate/pull/273)
+  [`69c7d2d`](https://github.com/graphile/migrate/commit/69c7d2dd918fa5acaa73ee701dfeed45afb9015c)
+  Thanks [@sean0407](https://github.com/sean0407)! - Fix a bug when commit
+  fails: restore the original migration fully (don't drop `Message` header)
+
+- [#272](https://github.com/graphile/migrate/pull/272)
+  [`7339fbe`](https://github.com/graphile/migrate/commit/7339fbe6b429d6a55b95e9b5dbcb22262f488a14)
+  Thanks [@benjie](https://github.com/benjie)! - Internal refactor of migration
+  reading, allowing us to get the latest committed migration without reading all
+  committed migrations.
+
+- [#271](https://github.com/graphile/migrate/pull/271)
+  [`9eb1f53`](https://github.com/graphile/migrate/commit/9eb1f53fce21f4bd5a851447bf63fe6d4acf6ad6)
+  Thanks [@benjie](https://github.com/benjie)! - Internal refactor of chokidar
+  settings
+
+- [#268](https://github.com/graphile/migrate/pull/268)
+  [`777f677`](https://github.com/graphile/migrate/commit/777f6773aa7bf3a73b7d42525fbb4d264a0b493e)
+  Thanks [@benjie](https://github.com/benjie)! - Internal refactor of compiling
+  includes
+
+- [#266](https://github.com/graphile/migrate/pull/266)
+  [`a6a3af2`](https://github.com/graphile/migrate/commit/a6a3af2284a85c20c3121f7fb718f2fdf6fefc2a)
+  Thanks [@benjie](https://github.com/benjie)! - Internal refactor of filesystem
+  helpers.
+
 ## 2.0.0-rc.5
 
 ### Patch Changes
