@@ -56,15 +56,18 @@ export async function readCurrentMigration(
   parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
 ): Promise<string> {
+  const { body, paths } = await readCurrentMigrationRaw(location);
+  return compileIncludes(parsedSettings, body, new Set(paths));
+}
+
+async function readCurrentMigrationRaw(
+  location: CurrentMigrationLocation,
+): Promise<{ body: string; paths: readonly string[] }> {
   if (location.isFile) {
     const content = await readFileOrNull(location.path);
 
     // If file doesn't exist, treat it as if it were empty.
-    return compileIncludes(
-      parsedSettings,
-      content || "",
-      new Set([location.path]),
-    );
+    return { body: content || "", paths: [location.path] };
   } else {
     const files = await fsp.readdir(location.path);
     const parts = new Map<
@@ -106,6 +109,7 @@ export async function readCurrentMigration(
     }
 
     const ids = [...parts.keys()].sort((a, b) => a - b);
+    const paths: string[] = [];
     let wholeBody = "";
 
     // Like hobbitses
@@ -113,12 +117,8 @@ export async function readCurrentMigration(
 
     for (const id of ids) {
       const { file, filePath, bodyPromise } = parts.get(id)!;
-      const rawContents = await bodyPromise;
-      const contents = await compileIncludes(
-        parsedSettings,
-        rawContents,
-        new Set([filePath]),
-      );
+      const contents = await bodyPromise;
+      paths.push(filePath);
       const { body, headers } = parseMigrationText(filePath, contents, false);
       headerses.push(headers);
       if (isNoTransactionDefined(body)) {
@@ -144,7 +144,7 @@ export async function readCurrentMigration(
       wholeBody = headerLines.join("\n") + "\n\n" + wholeBody;
     }
 
-    return wholeBody;
+    return { body: wholeBody, paths };
   }
 }
 
