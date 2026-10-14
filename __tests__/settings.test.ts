@@ -1,5 +1,6 @@
 import "./helpers"; // Side effects - must come first
 
+import { utimes } from "fs/promises";
 import mockFs from "mock-fs";
 import * as path from "path";
 
@@ -18,6 +19,21 @@ import {
 function sanitise(parsedSettings: ParsedSettings) {
   parsedSettings.migrationsFolder =
     "./" + path.relative(process.cwd(), parsedSettings.migrationsFolder);
+}
+
+async function touch(modulePath: string) {
+  const now = new Date();
+  const path = require.resolve(modulePath);
+  await utimes(path, now, now);
+}
+async function fixJestMockFsImportIssues() {
+  // The warmups force all the parts of Node import to be exercised before we
+  // try and import something from our mocked filesystem. We need to update
+  // their timestamps to invalidate Jest's cache, otherwise it'll work first
+  // time but fail thereafter until the next cache invalidation.
+  await Promise.all([touch("./warmup.js"), touch("./warmup.cjs")]);
+  // @ts-ignore
+  await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
 }
 
 const exampleConnectionString = "postgres://localhost:5432/dbname?ssl=true";
@@ -354,10 +370,7 @@ describe("gmrc from JS", () => {
   const node20PlusIt = nodeMajor >= 20 ? it : it.skip.bind(it);
   node20PlusIt("supports .gmrc.js", async () => {
     mockFs.restore();
-    // The warmups force all the parts of Node import to be exercised before we
-    // try and import something from our mocked filesystem.
-    // @ts-ignore
-    await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
+    await fixJestMockFsImportIssues();
 
     mockFs({
       [DEFAULT_GMRCJS_PATH]: /* JavaScript */ `\
@@ -374,10 +387,7 @@ module.exports = {
 
   node20PlusIt("supports .gmrc.cjs", async () => {
     mockFs.restore();
-    // The warmups force all the parts of Node import to be exercised before we
-    // try and import something from our mocked filesystem.
-    // @ts-ignore
-    await Promise.all([import("./warmup.js"), import("./warmup.cjs")]);
+    await fixJestMockFsImportIssues();
 
     mockFs({
       [DEFAULT_GMRC_COMMONJS_PATH]: /* JavaScript */ `\
