@@ -1,5 +1,15 @@
 # graphile-migrate
 
+## 2.0.0-rc.7
+
+### Patch Changes
+
+- [#275](https://github.com/graphile/migrate/pull/275)
+  [`a55954b`](https://github.com/graphile/migrate/commit/a55954bec701fbcbbf0e0313bed17909d8ba5d1e)
+  Thanks [@benjie](https://github.com/benjie)! - Fixes a bug in error handling
+  for `commit` where `--! include` comments were not restored, instead being
+  replaced by the included assets.
+
 ## 2.0.0-rc.6
 
 ### Patch Changes
