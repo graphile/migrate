@@ -59,7 +59,7 @@ export async function _commit(
 
   const { headers, body } = parseMigrationText(
     currentLocation.path,
-    contents,
+    contents.compiled,
     false,
   );
   const messageFromComment = headers.Message;
@@ -119,7 +119,7 @@ export async function _commit(
     logDbError(parsedSettings, e);
 
     parsedSettings.logger.error("ABORTING...");
-    await writeCurrentMigration(parsedSettings, currentLocation, contents);
+    await writeCurrentMigration(parsedSettings, currentLocation, contents.raw);
     await fsp.unlink(newMigrationFilepath);
     parsedSettings.logger.error("ABORTED AND ROLLED BACK");
     throw e;

@@ -25,7 +25,7 @@ async function _status(
   // Checks that don't need a database connection
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const body = await readCurrentMigration(parsedSettings, currentLocation);
-  const minifiedBody = pgMinify(body);
+  const minifiedBody = pgMinify(body.compiled);
   const hasCurrentMigration = minifiedBody !== "";
 
   // Checks that need a database connection
