@@ -55,9 +55,10 @@ export async function getCurrentMigrationLocation(
 export async function readCurrentMigration(
   parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
-): Promise<string> {
-  const { body, paths } = await readCurrentMigrationRaw(location);
-  return compileIncludes(parsedSettings, body, new Set(paths));
+): Promise<{ raw: string; compiled: string }> {
+  const { body: raw, paths } = await readCurrentMigrationRaw(location);
+  const compiled = await compileIncludes(parsedSettings, raw, new Set(paths));
+  return { raw, compiled };
 }
 
 async function readCurrentMigrationRaw(

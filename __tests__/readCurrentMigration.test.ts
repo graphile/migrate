@@ -28,14 +28,14 @@ it("reads from current.sql", async () => {
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual("-- TEST");
+  expect(content).toEqual({ raw: "-- TEST", compiled: "-- TEST" });
 });
 
 it("returns empty if there's no current.sql", async () => {
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual("");
+  expect(content).toEqual({ raw: "", compiled: "" });
 });
 
 it("returns empty if there's an empty current/", async () => {
@@ -45,7 +45,7 @@ it("returns empty if there's an empty current/", async () => {
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
 
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual("");
+  expect(content).toEqual({ raw: "", compiled: "" });
 });
 
 const contentWithSplits = `\
@@ -80,7 +80,7 @@ With multiple lines
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual(contentWithSplits);
+  expect(content.compiled).toEqual(contentWithSplits);
 });
 
 it("ignores extraneous files", async () => {
@@ -100,7 +100,7 @@ With multiple lines
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual(contentWithSplits);
+  expect(content.compiled).toEqual(contentWithSplits);
 });
 
 it("reads from current.sql, and processes included files", async () => {
@@ -111,7 +111,7 @@ it("reads from current.sql, and processes included files", async () => {
 
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const content = await readCurrentMigration(parsedSettings, currentLocation);
-  expect(content).toEqual(`\
+  expect(content.compiled).toEqual(`\
 --! Included foo_current.sql
 -- TEST from foo
 --! EndIncluded foo_current.sql`);

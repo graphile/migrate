@@ -19,7 +19,10 @@ export function makeCurrentMigrationRunner(
   const { shadow = false, forceActions = false } = options;
   async function run(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-    const body = await readCurrentMigration(parsedSettings, currentLocation);
+    const { compiled: body } = await readCurrentMigration(
+      parsedSettings,
+      currentLocation,
+    );
     let migrationsAreEquivalent = false;
 
     try {

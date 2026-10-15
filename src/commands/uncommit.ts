@@ -27,7 +27,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
 
   // Check current.sql is blank
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
-  const currentBody = await readCurrentMigration(
+  const { compiled: currentBody } = await readCurrentMigration(
     parsedSettings,
     currentLocation,
   );
