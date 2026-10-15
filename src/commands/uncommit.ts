@@ -7,6 +7,7 @@ import {
   readCurrentMigration,
   writeCurrentMigration,
 } from "../current";
+import { clearFixturesCache } from "../fixtures";
 import {
   getPreviousCommittedMigration,
   parseMigrationText,
@@ -57,6 +58,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
 
   // Delete the migration from committed and from the DB
   await fsp.unlink(lastMigrationFilepath);
+  clearFixturesCache();
   await undoMigration(parsedSettings, lastMigration);
 
   parsedSettings.logger.info(
