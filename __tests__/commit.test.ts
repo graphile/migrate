@@ -30,8 +30,10 @@ it("aborts if current.sql is empty", async () => {
 });
 
 it("restores migration headers after a failed commit", async () => {
-  const original = "--! Message: test-migration\n\nselect 1 + ;\n";
+  const original =
+    "--! Message: test-migration\n\nselect 1 + ;\n--! include some-fixture.sql\n";
   mockFs({
+    "migrations/fixtures/some-fixture.sql": "select 1;\n",
     "migrations/current.sql": original,
   });
 
