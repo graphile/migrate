@@ -79,24 +79,16 @@ export async function readCurrentMigration(
     // specifically `--!include`'d
     const committedState = await getCommittedFixturesState(parsedSettings);
     const changedFixtures: string[] = [];
-    for (const [
-      relativePath,
-      { hash, hasNoTransaction, isEmpty },
-    ] of Object.entries(currentFixtures)) {
+    for (const [relativePath, { hash, isEmpty }] of Object.entries(
+      currentFixtures,
+    )) {
       if (
         committedState[relativePath] !== hash &&
         !alreadyIncluded.has(relativePath) &&
         // A new fixture with nothing to run is not a change.
         !(isEmpty && committedState[relativePath] == null)
       ) {
-        if (hasNoTransaction) {
-          parsedSettings.logger.warn(
-            `Not including modified fixture ${relativePath} because it includes --! no-transaction`,
-            { relativePath, noTransaction: true },
-          );
-        } else {
-          changedFixtures.push(relativePath);
-        }
+        changedFixtures.push(relativePath);
       }
     }
 

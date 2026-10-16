@@ -3,7 +3,6 @@ import { promises as fsp } from "fs";
 import { posix, sep } from "path";
 import pgMinify from "pg-minify";
 
-import { isNoTransactionDefined } from "./header";
 import { realpathOrNull, walk } from "./lib";
 import { getAllMigrations } from "./migration";
 import type { ParsedSettings } from "./settings";
@@ -24,8 +23,6 @@ interface FileFixture {
    */
   hash: string;
 
-  hasNoTransaction: boolean;
-
   /**
    * True if the fixture is empty or only comments
    */
@@ -35,7 +32,8 @@ interface FileFixture {
 /**
  * Fixtures in this folder (inside the fixtures folder) that have changed since
  * the last commit are included automatically; creating the folder turns this
- * on. They must be self-contained: no `--!include`.
+ * on. They must be self-contained (no `--!include`) and run inside the
+ * migration's transaction (no `--! no-transaction`).
  *
  * NOTE: only use it for stateless database entities: functions, RLS policies,
  * grants, views, etc - things that can be dropped and recreated almost
@@ -86,12 +84,17 @@ export async function getLocalFixtures(
           `Automatic fixture '${relativePath}' uses '--!include'; fixtures in '${AUTO_FIXTURES_FOLDER}/' must be self-contained.`,
         );
       }
+      // The automatic section always runs inside the migration's transaction.
+      if (/^--!\s*no-transaction\b/m.test(contents)) {
+        throw new Error(
+          `Automatic fixture '${relativePath}' uses '--! no-transaction'; move it out of '${AUTO_FIXTURES_FOLDER}/' and include it manually.`,
+        );
+      }
       const hash = hashFixture(contents);
       allFixtures[relativePath] = {
         fullPath,
         relativePath,
         hash,
-        hasNoTransaction: isNoTransactionDefined(contents),
         isEmpty: hash === EMPTY_FIXTURE_HASH,
       };
     });

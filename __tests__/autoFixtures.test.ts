@@ -166,6 +166,17 @@ it("rejects --!include inside fixtures/auto", async () => {
   await expect(read()).rejects.toThrow("must be self-contained");
 });
 
+it.each([
+  ["on the first line", "--! no-transaction\nselect 1;\n"],
+  ["on a later line", "select 1;\n--! no-transaction\n"],
+])(
+  "rejects --! no-transaction inside fixtures/auto (%s)",
+  async (_, content) => {
+    await fsp.writeFile("migrations/fixtures/auto/concurrently.sql", content);
+    await expect(read()).rejects.toThrow("include it manually");
+  },
+);
+
 it.each(["current.sql", "current/"])(
   "keeps headers before the automatic fixtures (%s)",
   async (mode) => {

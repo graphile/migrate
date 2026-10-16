@@ -821,10 +821,10 @@ Only `fixtures/auto/` is included automatically; other fixtures are included
 manually as before. Use the folder for things that can be recreated quickly at
 any time: functions, views, policies, grants and comments. Keep stateful objects
 such as indexes, constraints and materialized views in other fixtures. Fixtures
-in `fixtures/auto/` must be self-contained: `--!include` inside them is an
-error. Fixtures with `--! no-transaction` are not included automatically; a
-warning is logged instead. Deleting a fixture does not drop anything; write any
-cleanup SQL yourself.
+in `fixtures/auto/` must be self-contained and run inside the migration's
+transaction: `--!include` or `--! no-transaction` inside them is an error, so
+keep such fixtures in another folder and include them manually. Deleting a
+fixture does not drop anything; write any cleanup SQL yourself.
 
 Automatic fixtures run before the rest of the migration, in path order, so name
 them to order their dependencies (for example `auto/010-functions/…` before
