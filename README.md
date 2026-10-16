@@ -806,6 +806,55 @@ drop policy if exists access_by_numbers on mytable;
 create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 42);
 ```
 
+#### Automatically including changed fixtures (experimental)
+
+Fixtures in `migrations/fixtures/auto/`, including its subdirectories, are
+included automatically when they change, without writing `--!include` yourself.
+Creating that folder turns this on; there is no setting. Whenever the current
+migration is read (by `watch`, `status`, `commit` and so on), every SQL file in
+that folder that differs from the version last included in a committed migration
+is included at the start of the migration, after any headers, in path order.
+Your current migration files are not changed. Comment-only changes are ignored,
+as are new files that are empty or only comments.
+
+Only `fixtures/auto/` is included automatically; other fixtures are included
+manually as before. Use the folder for things that can be recreated quickly at
+any time: functions, views, policies, grants and comments. Keep stateful objects
+such as indexes, constraints and materialized views in other fixtures. Fixtures
+in `fixtures/auto/` must be self-contained and run inside the migration's
+transaction: `--!include` or `--! no-transaction` inside them is an error, so
+keep such fixtures in another folder and include them manually. Deleting a
+fixture does not drop anything; write any cleanup SQL yourself.
+
+Automatic fixtures run before the rest of the migration, in path order, so name
+them to order their dependencies (for example `auto/010-functions/…` before
+`auto/020-policies/…`). To run one later, for example a policy on a table that
+the migration creates, include it in the migration yourself with
+`--!include auto/…`; it is then not added at the start. Only the migration
+itself can include a fixture from `fixtures/auto/`; other fixtures cannot. Some
+changes cannot be made by running the new definition: adding a parameter to a
+function needs a `drop function` first, and possibly dropping and recreating the
+policies that use it. Write those `drop`s in the migration and include the
+affected fixtures after them.
+
+A fixture that no committed migration has included counts as new. That includes
+a fixture moved into `fixtures/auto/`, because its path changes, so moving
+existing fixtures into the folder runs each of them once in the next migration.
+Check that they are safe to run again: no one-off data, and no
+`drop ... cascade` of objects other fixtures define. Recreating views and
+policies locks them and their tables until the migration commits, so deploy such
+a migration at a quiet time or with a `lock_timeout`.
+
+`watch` does not undo the previous run before running the migration again, so
+objects left by earlier runs can hide a wrong order. To check the order on a
+fresh database, run `graphile-migrate reset --shadow --erase` and then
+`graphile-migrate watch --once --shadow`; `commit` also replays every migration
+on the shadow database.
+
+Changes are detected with `pg-minify`, which does not understand dollar quoting:
+text after `--` inside a `$tag$…$tag$` string is treated as a comment, so
+editing only such text is not detected.
+
 ### Committed migration(s)
 
 The files for migrations that you've committed with `graphile-migrate commit`

@@ -1,11 +1,10 @@
 import * as crypto from "crypto";
 import { promises as fsp } from "fs";
-import { sep } from "path";
+import { posix, sep } from "path";
 import pgMinify from "pg-minify";
 
-import { isNoTransactionDefined } from "./header";
 import { realpathOrNull, walk } from "./lib";
-import { compileIncludes, getAllMigrations } from "./migration";
+import { AUTO_FIXTURES_FOLDER, getAllMigrations } from "./migration";
 import type { ParsedSettings } from "./settings";
 
 interface FileFixture {
@@ -24,7 +23,10 @@ interface FileFixture {
    */
   hash: string;
 
-  hasNoTransaction: boolean;
+  /**
+   * True if the fixture is empty or only comments
+   */
+  isEmpty: boolean;
 }
 
 interface FixturesCache {
@@ -44,29 +46,40 @@ function hashFixture(fixtureText: string) {
     .digest("hex");
 }
 
+const EMPTY_FIXTURE_HASH = hashFixture("");
+
 export async function getLocalFixtures(
   parsedSettings: ParsedSettings,
 ): Promise<{ [relativePath: string]: FileFixture }> {
   const allFixtures = Object.create(null) as {
     [relativePath: string]: FileFixture;
   };
-  const rawFixturesPath = `${parsedSettings.migrationsFolder}/fixtures`;
-  const fixturesPath = await realpathOrNull(rawFixturesPath);
-  if (fixturesPath) {
-    await walk(fixturesPath, async (relativePath, ent) => {
+  const rawAutoPath = `${parsedSettings.migrationsFolder}/fixtures/${AUTO_FIXTURES_FOLDER}`;
+  const autoPath = await realpathOrNull(rawAutoPath);
+  if (autoPath) {
+    await walk(autoPath, async (pathInAuto, ent) => {
       if (ent.name.startsWith(".") || !ent.name.endsWith(".sql")) return;
+      const relativePath = `${AUTO_FIXTURES_FOLDER}/${pathInAuto}`;
       const fullPath = ent.parentPath + sep + ent.name;
       const contents = await fsp.readFile(fullPath, "utf8");
-      const compiled = await compileIncludes(
-        parsedSettings,
-        contents,
-        new Set([fullPath]),
-      );
+      // Nested includes would run shared fixtures more than once.
+      if (/^--![ \t]*include\b/m.test(contents)) {
+        throw new Error(
+          `Automatic fixture '${relativePath}' uses '--!include'; fixtures in '${AUTO_FIXTURES_FOLDER}/' must be self-contained.`,
+        );
+      }
+      // The automatic section always runs inside the migration's transaction.
+      if (/^--!\s*no-transaction\b/m.test(contents)) {
+        throw new Error(
+          `Automatic fixture '${relativePath}' uses '--! no-transaction'; move it out of '${AUTO_FIXTURES_FOLDER}/' and include it manually.`,
+        );
+      }
+      const hash = hashFixture(contents);
       allFixtures[relativePath] = {
         fullPath,
         relativePath,
-        hash: hashFixture(compiled),
-        hasNoTransaction: isNoTransactionDefined(compiled),
+        hash,
+        isEmpty: hash === EMPTY_FIXTURE_HASH,
       };
     });
   }
@@ -102,10 +115,12 @@ async function _reallyGetCommittedFixturesCache(
     const re = /(^|\n)--! Included ([^\r\n]+)\r?\n/g;
     let match: RegExpExecArray | null;
     while ((match = re.exec(body)) != null) {
-      const [, relativePath] = match;
-      const i = body.indexOf(`--! EndIncluded ${relativePath}`, match.index);
+      const [, , includePath] = match;
+      const i = body.indexOf(`--! EndIncluded ${includePath}`, match.index);
       if (i < 0) throw new Error(`Found Included with no EndIncluded`);
       const content = body.substring(match.index + match[0].length, i).trim();
+      // `./auto/x.sql` and `auto/x.sql` are the same fixture.
+      const relativePath = posix.normalize(includePath);
       cache.fixtures[relativePath] ??= [];
       const hash = hashFixture(content);
       cache.fixtures[relativePath].push({ filename, hash });

@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { promises as fsp } from "fs";
+import { posix } from "path";
 
 import { getCommittedFixturesState, getLocalFixtures } from "./fixtures";
 import { isNoTransactionDefined } from "./header";
@@ -58,50 +59,66 @@ export async function readCurrentMigration(
   location: CurrentMigrationLocation,
 ): Promise<{ raw: string; compiled: string }> {
   const { body: raw, paths } = await readCurrentMigrationRaw(location);
-  let compiled = raw;
-  if (parsedSettings.autoIncludeFixtures) {
-    const regex = /^--![ \t]*include[ \t]+(.*\.sql)[ \t]*$/gm;
-    const alreadyIncluded = [...compiled.matchAll(regex)].map(
-      (match) => match[1],
+  let compiled = await compileIncludes(parsedSettings, raw, new Set(paths));
+  // Creating `fixtures/auto/` turns automatic fixtures on; without it, skip
+  // reading the committed history.
+  const currentFixtures = await getLocalFixtures(parsedSettings);
+  if (Object.keys(currentFixtures).length > 0) {
+    // Fixtures the migration includes itself, to run them later in the
+    // migration, whatever the spelling of its `--!include`. Other fixtures
+    // cannot include them.
+    const alreadyIncluded = new Set(
+      [...compiled.matchAll(/^--! Included (.+)$/gm)].map((match) =>
+        posix.normalize(match[1]),
+      ),
     );
 
     // Find any fixture that has changed since the last commit that hasn't been
     // specifically `--!include`'d
     const committedState = await getCommittedFixturesState(parsedSettings);
-    const currentFixtures = await getLocalFixtures(parsedSettings);
     const changedFixtures: string[] = [];
-    for (const [relativePath, { hash, hasNoTransaction }] of Object.entries(
+    for (const [relativePath, { hash, isEmpty }] of Object.entries(
       currentFixtures,
     )) {
-      if (committedState[relativePath] !== hash) {
-        // TODO: maybe be a bit more flexible about matches here: `./`, etc
-        if (!alreadyIncluded.includes(relativePath)) {
-          if (hasNoTransaction) {
-            parsedSettings.logger.warn(
-              `Not including modified fixture ${relativePath} because it includes --! no-transaction`,
-              { relativePath, noTransaction: true },
-            );
-          } else {
-            changedFixtures.push(relativePath);
-          }
-        }
+      if (
+        committedState[relativePath] !== hash &&
+        !alreadyIncluded.has(relativePath) &&
+        // A new fixture with nothing to run is not a change.
+        !(isEmpty && committedState[relativePath] == null)
+      ) {
+        changedFixtures.push(relativePath);
       }
     }
 
-    // Prefix the migration with the changed fixture includes
     if (changedFixtures.length > 0) {
       changedFixtures.sort((a, z) => (a < z ? -1 : a > z ? 1 : 0));
-      compiled =
+      const autoIncludes = await compileIncludes(
+        parsedSettings,
         changedFixtures
           .map((relativePath) => `--!include ${relativePath}`)
-          .join("\n") +
-        "\n\n--!endAuto\n\n" +
-        compiled;
+          .join("\n"),
+        new Set(paths),
+      );
+      // Headers and `--! no-transaction` must stay first; the fixtures follow
+      // them and the blank line that ends the headers.
+      const lines = compiled.split("\n");
+      let start = 0;
+      while (start < lines.length && LEADING_DIRECTIVE.test(lines[start])) {
+        start++;
+      }
+      if (start > 0 && lines[start] === "") start++;
+      compiled = [
+        ...lines.slice(0, start),
+        `${autoIncludes}\n\n--!endAuto\n\n${lines.slice(start).join("\n")}`,
+      ].join("\n");
     }
   }
-  compiled = await compileIncludes(parsedSettings, compiled, new Set(paths));
   return { raw, compiled };
 }
+
+/** A header line, or the `--! no-transaction` directive. */
+const LEADING_DIRECTIVE =
+  /^--!(?: [A-Z][a-zA-Z0-9_]*(?::.*)?|\s*no-transaction\b.*)$/;
 
 async function readCurrentMigrationRaw(
   location: CurrentMigrationLocation,
@@ -196,8 +213,11 @@ export async function writeCurrentMigration(
   location: CurrentMigrationLocation,
   rawBody: string,
 ): Promise<void> {
-  // Strip the auto-included fixtures
-  const body = rawBody.replace(/^[\s\S]*\n--!endAuto\n\n/, "");
+  // Strip the auto-included fixtures, keeping any headers before them
+  const body = rawBody.replace(
+    /^(?:--!include [^\n]*\n)+\n--!endAuto\n\n/m,
+    "",
+  );
   if (body.trim() + "\n" !== body) {
     throw new Error(
       "graphile-migrate error - 'body' should be sanitized before being passed to 'writeCurrentMigration'",
