@@ -133,8 +133,9 @@ export function compilePlaceholders(
  * Fixtures in this folder (inside the fixtures folder) that have changed since
  * the last commit are included automatically; creating the folder turns this
  * on. They must be self-contained (no `--!include`) and run inside the
- * migration's transaction (no `--! no-transaction`), and nothing else may
- * `--!include` them.
+ * migration's transaction (no `--! no-transaction`). Only the migration itself
+ * may `--!include` one, to run it later in the migration; other fixtures may
+ * not.
  *
  * NOTE: only use it for stateless database entities: functions, RLS policies,
  * grants, views, etc - things that can be dropped and recreated almost
@@ -210,7 +211,7 @@ export async function compileIncludes(
       relativePath.split(sep)[0] === AUTO_FIXTURES_FOLDER
     ) {
       throw new Error(
-        `Forbidden: cannot include '${rawSqlPath}' because fixtures in '${AUTO_FIXTURES_FOLDER}/' are only included automatically`,
+        `Forbidden: cannot include '${rawSqlPath}' from another fixture; only the migration itself can include fixtures from '${AUTO_FIXTURES_FOLDER}/'`,
       );
     }
 
@@ -227,7 +228,8 @@ export async function compileIncludes(
         parsedSettings,
         fileContents,
         new Set([...processedFiles, sqlPath]),
-        forbidAutoIncludes,
+        // Only the top-level file may include automatic fixtures.
+        true,
       );
       return processed;
     }),

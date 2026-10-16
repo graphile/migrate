@@ -137,23 +137,26 @@ it("treats a fixture moved into fixtures/auto as new", async () => {
 });
 
 it.each([
-  ["directly", "--!include auto/example.sql\n", {}],
-  ["with another spelling", "--! include ./auto/example.sql\n", {}],
-  [
-    "through another fixture",
-    "--!include wrapper.sql\n",
-    { "migrations/fixtures/wrapper.sql": "--!include auto/example.sql\n" },
-  ],
+  ["directly", "--!include auto/example.sql\n"],
+  ["with another spelling", "--! include ./auto/example.sql\n"],
 ])(
-  "rejects including an automatic fixture %s",
-  async (_, content, files: Record<string, string>) => {
-    for (const [path, fileContent] of Object.entries(files)) {
-      await fsp.writeFile(path, fileContent);
-    }
+  "does not add a fixture the migration includes itself %s",
+  async (_, content) => {
     await fsp.writeFile("migrations/current.sql", content);
-    await expect(read()).rejects.toThrow("only included automatically");
+    const { auto, compiled } = await read();
+    expect(auto).toEqual([]);
+    expect(compiled.match(/select '--literal'/g)).toHaveLength(1);
   },
 );
+
+it("rejects including an automatic fixture from another fixture", async () => {
+  await fsp.writeFile(
+    "migrations/fixtures/wrapper.sql",
+    "--!include auto/example.sql\n",
+  );
+  await fsp.writeFile("migrations/current.sql", "--!include wrapper.sql\n");
+  await expect(read()).rejects.toThrow("only the migration itself");
+});
 
 it("rejects --!include inside fixtures/auto", async () => {
   await fsp.writeFile("migrations/fixtures/shared.sql", "select 2;");
@@ -250,6 +253,32 @@ describe("database lifecycle", () => {
       ).toBe(committed);
     },
   );
+
+  it("runs a fixture the migration includes after creating its table", async () => {
+    await fsp.writeFile(
+      "migrations/fixtures/auto/policy.sql",
+      "comment on table placed_test is 'placed';\n",
+    );
+    await fsp.writeFile(
+      "migrations/current.sql",
+      "create table if not exists placed_test (id integer);\n--!include auto/policy.sql\n",
+    );
+    await current(settings);
+    const parsed = await parseSettings(settings);
+    const rows = await withClient(
+      parsed.connectionString,
+      parsed,
+      async (client) =>
+        (
+          await client.query(
+            "select obj_description('placed_test'::regclass) as description",
+          )
+        ).rows,
+    );
+    expect(rows).toEqual([{ description: "placed" }]);
+    await commit(settings);
+    expect((await read()).auto).toEqual([]);
+  });
 
   it("keeps the commit message through commit and uncommit", async () => {
     const content = "--! Message: add example\n\nselect 1;\n";

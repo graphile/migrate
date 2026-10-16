@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { promises as fsp } from "fs";
+import { posix } from "path";
 
 import { getCommittedFixturesState, getLocalFixtures } from "./fixtures";
 import { isNoTransactionDefined } from "./header";
@@ -58,18 +59,22 @@ export async function readCurrentMigration(
   location: CurrentMigrationLocation,
 ): Promise<{ raw: string; compiled: string }> {
   const { body: raw, paths } = await readCurrentMigrationRaw(location);
-  // Fixtures in `fixtures/auto/` are only ever included automatically.
-  let compiled = await compileIncludes(
-    parsedSettings,
-    raw,
-    new Set(paths),
-    true,
-  );
+  let compiled = await compileIncludes(parsedSettings, raw, new Set(paths));
   // Creating `fixtures/auto/` turns automatic fixtures on; without it, skip
   // reading the committed history.
   const currentFixtures = await getLocalFixtures(parsedSettings);
   if (Object.keys(currentFixtures).length > 0) {
-    // Find any fixture that has changed since the last commit
+    // Fixtures the migration includes itself, to run them later in the
+    // migration, whatever the spelling of its `--!include`. Other fixtures
+    // cannot include them.
+    const alreadyIncluded = new Set(
+      [...compiled.matchAll(/^--! Included (.+)$/gm)].map((match) =>
+        posix.normalize(match[1]),
+      ),
+    );
+
+    // Find any fixture that has changed since the last commit that hasn't been
+    // specifically `--!include`'d
     const committedState = await getCommittedFixturesState(parsedSettings);
     const changedFixtures: string[] = [];
     for (const [relativePath, { hash, isEmpty }] of Object.entries(
@@ -77,6 +82,7 @@ export async function readCurrentMigration(
     )) {
       if (
         committedState[relativePath] !== hash &&
+        !alreadyIncluded.has(relativePath) &&
         // A new fixture with nothing to run is not a change.
         !(isEmpty && committedState[relativePath] == null)
       ) {
