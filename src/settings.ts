@@ -85,14 +85,16 @@ export interface Settings {
   blankMigrationContent?: string;
   logger?: Logger;
   /**
-   * On `commit` (or when using `watch` mode), find fixtures that have changed
-   * since the last commit and include them in this migration.
+   * On `commit` (or when using `watch` mode), find fixtures in
+   * `migrations/fixtures/auto/` that have changed since the last commit and
+   * include them in this migration. Fixtures in that folder must not use
+   * `--!include`; fixtures elsewhere are only included manually.
    *
-   * NOTE: in this mode, fixtures should only be used for stateless database
-   * entities: functions, RLS policies, grants, views, etc - things that can be
-   * dropped and recreated almost instantly. You should be very wary of using
-   * them with stateful entities such as indexes, constraints and materialized
-   * views as dropping and recreating these takes significant time.
+   * NOTE: only use the `auto` folder for stateless database entities:
+   * functions, RLS policies, grants, views, etc - things that can be dropped
+   * and recreated almost instantly. Keep stateful entities such as indexes,
+   * constraints and materialized views in other fixtures, as dropping and
+   * recreating these takes significant time.
    *
    * @experimental
    */

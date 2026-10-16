@@ -5,7 +5,7 @@ import pgMinify from "pg-minify";
 
 import { isNoTransactionDefined } from "./header";
 import { realpathOrNull, walk } from "./lib";
-import { compileIncludes, getAllMigrations } from "./migration";
+import { getAllMigrations } from "./migration";
 import type { ParsedSettings } from "./settings";
 
 interface FileFixture {
@@ -25,7 +25,18 @@ interface FileFixture {
   hash: string;
 
   hasNoTransaction: boolean;
+
+  /**
+   * True if the fixture is empty or only comments
+   */
+  isEmpty: boolean;
 }
+
+/**
+ * Only fixtures in this folder (inside the fixtures folder) are included
+ * automatically. They must be self-contained: no `--!include`.
+ */
+export const AUTO_FIXTURES_FOLDER = "auto";
 
 interface FixturesCache {
   fixtures: {
@@ -44,29 +55,35 @@ function hashFixture(fixtureText: string) {
     .digest("hex");
 }
 
+const EMPTY_FIXTURE_HASH = hashFixture("");
+
 export async function getLocalFixtures(
   parsedSettings: ParsedSettings,
 ): Promise<{ [relativePath: string]: FileFixture }> {
   const allFixtures = Object.create(null) as {
     [relativePath: string]: FileFixture;
   };
-  const rawFixturesPath = `${parsedSettings.migrationsFolder}/fixtures`;
-  const fixturesPath = await realpathOrNull(rawFixturesPath);
-  if (fixturesPath) {
-    await walk(fixturesPath, async (relativePath, ent) => {
+  const rawAutoPath = `${parsedSettings.migrationsFolder}/fixtures/${AUTO_FIXTURES_FOLDER}`;
+  const autoPath = await realpathOrNull(rawAutoPath);
+  if (autoPath) {
+    await walk(autoPath, async (pathInAuto, ent) => {
       if (ent.name.startsWith(".") || !ent.name.endsWith(".sql")) return;
+      const relativePath = `${AUTO_FIXTURES_FOLDER}/${pathInAuto}`;
       const fullPath = ent.parentPath + sep + ent.name;
       const contents = await fsp.readFile(fullPath, "utf8");
-      const compiled = await compileIncludes(
-        parsedSettings,
-        contents,
-        new Set([fullPath]),
-      );
+      // Nested includes would run shared fixtures more than once.
+      if (/^--![ \t]*include\b/m.test(contents)) {
+        throw new Error(
+          `Automatic fixture '${relativePath}' uses '--!include'; fixtures in '${AUTO_FIXTURES_FOLDER}/' must be self-contained.`,
+        );
+      }
+      const hash = hashFixture(contents);
       allFixtures[relativePath] = {
         fullPath,
         relativePath,
-        hash: hashFixture(compiled),
-        hasNoTransaction: isNoTransactionDefined(compiled),
+        hash,
+        hasNoTransaction: isNoTransactionDefined(contents),
+        isEmpty: hash === EMPTY_FIXTURE_HASH,
       };
     });
   }
