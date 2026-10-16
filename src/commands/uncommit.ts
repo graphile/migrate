@@ -26,12 +26,11 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
     throw new Error("There's no committed migration to uncommit");
   }
 
-  // Check current.sql is blank; automatic fixtures are derived again afterwards
+  // Check current.sql is blank
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
   const { compiled: currentBody } = await readCurrentMigration(
     parsedSettings,
     currentLocation,
-    { autoFixtures: false },
   );
   const minifiedCurrentBody = pgMinify(currentBody);
   if (minifiedCurrentBody !== "") {

@@ -264,14 +264,18 @@ describe("database lifecycle", () => {
     expect(await fsp.readFile("migrations/current.sql", "utf8")).toBe(content);
   });
 
-  it("can uncommit while fixtures have pending changes", async () => {
+  it("refuses to uncommit while a fixture has pending changes", async () => {
+    const path = "migrations/fixtures/auto/example.sql";
     await commit(settings);
-    await fsp.writeFile("migrations/fixtures/auto/example.sql", "select 2;");
+    const original = await fsp.readFile(path, "utf8");
+    await fsp.writeFile(path, "select 2;");
+    await expect(uncommit(settings)).rejects.toThrow(
+      "current migration is not blank",
+    );
+    // Once the edit is committed or reverted, uncommit works again.
+    await fsp.writeFile(path, original);
     await uncommit(settings);
-    const { raw, auto, compiled } = await read();
-    expect(raw).not.toContain("auto/example.sql");
-    expect(auto).toEqual(["auto/example.sql"]);
-    expect(compiled.match(/select 2;/g)).toHaveLength(1);
+    expect((await read()).auto).toEqual(["auto/example.sql"]);
   });
 
   it("restores what the user wrote after a failed commit", async () => {
