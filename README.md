@@ -828,13 +828,15 @@ fixture does not drop anything; write any cleanup SQL yourself.
 
 Automatic fixtures run before the rest of the migration, in path order, so name
 them to order their dependencies (for example `auto/010-functions/…` before
-`auto/020-policies/…`). To run a fixture elsewhere, for example a view that
-selects a column this migration adds, include it yourself with
-`--!include auto/…`; a fixture that the migration already includes, directly or
-through another fixture, is not added again. Some changes cannot be made by
-running the new definition: adding a parameter to a function needs a
-`drop function` first, and possibly dropping and recreating the policies that
-use it. Make those changes in the migration yourself.
+`auto/020-policies/…`). They only ever run there: nothing can include a fixture
+from `fixtures/auto/` with `--!include`, neither the current migration nor
+another fixture. If a fixture change depends on the rest of the migration, such
+as a view selecting a column that the migration adds, commit the migration first
+and change the fixture in the next one. Some changes cannot be made by running
+the new definition: adding a parameter to a function needs a `drop function`
+first, and possibly dropping and recreating the policies that use it. Make such
+a change by hand in a migration and commit it, then update the fixture to match;
+the next migration runs the matching definition again, which changes nothing.
 
 A fixture that no committed migration has included counts as new. That includes
 a fixture moved into `fixtures/auto/`, because its path changes, so moving

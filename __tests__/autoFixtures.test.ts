@@ -145,15 +145,13 @@ it.each([
     { "migrations/fixtures/wrapper.sql": "--!include auto/example.sql\n" },
   ],
 ])(
-  "does not add a fixture the migration already includes %s",
+  "rejects including an automatic fixture %s",
   async (_, content, files: Record<string, string>) => {
     for (const [path, fileContent] of Object.entries(files)) {
       await fsp.writeFile(path, fileContent);
     }
     await fsp.writeFile("migrations/current.sql", content);
-    const { auto, compiled } = await read();
-    expect(auto).toEqual([]);
-    expect(compiled.match(/select '--literal'/g)).toHaveLength(1);
+    await expect(read()).rejects.toThrow("only included automatically");
   },
 );
 

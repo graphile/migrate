@@ -4,7 +4,7 @@ import { posix, sep } from "path";
 import pgMinify from "pg-minify";
 
 import { realpathOrNull, walk } from "./lib";
-import { getAllMigrations } from "./migration";
+import { AUTO_FIXTURES_FOLDER, getAllMigrations } from "./migration";
 import type { ParsedSettings } from "./settings";
 
 interface FileFixture {
@@ -28,22 +28,6 @@ interface FileFixture {
    */
   isEmpty: boolean;
 }
-
-/**
- * Fixtures in this folder (inside the fixtures folder) that have changed since
- * the last commit are included automatically; creating the folder turns this
- * on. They must be self-contained (no `--!include`) and run inside the
- * migration's transaction (no `--! no-transaction`).
- *
- * NOTE: only use it for stateless database entities: functions, RLS policies,
- * grants, views, etc - things that can be dropped and recreated almost
- * instantly. Keep stateful entities such as indexes, constraints and
- * materialized views in other fixtures, as dropping and recreating these takes
- * significant time.
- *
- * @experimental
- */
-export const AUTO_FIXTURES_FOLDER = "auto";
 
 interface FixturesCache {
   fixtures: {

@@ -1,5 +1,5 @@
 import * as fsp from "fs/promises";
-import { relative } from "path";
+import { relative, sep } from "path";
 
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
@@ -129,10 +129,28 @@ export function compilePlaceholders(
   )(content);
 }
 
+/**
+ * Fixtures in this folder (inside the fixtures folder) that have changed since
+ * the last commit are included automatically; creating the folder turns this
+ * on. They must be self-contained (no `--!include`) and run inside the
+ * migration's transaction (no `--! no-transaction`), and nothing else may
+ * `--!include` them.
+ *
+ * NOTE: only use it for stateless database entities: functions, RLS policies,
+ * grants, views, etc - things that can be dropped and recreated almost
+ * instantly. Keep stateful entities such as indexes, constraints and
+ * materialized views in other fixtures, as dropping and recreating these takes
+ * significant time.
+ *
+ * @experimental
+ */
+export const AUTO_FIXTURES_FOLDER = "auto";
+
 export async function compileIncludes(
   parsedSettings: ParsedSettings,
   content: string,
   processedFiles: ReadonlySet<string>,
+  forbidAutoIncludes = false,
 ): Promise<string> {
   if (/--!\s*(End)?Included?/.test(content)) {
     throw new Error(
@@ -187,6 +205,15 @@ export async function compileIncludes(
       );
     }
 
+    if (
+      forbidAutoIncludes &&
+      relativePath.split(sep)[0] === AUTO_FIXTURES_FOLDER
+    ) {
+      throw new Error(
+        `Forbidden: cannot include '${rawSqlPath}' because fixtures in '${AUTO_FIXTURES_FOLDER}/' are only included automatically`,
+      );
+    }
+
     // Looks good to me
     sqlPathByRawSqlPath[rawSqlPath] = sqlPath;
   }
@@ -200,6 +227,7 @@ export async function compileIncludes(
         parsedSettings,
         fileContents,
         new Set([...processedFiles, sqlPath]),
+        forbidAutoIncludes,
       );
       return processed;
     }),
