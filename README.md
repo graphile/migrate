@@ -808,14 +808,14 @@ create policy access_by_numbers on mytable for update using (myfunction(4, 2) < 
 
 #### Automatically including changed fixtures (experimental)
 
-Set `autoIncludeFixtures: true` in `.gmrc` to include changed fixtures from
-`migrations/fixtures/auto/`, including its subdirectories, without writing
-`--!include` yourself. Whenever the current migration is read (by `watch`,
-`status`, `commit` and so on), every SQL file in that folder that differs from
-the version last included in a committed migration is included at the start of
-the migration, after any headers, in path order. Your current migration files
-are not changed. Comment-only changes are ignored, as are new files that are
-empty or only comments.
+Fixtures in `migrations/fixtures/auto/`, including its subdirectories, are
+included automatically when they change, without writing `--!include` yourself.
+Creating that folder turns this on; there is no setting. Whenever the current
+migration is read (by `watch`, `status`, `commit` and so on), every SQL file in
+that folder that differs from the version last included in a committed migration
+is included at the start of the migration, after any headers, in path order.
+Your current migration files are not changed. Comment-only changes are ignored,
+as are new files that are empty or only comments.
 
 Only `fixtures/auto/` is included automatically; other fixtures are included
 manually as before. Use the folder for things that can be recreated quickly at

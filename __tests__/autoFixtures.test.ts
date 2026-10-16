@@ -10,6 +10,7 @@ import {
 } from "../src/current";
 import { calculateHash } from "../src/hash";
 import { isNoTransactionDefined } from "../src/header";
+import * as migration from "../src/migration";
 import {
   compileIncludes,
   parseMigrationText,
@@ -17,9 +18,7 @@ import {
 } from "../src/migration";
 import { withClient } from "../src/pg";
 import { parseSettings } from "../src/settings";
-import { resetDb, settings as baseSettings } from "./helpers";
-
-const settings = { ...baseSettings, autoIncludeFixtures: true };
+import { resetDb, settings } from "./helpers";
 
 beforeEach(() => {
   mockFs({
@@ -51,8 +50,8 @@ async function recordCommit(
 }
 
 /** Read the current migration, listing the fixtures it includes automatically. */
-async function read(autoIncludeFixtures = true) {
-  const parsed = await parseSettings({ ...settings, autoIncludeFixtures });
+async function read() {
+  const parsed = await parseSettings(settings);
   const location = await getCurrentMigrationLocation(parsed);
   const { raw, compiled } = await readCurrentMigration(parsed, location);
   const end = compiled.indexOf("--!endAuto");
@@ -71,8 +70,21 @@ async function useCurrentDirectory(content = "-- current\n") {
   await fsp.writeFile("migrations/current/001.sql", content);
 }
 
-it("does nothing unless autoIncludeFixtures is enabled", async () => {
-  expect((await read(false)).auto).toEqual([]);
+it("does nothing, without reading history, if there is no fixtures/auto", async () => {
+  await fsp.rename(
+    "migrations/fixtures/auto/example.sql",
+    "migrations/fixtures/example.sql",
+  );
+  await fsp.rmdir("migrations/fixtures/auto");
+  const history = jest.spyOn(migration, "getAllMigrations");
+  try {
+    const { auto, compiled } = await read();
+    expect(auto).toEqual([]);
+    expect(compiled).toBe("-- current\n");
+    expect(history).not.toHaveBeenCalled();
+  } finally {
+    history.mockRestore();
+  }
 });
 
 it("includes new fixtures from fixtures/auto only, in path order", async () => {

@@ -33,8 +33,17 @@ interface FileFixture {
 }
 
 /**
- * Only fixtures in this folder (inside the fixtures folder) are included
- * automatically. They must be self-contained: no `--!include`.
+ * Fixtures in this folder (inside the fixtures folder) that have changed since
+ * the last commit are included automatically; creating the folder turns this
+ * on. They must be self-contained: no `--!include`.
+ *
+ * NOTE: only use it for stateless database entities: functions, RLS policies,
+ * grants, views, etc - things that can be dropped and recreated almost
+ * instantly. Keep stateful entities such as indexes, constraints and
+ * materialized views in other fixtures, as dropping and recreating these takes
+ * significant time.
+ *
+ * @experimental
  */
 export const AUTO_FIXTURES_FOLDER = "auto";
 

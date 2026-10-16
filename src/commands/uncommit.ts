@@ -31,7 +31,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   const { compiled: currentBody } = await readCurrentMigration(
     parsedSettings,
     currentLocation,
-    { autoIncludeFixtures: false },
+    { autoFixtures: false },
   );
   const minifiedCurrentBody = pgMinify(currentBody);
   if (minifiedCurrentBody !== "") {

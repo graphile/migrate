@@ -57,11 +57,16 @@ export async function getCurrentMigrationLocation(
 export async function readCurrentMigration(
   parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
-  { autoIncludeFixtures = parsedSettings.autoIncludeFixtures } = {},
+  { autoFixtures = true }: { autoFixtures?: boolean } = {},
 ): Promise<{ raw: string; compiled: string }> {
   const { body: raw, paths } = await readCurrentMigrationRaw(location);
   let compiled = await compileIncludes(parsedSettings, raw, new Set(paths));
-  if (autoIncludeFixtures) {
+  // Creating `fixtures/auto/` turns automatic fixtures on; without it, skip
+  // reading the committed history.
+  const currentFixtures = autoFixtures
+    ? await getLocalFixtures(parsedSettings)
+    : {};
+  if (Object.keys(currentFixtures).length > 0) {
     // Everything the migration already includes, directly or through another
     // fixture, whatever the spelling of its `--!include`.
     const alreadyIncluded = new Set(
@@ -73,7 +78,6 @@ export async function readCurrentMigration(
     // Find any fixture that has changed since the last commit that hasn't been
     // specifically `--!include`'d
     const committedState = await getCommittedFixturesState(parsedSettings);
-    const currentFixtures = await getLocalFixtures(parsedSettings);
     const changedFixtures: string[] = [];
     for (const [
       relativePath,

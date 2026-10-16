@@ -84,21 +84,6 @@ export interface Settings {
   afterCurrent?: Actions;
   blankMigrationContent?: string;
   logger?: Logger;
-  /**
-   * On `commit` (or when using `watch` mode), find fixtures in
-   * `migrations/fixtures/auto/` that have changed since the last commit and
-   * include them in this migration. Fixtures in that folder must not use
-   * `--!include`; fixtures elsewhere are only included manually.
-   *
-   * NOTE: only use the `auto` folder for stateless database entities:
-   * functions, RLS policies, grants, views, etc - things that can be dropped
-   * and recreated almost instantly. Keep stateful entities such as indexes,
-   * constraints and materialized views in other fixtures, as dropping and
-   * recreating these takes significant time.
-   *
-   * @experimental
-   */
-  autoIncludeFixtures?: boolean;
 }
 
 // NOTE: only override values that differ (e.g. changing non-nullability)
@@ -117,8 +102,6 @@ export interface ParsedSettings extends Settings {
   afterCurrent: ActionSpec[];
   blankMigrationContent: string;
   logger: Logger;
-  /** @experimental */
-  autoIncludeFixtures: boolean;
 }
 
 export async function parseSettings(
@@ -306,15 +289,6 @@ export async function parseSettings(
     },
   );
 
-  const autoIncludeFixtures = await check(
-    "autoIncludeFixtures",
-    (rawAIF): boolean => {
-      if (typeof rawAIF === "boolean") return rawAIF;
-      if (rawAIF == null) return false;
-      throw new Error(`Invalid value for autoIncludeFixtures`);
-    },
-  );
-
   const validateAction = makeValidateActionCallback(logger);
   const rootValidateAction = makeValidateActionCallback(logger, true);
 
@@ -416,7 +390,6 @@ export async function parseSettings(
     placeholders,
     blankMigrationContent,
     logger,
-    autoIncludeFixtures,
   };
 }
 
