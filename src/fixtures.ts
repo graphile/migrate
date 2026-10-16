@@ -1,6 +1,6 @@
 import * as crypto from "crypto";
 import { promises as fsp } from "fs";
-import { sep } from "path";
+import { posix, sep } from "path";
 import pgMinify from "pg-minify";
 
 import { isNoTransactionDefined } from "./header";
@@ -102,10 +102,12 @@ async function _reallyGetCommittedFixturesCache(
     const re = /(^|\n)--! Included ([^\r\n]+)\r?\n/g;
     let match: RegExpExecArray | null;
     while ((match = re.exec(body)) != null) {
-      const [, relativePath] = match;
-      const i = body.indexOf(`--! EndIncluded ${relativePath}`, match.index);
+      const [, , includePath] = match;
+      const i = body.indexOf(`--! EndIncluded ${includePath}`, match.index);
       if (i < 0) throw new Error(`Found Included with no EndIncluded`);
       const content = body.substring(match.index + match[0].length, i).trim();
+      // `./auto/x.sql` and `auto/x.sql` are the same fixture.
+      const relativePath = posix.normalize(includePath);
       cache.fixtures[relativePath] ??= [];
       const hash = hashFixture(content);
       cache.fixtures[relativePath].push({ filename, hash });
