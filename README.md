@@ -153,10 +153,12 @@ graphile-migrate watch
 ### Committed and current migrations
 
 New migrations are composed within **"the current migration"**. You will see
-this term used a lot. By default this is in the `migrations/current.sql` file,
-but if you like you may delete that file and instead create a
-`migrations/current/` folder into which you may place numbered SQL files which
-together comprise "the current migration".
+this term used a lot. When you run `graphile-migrate init`, the current
+migration is created as a `migrations/current/` folder into which you may place
+numbered SQL files which together comprise "the current migration". If you
+prefer, you may instead use a single `migrations/current.sql` file (pass
+`--no-folder` to `graphile-migrate init`, or delete the folder and create the
+file manually).
 
 The current migration should be idempotent (this is your responsibility, see
 "Idempotency" below); i.e. it should be able to be ran multiple times and have
@@ -252,7 +254,7 @@ Options:
       --help    Show help                                              [boolean]
   -c, --config  Optional path to gmrc file   [string] [default: .gmrc[.js|.cjs]]
       --folder  Use a folder rather than a file for the current migration.
-                                                      [boolean] [default: false]
+                                                       [boolean] [default: true]
 ```
 
 
