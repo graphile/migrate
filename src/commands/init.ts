@@ -202,7 +202,8 @@ export async function init(options: InitArgv = {}): Promise<void> {
   });
   await fsp.mkdir(parsedSettings.migrationsFolder);
   await fsp.mkdir(parsedSettings.migrationsFolder + "/committed");
-  if (options.folder) {
+  const useFolder = options.folder !== false;
+  if (useFolder) {
     await fsp.mkdir(parsedSettings.migrationsFolder + "/current");
   }
   const currentLocation = await getCurrentMigrationLocation(parsedSettings);
@@ -230,7 +231,7 @@ Initializes a graphile-migrate project by creating a \`.gmrc\` file and \`migrat
     folder: {
       type: "boolean",
       description: "Use a folder rather than a file for the current migration.",
-      default: false,
+      default: true,
     },
   },
   handler: init,
