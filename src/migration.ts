@@ -3,7 +3,10 @@ import { relative } from "path";
 
 import { calculateHash } from "./hash";
 import { isNoTransactionDefined } from "./header";
-import { runQueryWithErrorInstrumentation } from "./instrumentation";
+import {
+  RunQueryInstrumentationOptions,
+  runQueryWithErrorInstrumentation,
+} from "./instrumentation";
 import { mergeWithoutClobbering, realpathOrNull } from "./lib";
 import memoize from "./memoize";
 import { migrationFilenameMatches } from "./migrationFilename";
@@ -567,6 +570,7 @@ export async function runStringMigration(
   filename: string,
   committedMigration?: FileMigration,
   dryRun?: boolean,
+  instrumentation?: RunQueryInstrumentationOptions,
 ): Promise<{ sql: string; transaction: boolean }> {
   const placeholderReplacement = generatePlaceholderReplacement(
     parsedSettings,
@@ -582,7 +586,12 @@ export async function runStringMigration(
       await pgClient.query("begin");
     }
     try {
-      await runQueryWithErrorInstrumentation(pgClient, sql, filename);
+      await runQueryWithErrorInstrumentation(
+        pgClient,
+        sql,
+        filename,
+        instrumentation,
+      );
       if (committedMigration) {
         const { hash, previousHash, filename } = committedMigration;
         await pgClient.query({

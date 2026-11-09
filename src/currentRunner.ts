@@ -23,6 +23,10 @@ export function makeCurrentMigrationRunner(
       parsedSettings,
       currentLocation,
     );
+    const splitBasePath = currentLocation.isFile
+      ? undefined
+      : currentLocation.path;
+    const runInstrumentation = splitBasePath ? { splitBasePath } : undefined;
     let migrationsAreEquivalent = false;
 
     try {
@@ -70,6 +74,7 @@ export function makeCurrentMigrationRunner(
               "current.sql",
               undefined,
               true,
+              runInstrumentation,
             );
             const previousBodyMinified = previousBody
               ? pgMinify(previousBody)
@@ -115,6 +120,8 @@ export function makeCurrentMigrationRunner(
                       body,
                       "current.sql",
                       undefined,
+                      undefined,
+                      runInstrumentation,
                     ),
                 );
               }
