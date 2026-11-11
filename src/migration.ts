@@ -573,7 +573,9 @@ export async function runStringMigration(
     context,
   );
   const sql = placeholderReplacement(rawBody);
-  const transaction = isNoTransactionDefined(sql) === false;
+  // current.sql may start with headers, and `--! no-transaction` comes after them
+  const { body } = parseMigrationText(filename, sql, false);
+  const transaction = isNoTransactionDefined(body) === false;
   if (dryRun) {
     return { sql, transaction };
   }

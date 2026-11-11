@@ -137,6 +137,27 @@ it("runs migrations", async () => {
   expect(newEnums).toEqual(enums);
 });
 
+it("runs a --! no-transaction current.sql that has headers before it", async () => {
+  mockFs({
+    [`migrations/committed/000001.sql`]: MIGRATION_1_COMMITTED,
+    "migrations/current.sql":
+      "--! Message: add an index\n\n--! no-transaction\ncreate index concurrently foo_id_idx on foo (id);\n",
+  });
+
+  await current(settings);
+
+  const parsedSettings = await parseSettings(settings);
+  const { rows } = await withClient(
+    parsedSettings.connectionString,
+    parsedSettings,
+    (pgClient) =>
+      pgClient.query(
+        "select indexname from pg_indexes where schemaname = 'public' and indexname = 'foo_id_idx'",
+      ),
+  );
+  expect(rows).toHaveLength(1);
+});
+
 it("runs actions when forceActions is set", async () => {
   const ACTIONS = {
     initial: {
