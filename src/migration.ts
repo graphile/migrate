@@ -344,8 +344,9 @@ export function parseMigrationText(
   }
 
   // The `\r\n` should never exist; however Windows users may be having git convert LF to CRLF, corrupting migrations.
+  // A header line then ends in `\r` and does not match, so the line that ends the headers may be a header itself.
   if (strict && lines[headerLines] !== "") {
-    if (lines[headerLines] === "\r") {
+    if (lines[headerLines].endsWith("\r")) {
       throw new Error(
         `Invalid migration '${fullPath}': it looks like the line endings have been corrupted - perhaps you have configured git to replace LF with CRLF? Here's a couple potential solutions:
 Option 1: Add \`path/to/migrations/committed/*.sql -text\` to \`.gitattributes\` in your repository
