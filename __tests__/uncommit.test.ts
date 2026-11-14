@@ -46,6 +46,20 @@ it("aborts if current migration is not empty", async () => {
   );
 });
 
+it("restores an include whose path contains a space", async () => {
+  mockFs({
+    "migrations/current.sql": "select 1;\n--!include my fixture.sql\n",
+    "migrations/fixtures/my fixture.sql": "select 2;\n",
+  });
+  await commit(settings);
+  await migrate(settings);
+
+  await uncommit(settings);
+  expect(await fsp.readFile("migrations/current.sql", "utf8")).toEqual(
+    "select 1;\n--!include my fixture.sql\n",
+  );
+});
+
 describe.each([[undefined], ["My Commit Message"]])(
   "uncommit message '%s'",
   (commitMessage) => {

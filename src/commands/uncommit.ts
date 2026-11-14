@@ -46,7 +46,7 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
 
   // Replace included migrations with their `--!include` equivalent
   const body = committedBody.replace(
-    /^--! Included (?<filename>\S+)$[\s\S]*?^--! EndIncluded \k<filename>$/gm,
+    /^--! Included (?<filename>.+)$[\s\S]*?^--! EndIncluded \k<filename>$/gm,
     (_, filename) => `--!include ${filename}`,
   );
 
