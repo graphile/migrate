@@ -754,7 +754,7 @@ you're using folder mode.
 
 You can include external files in your `current.sql` to better assist in source
 control. These includes are identified by paths within the `migrations/fixtures`
-folder.
+folder. The path must not contain whitespace.
 
 For example. Given the following directory structure:
 
