@@ -162,6 +162,13 @@ export async function compileIncludes(
   const sqlPathByRawSqlPath = Object.create(null) as Record<string, string>;
   for (const match of matches) {
     const [line, rawSqlPath] = match;
+
+    if (/\s/.test(rawSqlPath)) {
+      throw new Error(
+        `Include of '${rawSqlPath}' failed because paths containing whitespace are not supported.`,
+      );
+    }
+
     const sqlPath = await realpathOrNull(`${fixturesPath}/${rawSqlPath}`);
 
     if (!sqlPath) {

@@ -96,6 +96,22 @@ it("compiles an included file, and won't get stuck in an infinite include loop",
   expect(message.replaceAll(process.cwd(), "~")).toMatchSnapshot();
 });
 
+it("disallows paths containing whitespace", async () => {
+  mockFs({
+    "migrations/fixtures/my fixture.sql": "select * from foo;",
+  });
+
+  const promise = compileIncludes(
+    settings,
+    `--!include my fixture.sql
+`,
+    FAKE_VISITED,
+  );
+  await expect(promise).rejects.toThrowError(
+    "Include of 'my fixture.sql' failed because paths containing whitespace are not supported.",
+  );
+});
+
 it("disallows calling files outside of the migrations/fixtures folder", async () => {
   mockFs({
     "migrations/fixtures/bar.sql": "",
