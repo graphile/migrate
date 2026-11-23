@@ -543,6 +543,26 @@ All commands accept an optional `--config` parameter with a custom path to a
 `.gmrc(.js)` file. This is useful if, for example, you have a monorepo or other
 project with multiple interacting databases.
 
+### SSL connections
+
+The connection strings are passed to [`pg`](https://node-postgres.com/), so its
+TLS options can be set with connection string parameters. For example, to
+connect to a server with a self-signed certificate:
+
+```sh
+export DATABASE_URL="postgres://user:pass@db.example.com/app?ssl=true&sslrootcert=/path/to/ca.pem"
+export SHADOW_DATABASE_URL="postgres://user:pass@db.example.com/app_shadow?ssl=true&sslrootcert=/path/to/ca.pem"
+export ROOT_DATABASE_URL="postgres://user:pass@db.example.com/postgres?ssl=true&sslrootcert=/path/to/ca.pem"
+```
+
+Use `sslmode=verify-full` instead of `ssl=true` if you also want to verify the
+hostname. Client certificates can be configured with `sslcert` and `sslkey`.
+
+The same options work in the `connectionString`, `shadowConnectionString` and
+`rootConnectionString` configuration keys. See
+[the Graphile Worker connection string documentation](https://worker.graphile.org/docs/connection-string#tcp--ssl)
+for more details.
+
 ### Windows
 
 Since committed migrations utilize hashes to verify file integrity, the
